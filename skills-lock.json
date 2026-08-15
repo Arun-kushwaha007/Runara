@@ -1,0 +1,329 @@
+{
+  "version": 1,
+  "skills": {
+    "adding-tauri-splashscreen": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-splashscreen/SKILL.md",
+      "computedHash": "754cb224ea7f7e660f55ce851bfe3b086f483e5b37fcf80dcb0458a6f1f56fcc"
+    },
+    "adding-tauri-system-tray": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-system-tray/SKILL.md",
+      "computedHash": "d79fd615d20a7357208a39527d1f00ae63091bf905a0da316abeaf9cefa5f619"
+    },
+    "brainstorming": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/brainstorming/SKILL.md",
+      "computedHash": "0eb8e9ba100985eb4da20c46807268cafd72ec1c4ea58132edf9be6c469867fe"
+    },
+    "building-tauri-with-github-actions": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-pipeline-github/SKILL.md",
+      "computedHash": "11a8412b733cec35b7c6738054d4cb866d8bfb451e3a0f68e545022211fa4a54"
+    },
+    "calling-frontend-from-tauri-rust": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-calling-frontend/SKILL.md",
+      "computedHash": "974705471977d53c6e075eb4a8b90da6315a8c716e03bc888dec88478a7b85a4"
+    },
+    "calling-rust-from-tauri-frontend": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-calling-rust/SKILL.md",
+      "computedHash": "7a58b23132ea2047355e640bf59e90db6681431bf7c8b3387890746cb2635337"
+    },
+    "configuring-tauri-apps": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-configuration/SKILL.md",
+      "computedHash": "be16c7bcea92b2f50d7eb613cb34130946fa37cbcba4708b4d428c426d3fd027"
+    },
+    "configuring-tauri-capabilities": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-capabilities/SKILL.md",
+      "computedHash": "19a0c095c7da288e554936c0c56c9955886a70bcf6a394f5e04e8a4ee2fa8570"
+    },
+    "configuring-tauri-csp": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-csp/SKILL.md",
+      "computedHash": "9b572fc6dc11dfb034186544d694ed68721aabd47cba88957a31afcf56e9054a"
+    },
+    "configuring-tauri-http-headers": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-http-headers/SKILL.md",
+      "computedHash": "a67f1b1258f9aebf687e5c444fe0224428b4f5513b102f482ad397f2a84b54f3"
+    },
+    "configuring-tauri-permissions": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-permissions/SKILL.md",
+      "computedHash": "463bd9a50d3f5c4d4e4d330772057bfb8b452fc4061a01c3f4b543a938a6a00f"
+    },
+    "configuring-tauri-scopes": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-scope/SKILL.md",
+      "computedHash": "e0d6bfd4e71df09e6f692414f1295d0d3876b3f15330caeb4d18efacd3ca6c27"
+    },
+    "customizing-tauri-windows": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-window-customization/SKILL.md",
+      "computedHash": "37bf0dcab3267de6989e7e2930efc480739e8f4f7e1fe74ae66b0ff89250101e"
+    },
+    "debugging-tauri-apps": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-debugging/SKILL.md",
+      "computedHash": "d1122b681157ef9a183a6451a62ebfd1ab52fc7a83f785c55e985e1a47f538dd"
+    },
+    "developing-tauri-plugins": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-plugins/SKILL.md",
+      "computedHash": "69b492dbd59587e0ec232034a3e1e12d55a9532e7881d22da3e7e4b16b74a1d3"
+    },
+    "dispatching-parallel-agents": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/dispatching-parallel-agents/SKILL.md",
+      "computedHash": "b011107f17188e0b2898bb1856b5bac8b49537cc86e737c82126558a235bd62a"
+    },
+    "distributing-tauri-for-android": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-android-distribution/SKILL.md",
+      "computedHash": "f788d9c5c736fdc1c08731642d5a75ea629e8a5ad7558084beedf1a1bc911832"
+    },
+    "distributing-tauri-for-ios": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-ios-distribution/SKILL.md",
+      "computedHash": "fecae0a50d3e73bb3f4b0939ffc06a2c26e1dfe558b92d713b4043905b3a8158"
+    },
+    "distributing-tauri-for-macos": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-macos-distribution/SKILL.md",
+      "computedHash": "408c3715ff9e14b6698e11649d3553b4bea56f489e802123e758284ec7a943f8"
+    },
+    "distributing-tauri-for-windows": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-windows-distribution/SKILL.md",
+      "computedHash": "06ed42266e2749ad8d3be7ac0d4fff7064e2791b8c47a75e4fd24c8672541681"
+    },
+    "embedding-tauri-sidecars": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-sidecar/SKILL.md",
+      "computedHash": "a75145978d8fffad5b9d1f2c43f943af6cf1f3f4350db6daa71044c0dfbc94a2"
+    },
+    "executing-plans": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/executing-plans/SKILL.md",
+      "computedHash": "78a07800ee99a5861ae10be59d79fad085fdca10444e8aaeb2691597e357cff8"
+    },
+    "finishing-a-development-branch": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/finishing-a-development-branch/SKILL.md",
+      "computedHash": "4f571e7befb8b0946d9d7770232c818812412e9ab1dfb811f847edfba1fc6275"
+    },
+    "integrating-tauri-js-frontends": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-frontend-js/SKILL.md",
+      "computedHash": "c9464094a7619579792a5194ab75363dde0db5cbaaf8897ec352940e907755de"
+    },
+    "integrating-tauri-rust-frontends": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-frontend-rust/SKILL.md",
+      "computedHash": "b940b29489b0c3e775433c229eafda005e2a1d3fcdd4814583c10fc11b129e7f"
+    },
+    "listening-to-tauri-events": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-frontend-events/SKILL.md",
+      "computedHash": "b5100129ef6898e7d0f8c088d7161a00377c622c16bebcccf19d5e9b48cc602f"
+    },
+    "managing-tauri-app-resources": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-app-resources/SKILL.md",
+      "computedHash": "20f956c5d069e68777e1386f5b366f4419e1320566279ef4b763c534a271d109"
+    },
+    "managing-tauri-plugin-permissions": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-plugin-permissions/SKILL.md",
+      "computedHash": "ff8ddbe6dbf9ce8b07b66781abbe871e1d44a3b22cf76f7ee5245d9a4c295fca"
+    },
+    "migrating-tauri-apps": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-migration/SKILL.md",
+      "computedHash": "8f7aadd78312e86bd3f0bb75058cf763fb3ad1fb22369ca112b21a50988b65b2"
+    },
+    "optimizing-tauri-binary-size": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-binary-size/SKILL.md",
+      "computedHash": "e7d5a72e1c591ea353b2a34f7ab9e7d93c16ec82cfba38fb4ae3d421a8727f4d"
+    },
+    "packaging-tauri-for-linux": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-linux-packaging/SKILL.md",
+      "computedHash": "754407b67e74b075240a59126208a87a5bcd973ae301ce9d89d728b6d8a29fb7"
+    },
+    "receiving-code-review": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/receiving-code-review/SKILL.md",
+      "computedHash": "59361179fc9225173e0c145ffd9bafbf9fdbf8b43ce3dc308497a0b4f83a6063"
+    },
+    "requesting-code-review": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/requesting-code-review/SKILL.md",
+      "computedHash": "004f340ae65811095d6a9bb0a759c87d0a8085c5e705dbb019b011626293d2e9"
+    },
+    "running-nodejs-sidecar-in-tauri": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-nodejs-sidecar/SKILL.md",
+      "computedHash": "739f0c3d5b1fa9ca1c44795538cfddc2aefc05f32f4fed8230e80c248ecab328"
+    },
+    "setting-up-tauri-projects": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-project-setup/SKILL.md",
+      "computedHash": "44ae3867ce7781dd3ad0a7e032c9eb0fab8ccf6ba88b6e1e5a53233154d1d2bf"
+    },
+    "signing-tauri-apps": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-code-signing/SKILL.md",
+      "computedHash": "24893c5557b8054e2d151814e215f4c603fb2239df3a08606f1205c07b638348"
+    },
+    "subagent-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/subagent-driven-development/SKILL.md",
+      "computedHash": "988e6ae6fa0e6a3ab7cba613662d75e80f193259576f2ede379461bfc40aa7d7"
+    },
+    "systematic-debugging": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/systematic-debugging/SKILL.md",
+      "computedHash": "a2750dfbaed1690da73b120254892c4f926b4576cb82eb16fc877783941fe39b"
+    },
+    "tauri-v2": {
+      "source": "nodnarbnitram/claude-code-extensions",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/tauri-v2/SKILL.md",
+      "computedHash": "7108944eec3bef17686df9ebae9c9bdbee7809744930c8734c979e3c4573eaab"
+    },
+    "test-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/test-driven-development/SKILL.md",
+      "computedHash": "a4126a9c5f17be3c228aa9e5755898ade283448b86099f56f40852e8c14532be"
+    },
+    "testing-tauri-apps": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-testing/SKILL.md",
+      "computedHash": "e9400180901df5ec5192b390f2e2239198b69be3982fb1568ddaddf6e2faa4ce"
+    },
+    "understanding-tauri-architecture": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-architecture/SKILL.md",
+      "computedHash": "5ab4b6c7fc8bb23c8f3c749d817c096418bd8d5333b25135dfd90f98ab42a18e"
+    },
+    "understanding-tauri-ecosystem-security": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-ecosystem-security/SKILL.md",
+      "computedHash": "17b1a0ad75fe1ea7f7a4adf515a4eca396c396cccd918e2a64cd8e7079739de6"
+    },
+    "understanding-tauri-ipc": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-ipc/SKILL.md",
+      "computedHash": "c04245632c60829c75519804c9eb02ea025e7cefbb3f79c68d21fec7af3dce2f"
+    },
+    "understanding-tauri-lifecycle-security": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-lifecycle-security/SKILL.md",
+      "computedHash": "62be32aeae9688e751b0380150aa6cdad9822717f1625cc4efd4eaf891578405"
+    },
+    "understanding-tauri-process-model": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-process-model/SKILL.md",
+      "computedHash": "56dab8c1e4369c20e39d8250914fc57a55a67e55cad3ce319d28e2655e7b8490"
+    },
+    "understanding-tauri-runtime-authority": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-runtime-authority/SKILL.md",
+      "computedHash": "84b34244d0b700ff1ce9774e923618d5a65eaab3673819bde9ee7eea342b9025"
+    },
+    "updating-tauri-dependencies": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-updating-dependencies/SKILL.md",
+      "computedHash": "2d22910f955e146170f967098135aae0bb660efafda0d40cada2d7374092d9cb"
+    },
+    "using-crabnebula-cloud-with-tauri": {
+      "source": "dchuk/claude-code-tauri-skills",
+      "sourceType": "github",
+      "skillPath": "tauri/tauri-crabnebula/SKILL.md",
+      "computedHash": "f3b4a10e6706950d4a5c4002d88155dd06745fb1af7ca8ee13d699b56ce603c4"
+    },
+    "using-git-worktrees": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/using-git-worktrees/SKILL.md",
+      "computedHash": "48c8a1040e378e0cb7208107294e3afa9067b9370c3f33b49a443eb6b7528b0d"
+    },
+    "using-superpowers": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/using-superpowers/SKILL.md",
+      "computedHash": "c7abe8bdc2099bbe4f245454d32c7563ccd2bb41dcc218b02b461c2acc3c6ae6"
+    },
+    "verification-before-completion": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/verification-before-completion/SKILL.md",
+      "computedHash": "b529822bdac4b197b180fe12225cff86b930b65910435103c10622df7f041651"
+    },
+    "writing-plans": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/writing-plans/SKILL.md",
+      "computedHash": "27c75044e444a4fc68798c3f799dc23eaff3a6bfabff32e6ad75bb20f881c094"
+    },
+    "writing-skills": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/writing-skills/SKILL.md",
+      "computedHash": "5f255b9c0d50d6d7eafa41b245b9308799321c5222bc68b1be2499f50ed82713"
+    }
+  }
+}
