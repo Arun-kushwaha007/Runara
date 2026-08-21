@@ -1,38 +1,60 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { processApi, systemApi } from '../lib/commands';
-import type { ProcessInfo, SystemInfo } from '../types';
-import { ProcessTable, type SortField, type SortDirection } from '../components/processes/ProcessTable';
+import { processApi, portApi, systemApi } from '../lib/commands';
+import type { ProcessInfo, PortInfo, JoinedPortProcess, SystemInfo } from '../types';
+import { PortTable, type PortSortField, type SortDirection as PortSortDirection } from '../components/ports/PortTable';
+import { PortDetailsModal } from '../components/ports/PortDetailsModal';
+import { ProcessTable, type SortField as ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
 import { ProcessDetailsModal } from '../components/processes/ProcessDetailsModal';
 
+type ActiveView = 'ports' | 'processes';
+
 const Dashboard: React.FC = () => {
+  const [activeView, setActiveView] = useState<ActiveView>('ports');
+  const [ports, setPorts] = useState<PortInfo[]>([]);
   const [processes, setProcesses] = useState<ProcessInfo[]>([]);
   const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  
+  // Port sorting state
+  const [portSortField, setPortSortField] = useState<PortSortField>('port');
+  const [portSortDirection, setPortSortDirection] = useState<PortSortDirection>('asc');
+  
+  // Process sorting state
+  const [processSortField, setProcessSortField] = useState<ProcessSortField>('name');
+  const [processSortDirection, setProcessSortDirection] = useState<ProcessSortDirection>('asc');
+
+  // Selected item modals
+  const [selectedPortItem, setSelectedPortItem] = useState<JoinedPortProcess | null>(null);
   const [selectedProcess, setSelectedProcess] = useState<ProcessInfo | null>(null);
+
+  // Auto-refresh & timestamp
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Fetch process list from Rust backend via Tauri IPC
-  const fetchProcesses = useCallback(async (isManualRefresh = false) => {
+  // Fetch listening ports and processes concurrently
+  const refreshAll = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setRefreshing(true);
     }
     try {
-      const data = await processApi.getProcesses();
-      setProcesses(data);
+      const [fetchedPorts, fetchedProcesses] = await Promise.all([
+        portApi.getListeningPorts(),
+        processApi.getProcesses(),
+      ]);
+
+      setPorts(fetchedPorts);
+      setProcesses(fetchedProcesses);
       setError(null);
       setLastUpdated(new Date());
     } catch (err) {
-      console.error('Process discovery failed:', err);
+      console.error('System discovery failed:', err);
       setError(
         typeof err === 'string'
           ? err
-          : 'Unable to inspect Windows processes. Access may be denied or process enumeration failed.'
+          : 'Unable to inspect Windows ports or processes. Access may be restricted.'
       );
     } finally {
       setLoading(false);
@@ -42,35 +64,116 @@ const Dashboard: React.FC = () => {
 
   // Initial load
   useEffect(() => {
-    fetchProcesses();
+    refreshAll();
     systemApi.getSystemInfo().then(setSysInfo).catch(console.error);
-  }, [fetchProcesses]);
+  }, [refreshAll]);
 
-  // Optional polling (auto-refresh every 3 seconds)
+  // Auto-refresh polling (every 3 seconds)
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
-      fetchProcesses();
+      refreshAll();
     }, 3000);
     return () => clearInterval(interval);
-  }, [autoRefresh, fetchProcesses]);
+  }, [autoRefresh, refreshAll]);
 
-  // Handle column header sorting
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+  // Efficient O(P) Process Map construction
+  const processMap = useMemo(() => {
+    const map = new Map<number, ProcessInfo>();
+    for (const proc of processes) {
+      map.set(proc.pid, proc);
+    }
+    return map;
+  }, [processes]);
+
+  // Efficient O(S) Port -> Process Join
+  const joinedEndpoints = useMemo<JoinedPortProcess[]>(() => {
+    return ports.map((port) => ({
+      port,
+      process: processMap.get(port.pid) ?? null,
+    }));
+  }, [ports, processMap]);
+
+  // Handle Port Sort
+  const handlePortSort = (field: PortSortField) => {
+    if (portSortField === field) {
+      setPortSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
-      setSortField(field);
-      setSortDirection('asc');
+      setPortSortField(field);
+      setPortSortDirection('asc');
     }
   };
 
-  // Filter processes client-side based on search query
+  // Handle Process Sort
+  const handleProcessSort = (field: ProcessSortField) => {
+    if (processSortField === field) {
+      setProcessSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setProcessSortField(field);
+      setProcessSortDirection('asc');
+    }
+  };
+
+  // Filter Port Endpoints client-side
+  const filteredEndpoints = useMemo(() => {
+    if (!searchQuery.trim()) return joinedEndpoints;
+    const q = searchQuery.toLowerCase().trim();
+
+    return joinedEndpoints.filter(({ port, process }) => {
+      const matchPort = port.port.toString().includes(q);
+      const matchPid = port.pid.toString().includes(q);
+      const matchAddress = port.address.toLowerCase().includes(q);
+      const matchProtocol = port.protocol.toLowerCase().includes(q);
+      const matchName = process ? process.name.toLowerCase().includes(q) : false;
+      const matchCmd = process?.commandLine ? process.commandLine.toLowerCase().includes(q) : false;
+      const matchCwd = process?.workingDirectory ? process.workingDirectory.toLowerCase().includes(q) : false;
+
+      return matchPort || matchPid || matchAddress || matchProtocol || matchName || matchCmd || matchCwd;
+    });
+  }, [joinedEndpoints, searchQuery]);
+
+  // Sort Port Endpoints
+  const sortedEndpoints = useMemo(() => {
+    return [...filteredEndpoints].sort((a, b) => {
+      let comparison = 0;
+
+      switch (portSortField) {
+        case 'port':
+          comparison = a.port.port - b.port.port;
+          break;
+        case 'pid':
+          comparison = a.port.pid - b.port.pid;
+          break;
+        case 'address':
+          comparison = a.port.address.localeCompare(b.port.address);
+          break;
+        case 'protocol':
+          comparison = a.port.protocol.localeCompare(b.port.protocol);
+          break;
+        case 'process': {
+          const nameA = a.process?.name ?? '';
+          const nameB = b.process?.name ?? '';
+          comparison = nameA.localeCompare(nameB);
+          break;
+        }
+        case 'command': {
+          const cmdA = a.process?.commandLine ?? '';
+          const cmdB = b.process?.commandLine ?? '';
+          comparison = cmdA.localeCompare(cmdB);
+          break;
+        }
+      }
+
+      return portSortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [filteredEndpoints, portSortField, portSortDirection]);
+
+  // Filter Processes client-side
   const filteredProcesses = useMemo(() => {
     if (!searchQuery.trim()) return processes;
     const q = searchQuery.toLowerCase().trim();
 
-    return processes.filter(p => {
+    return processes.filter((p) => {
       const matchPid = p.pid.toString().includes(q);
       const matchName = p.name.toLowerCase().includes(q);
       const matchParent = p.parentPid ? p.parentPid.toString().includes(q) : false;
@@ -82,12 +185,12 @@ const Dashboard: React.FC = () => {
     });
   }, [processes, searchQuery]);
 
-  // Sort filtered processes
+  // Sort Processes
   const sortedProcesses = useMemo(() => {
     return [...filteredProcesses].sort((a, b) => {
       let comparison = 0;
 
-      switch (sortField) {
+      switch (processSortField) {
         case 'pid':
           comparison = a.pid - b.pid;
           break;
@@ -105,18 +208,27 @@ const Dashboard: React.FC = () => {
         }
       }
 
-      return sortDirection === 'asc' ? comparison : -comparison;
+      return processSortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [filteredProcesses, sortField, sortDirection]);
+  }, [filteredProcesses, processSortField, processSortDirection]);
+
+  // Unique owning processes for ports
+  const uniquePortPids = useMemo(() => {
+    const pids = new Set<number>();
+    for (const p of ports) {
+      pids.add(p.pid);
+    }
+    return pids.size;
+  }, [ports]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Top Hero Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">Process Discovery</h2>
+          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">System Discovery</h2>
           <p className="text-zinc-400 text-sm mt-0.5">
-            Discover and inspect active Windows processes across your local system.
+            Discover active Windows listening TCP ports and running processes with PID mapping.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -133,7 +245,7 @@ const Dashboard: React.FC = () => {
 
           {/* Refresh Button */}
           <button
-            onClick={() => fetchProcesses(true)}
+            onClick={() => refreshAll(true)}
             disabled={loading || refreshing}
             className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors shadow-xs"
           >
@@ -161,48 +273,117 @@ const Dashboard: React.FC = () => {
 
       {/* Metrics Summary Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Total Listening Ports */}
+        <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
+          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Listening TCP Ports</div>
+          <div className="mt-2 text-2xl font-bold text-blue-400 font-mono">
+            {loading ? '...' : ports.length.toLocaleString()}
+          </div>
+          <div className="mt-2 text-[11px] text-zinc-500">
+            {searchQuery && activeView === 'ports'
+              ? `${filteredEndpoints.length} matching search`
+              : `Across ${uniquePortPids} distinct processes`}
+          </div>
+        </div>
+
+        {/* Total Windows Processes */}
         <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
           <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Total Processes</div>
           <div className="mt-2 text-2xl font-bold text-zinc-100 font-mono">
             {loading ? '...' : processes.length.toLocaleString()}
           </div>
           <div className="mt-2 text-[11px] text-zinc-500">
-            {searchQuery ? `${filteredProcesses.length} matching search` : 'Windows active processes'}
+            {searchQuery && activeView === 'processes'
+              ? `${filteredProcesses.length} matching search`
+              : 'Windows active processes'}
           </div>
         </div>
 
-        <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Operating System</div>
-          <div className="mt-2 text-2xl font-bold text-zinc-100">
-            {sysInfo ? sysInfo.platform : 'Windows'}
-          </div>
-          <div className="mt-2 text-[11px] text-zinc-500">Native Windows x86_64</div>
-        </div>
-
+        {/* Discovery Engine */}
         <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
           <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Discovery Engine</div>
           <div className="mt-2 text-2xl font-bold text-emerald-400 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Rust Native
           </div>
-          <div className="mt-2 text-[11px] text-zinc-500">Tauri IPC / sysinfo</div>
+          <div className="mt-2 text-[11px] text-zinc-500">
+            {sysInfo ? sysInfo.platform : 'Windows'} • IP Helper + sysinfo
+          </div>
         </div>
 
+        {/* Last Updated */}
         <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
           <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Last Updated</div>
           <div className="mt-2 text-sm font-mono text-zinc-200">
             {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Pending'}
           </div>
           <div className="mt-2 text-[11px] text-zinc-500">
-            {autoRefresh ? 'Live Polling Active' : 'Manual refresh mode'}
+            {autoRefresh ? 'Live Polling Active (3s)' : 'Manual refresh mode'}
           </div>
         </div>
       </section>
 
-      {/* Process Discovery Section */}
+      {/* View Switcher Tabs & Search Toolbar */}
       <section className="space-y-4">
-        {/* Search & Filter Toolbar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+          {/* Navigation Tabs */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveView('ports')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                activeView === 'ports'
+                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
+                <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
+                <line x1="6" x2="6.01" y1="6" y2="6" />
+                <line x1="6" x2="6.01" y1="18" y2="18" />
+              </svg>
+              <span>Listening Ports ({ports.length})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveView('processes')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                activeView === 'processes'
+                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="7" height="9" x="3" y="3" rx="1" />
+                <rect width="7" height="5" x="14" y="3" rx="1" />
+                <rect width="7" height="9" x="14" y="12" rx="1" />
+                <rect width="7" height="5" x="3" y="16" rx="1" />
+              </svg>
+              <span>All Processes ({processes.length})</span>
+            </button>
+          </div>
+
+          {/* Search Input */}
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
               <svg
@@ -224,7 +405,11 @@ const Dashboard: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search processes by name, PID, command, path, working directory..."
+              placeholder={
+                activeView === 'ports'
+                  ? 'Search by port (e.g. 3000), PID, process, address, command...'
+                  : 'Search by name, PID, command, path, working directory...'
+              }
               className="w-full bg-zinc-800/50 border border-zinc-700/60 rounded-lg pl-9 pr-8 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             {searchQuery && (
@@ -249,16 +434,9 @@ const Dashboard: React.FC = () => {
               </button>
             )}
           </div>
-
-          <div className="text-xs text-zinc-400 flex items-center gap-2 self-end sm:self-auto">
-            <span>
-              Showing <strong className="text-zinc-200">{sortedProcesses.length}</strong> of{' '}
-              <strong className="text-zinc-200">{processes.length}</strong> processes
-            </span>
-          </div>
         </div>
 
-        {/* Dynamic Content Area: Loading, Error, Empty, or Table */}
+        {/* Dynamic Content Area: Loading, Error, Empty, or Active Table */}
         {loading ? (
           <div className="border border-zinc-800 rounded-xl p-16 text-center bg-zinc-900/30 flex flex-col items-center justify-center gap-3">
             <svg
@@ -274,8 +452,8 @@ const Dashboard: React.FC = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <p className="text-sm text-zinc-300 font-medium">Loading Windows processes...</p>
-            <p className="text-xs text-zinc-500">Querying system process table via Rust native API</p>
+            <p className="text-sm text-zinc-300 font-medium">Discovering Windows ports and processes...</p>
+            <p className="text-xs text-zinc-500">Querying Win32 IP Helper and process subsystems via Rust</p>
           </div>
         ) : error ? (
           <div className="border border-red-900/60 bg-red-950/20 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
@@ -297,31 +475,42 @@ const Dashboard: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-red-300">Unable to inspect Windows processes</h4>
+              <h4 className="text-sm font-semibold text-red-300">System discovery failed</h4>
               <p className="text-xs text-red-400/80 mt-1 max-w-md">{error}</p>
             </div>
             <button
-              onClick={() => fetchProcesses(true)}
+              onClick={() => refreshAll(true)}
               className="mt-2 px-4 py-1.5 bg-red-800 hover:bg-red-700 text-red-100 text-xs font-medium rounded-lg transition-colors"
             >
               Retry
             </button>
           </div>
-        ) : processes.length === 0 ? (
-          <div className="border border-dashed border-zinc-800 rounded-xl p-16 text-center bg-zinc-900/30">
-            <p className="text-sm text-zinc-300 font-medium">No processes detected</p>
-            <p className="text-xs text-zinc-500 mt-1">The system returned 0 processes.</p>
-          </div>
+        ) : activeView === 'ports' ? (
+          <PortTable
+            items={sortedEndpoints}
+            onSelectItem={setSelectedPortItem}
+            sortField={portSortField}
+            sortDirection={portSortDirection}
+            onSort={handlePortSort}
+          />
         ) : (
           <ProcessTable
             processes={sortedProcesses}
             onSelectProcess={setSelectedProcess}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={handleSort}
+            sortField={processSortField}
+            sortDirection={processSortDirection}
+            onSort={handleProcessSort}
           />
         )}
       </section>
+
+      {/* Port Details Modal */}
+      {selectedPortItem && (
+        <PortDetailsModal
+          item={selectedPortItem}
+          onClose={() => setSelectedPortItem(null)}
+        />
+      )}
 
       {/* Process Details Modal */}
       {selectedProcess && (

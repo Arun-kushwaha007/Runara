@@ -22,7 +22,7 @@ DevHub provides a unified control layer over local development processes without
 ## 📚 Documentation & Engineering Guides
 
 - **[Product Requirements Document (PRD.md)](doc/PRD.md)** — Complete product specifications, domain models, and milestone roadmap.
-- **[Engineering Learning Guide (LEARNING.md)](LEARNING.md)** — Comprehensive educational guide covering CS fundamentals, Windows systems programming, HLD/LLD architecture, cross-language IPC, and code traces for interview preparation.
+- **[Engineering Learning Guide (LEARNING.md)](LEARNING.md)** — Comprehensive educational guide covering CS fundamentals, Windows systems programming, networking theory, HLD/LLD architecture, cross-language IPC, and code traces for interview preparation.
 
 ---
 
@@ -49,11 +49,19 @@ DevHub provides a unified control layer over local development processes without
   - Native Rust process discovery service (`sysinfo`)
   - Normalized `ProcessInfo` model (PID, PPID, name, executable path, command line, CWD, status)
   - Tauri IPC `get_processes` command with Serde camelCase mapping
-  - Interactive process inspection dashboard with real-time search, sorting, auto-refresh polling, and process details modal
+  - Interactive process inspection dashboard with search, sorting, auto-refresh polling, and process details modal
   - Comprehensive unit and integration test coverage
-  - In-depth engineering learning guide (`LEARNING.md`)
 
-*Next Milestone: Milestone 2 — Windows Port Discovery*
+- **Milestone 2: Windows Port Discovery (Complete)**
+  - Native Win32 IP Helper API integration (`iphlpapi.dll` & `GetExtendedTcpTable`) for sub-millisecond listening TCP socket discovery
+  - Complete support for IPv4 (`AF_INET`, `127.0.0.1`, `0.0.0.0`) and IPv6 (`AF_INET6`, `[::1]`, `[::]`) endpoints with network byte-order translation
+  - Normalized `PortInfo` domain model and decoupled `PortDiscovery` service trait
+  - High-performance $O(P + S)$ Hash Map join associating listening ports with owning `ProcessInfo` metadata
+  - Support for multi-port processes, wildcard addresses, and missing process degradation
+  - Dedicated Listening Ports & Processes interactive table with searching, column sorting, clipboard copying, and auto-refresh (3s)
+  - Deep networking fundamentals and systems architecture chapters added to `LEARNING.md`
+
+*Next Milestone: Milestone 3 — Process Identity*
 
 ---
 
@@ -116,23 +124,23 @@ npm run tauri build
 DevHub/
 ├── src/                      # React Frontend
 │   ├── components/           # Reusable UI components
+│   │   ├── ports/            # PortTable, PortDetailsModal
 │   │   ├── processes/        # ProcessTable, ProcessDetailsModal
 │   │   ├── Sidebar.tsx       # Navigation sidebar
 │   │   ├── Header.tsx        # Top header
 │   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── hooks/                # React custom hooks
-│   ├── types/                # TypeScript interface definitions (process.ts, index.ts)
+│   ├── types/                # TypeScript interfaces (port.ts, process.ts, index.ts)
 │   ├── lib/                  # Typed Tauri command wrappers & API client (commands.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (processes.rs, system.rs)
-│   │   ├── discovery/        # Process discovery service (process.rs)
-│   │   ├── models/           # Domain models (process.rs)
-│   │   ├── windows/          # Windows OS APIs
+│   │   ├── commands/         # Tauri IPC commands (ports.rs, processes.rs, system.rs)
+│   │   ├── discovery/        # Discovery services (port.rs, process.rs)
+│   │   ├── models/           # Domain models (port.rs, process.rs)
+│   │   ├── windows/          # Windows Win32 networking (networking.rs)
 │   │   ├── lib.rs            # Tauri application entry point & handler registry
 │   │   └── main.rs           # Desktop binary entry
 │   ├── Cargo.toml            # Rust dependencies and package configuration
