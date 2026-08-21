@@ -1,1 +1,3 @@
-// Domain models - Milestone 1+
+pub mod process;
+
+pub use process::{ProcessInfo, ProcessStatus};

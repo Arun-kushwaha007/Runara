@@ -19,6 +19,13 @@ DevHub provides a unified control layer over local development processes without
 
 ---
 
+## 📚 Documentation & Engineering Guides
+
+- **[Product Requirements Document (PRD.md)](doc/PRD.md)** — Complete product specifications, domain models, and milestone roadmap.
+- **[Engineering Learning Guide (LEARNING.md)](LEARNING.md)** — Comprehensive educational guide covering CS fundamentals, Windows systems programming, HLD/LLD architecture, cross-language IPC, and code traces for interview preparation.
+
+---
+
 ## 🛠️ Technology Stack
 
 - **Desktop Framework:** [Tauri 2](https://v2.tauri.app/)
@@ -31,14 +38,22 @@ DevHub provides a unified control layer over local development processes without
 
 ## 📍 Current Status
 
-**Milestone 0: Project Foundation (Complete)**
-- Initial desktop application shell and navigation structure
-- React + TypeScript + Vite + Tailwind CSS frontend pipeline
-- Tauri 2 + Rust native backend configuration
-- Verified React ↔ Tauri/Rust IPC communication
-- Windows desktop executable build verified
+- **Milestone 0: Project Foundation (Complete)**
+  - Initial desktop application shell and navigation structure
+  - React + TypeScript + Vite + Tailwind CSS frontend pipeline
+  - Tauri 2 + Rust native backend configuration
+  - Verified React ↔ Tauri/Rust IPC communication
+  - Windows desktop executable build verified
 
-*Next Milestone: Milestone 1 — Windows Process Discovery*
+- **Milestone 1: Windows Process Discovery (Complete)**
+  - Native Rust process discovery service (`sysinfo`)
+  - Normalized `ProcessInfo` model (PID, PPID, name, executable path, command line, CWD, status)
+  - Tauri IPC `get_processes` command with Serde camelCase mapping
+  - Interactive process inspection dashboard with real-time search, sorting, auto-refresh polling, and process details modal
+  - Comprehensive unit and integration test coverage
+  - In-depth engineering learning guide (`LEARNING.md`)
+
+*Next Milestone: Milestone 2 — Windows Port Discovery*
 
 ---
 
@@ -75,6 +90,17 @@ npm run tauri dev
 npm run dev
 ```
 
+### Running Tests
+
+```bash
+# Run Rust backend unit and integration tests
+cd src-tauri
+cargo test -- --nocapture
+
+# Run frontend build and typecheck
+npm run build
+```
+
 ### Building for Production
 
 ```bash
@@ -89,30 +115,32 @@ npm run tauri build
 ```
 DevHub/
 ├── src/                      # React Frontend
-│   ├── components/           # Reusable UI components (Sidebar, Header, Layout)
+│   ├── components/           # Reusable UI components
+│   │   ├── processes/        # ProcessTable, ProcessDetailsModal
+│   │   ├── Sidebar.tsx       # Navigation sidebar
+│   │   ├── Header.tsx        # Top header
+│   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
 │   ├── hooks/                # React custom hooks
-│   ├── stores/               # State management
-│   ├── types/                # TypeScript interface definitions
-│   ├── lib/                  # Utilities and typed Tauri command wrappers
+│   ├── types/                # TypeScript interface definitions (process.ts, index.ts)
+│   ├── lib/                  # Typed Tauri command wrappers & API client (commands.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (e.g. system info)
-│   │   ├── discovery/        # Process and port discovery (Milestones 1-3)
-│   │   ├── process/          # Process control (Milestone 5)
-│   │   ├── wsl/              # WSL distribution integration (Milestone 6)
+│   │   ├── commands/         # Tauri IPC commands (processes.rs, system.rs)
+│   │   ├── discovery/        # Process discovery service (process.rs)
+│   │   ├── models/           # Domain models (process.rs)
 │   │   ├── windows/          # Windows OS APIs
-│   │   ├── db/               # Persistence layer
-│   │   ├── models/           # Domain models
 │   │   ├── lib.rs            # Tauri application entry point & handler registry
 │   │   └── main.rs           # Desktop binary entry
 │   ├── Cargo.toml            # Rust dependencies and package configuration
 │   └── tauri.conf.json       # Tauri window and build configuration
-└── doc/
-    └── PRD.md                # Product Requirements Document
+├── doc/
+│   └── PRD.md                # Product Requirements Document
+├── LEARNING.md               # Engineering Learning & Code-Reading Guide
+└── README.md                 # Project Overview & Setup Instructions
 ```
 
 ---
