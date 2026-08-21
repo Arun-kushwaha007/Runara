@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { JoinedPortProcess } from '../../types';
+import type { JoinedPortProcess, Runtime, PackageManager } from '../../types';
 
 interface PortDetailsModalProps {
   item: JoinedPortProcess | null;
@@ -11,7 +11,7 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
 
   if (!item) return null;
 
-  const { port, process } = item;
+  const { port, process, identity } = item;
 
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -34,6 +34,48 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
     ? `${port.address}:${port.port}`
     : `${port.address}:${port.port}`;
 
+  const renderRuntimeBadge = (r?: Runtime) => {
+    if (!r || r === 'Unknown') return <span className="text-zinc-500 font-sans">Unknown</span>;
+    const map: Record<string, string> = {
+      'Node.js': 'bg-green-950/60 text-green-300 border-green-800/40',
+      Python: 'bg-yellow-950/60 text-yellow-300 border-yellow-800/40',
+      Java: 'bg-red-950/60 text-red-300 border-red-800/40',
+      '.NET': 'bg-purple-950/60 text-purple-300 border-purple-800/40',
+      Go: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
+      Rust: 'bg-orange-950/60 text-orange-300 border-orange-800/40',
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
+          map[r] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+        }`}
+      >
+        {r}
+      </span>
+    );
+  };
+
+  const renderPackageManagerBadge = (pm?: PackageManager) => {
+    if (!pm || pm === 'Unknown') return <span className="text-zinc-500 font-sans">None</span>;
+    const colors: Record<string, string> = {
+      npm: 'bg-red-950/40 text-red-300 border-red-800/40',
+      pnpm: 'bg-amber-950/40 text-amber-300 border-amber-800/40',
+      yarn: 'bg-blue-950/40 text-blue-300 border-blue-800/40',
+      bun: 'bg-orange-950/40 text-orange-300 border-orange-800/40',
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium border ${
+          colors[pm] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+        }`}
+      >
+        {pm}
+      </span>
+    );
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs"
@@ -44,7 +86,7 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
       tabIndex={-1}
     >
       <div
-        className="bg-zinc-900 border border-zinc-700/70 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="bg-zinc-900 border border-zinc-700/70 rounded-xl shadow-2xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -174,22 +216,82 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
 
             {process ? (
               <div className="space-y-4 bg-zinc-950/60 border border-zinc-800 rounded-lg p-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <div className="text-[11px] text-zinc-500">Process Name</div>
                     <div className="text-sm font-semibold text-zinc-100 font-mono">{process.name}</div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-zinc-500">Parent PID</div>
-                    <div className="text-sm font-mono text-zinc-300">
-                      {process.parentPid ?? 'None'}
+                    <div className="text-[11px] text-zinc-500">Parent Process</div>
+                    <div className="text-xs font-mono text-zinc-300 mt-0.5 truncate">
+                      {identity?.parent ? (
+                        <span>
+                          {identity.parent.name} ({identity.parent.pid})
+                        </span>
+                      ) : (
+                        process.parentPid ?? 'None'
+                      )}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-zinc-500">Process Status</div>
-                    <div className="text-xs text-zinc-300 capitalize">{process.status}</div>
+                    <div className="text-[11px] text-zinc-500">Runtime</div>
+                    <div className="mt-0.5">{renderRuntimeBadge(identity?.runtime)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-zinc-500">Package Manager</div>
+                    <div className="mt-0.5">{renderPackageManagerBadge(identity?.packageManager)}</div>
                   </div>
                 </div>
+
+                {/* All Listening Ports for this process */}
+                {identity && identity.listeningPorts.length > 1 && (
+                  <div className="space-y-1">
+                    <div className="text-[11px] text-zinc-400">
+                      All Listening Ports Owned by PID {port.pid} ({identity.listeningPorts.length})
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {identity.listeningPorts.map((p) => (
+                        <span
+                          key={p}
+                          className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
+                            p === port.port
+                              ? 'bg-blue-600 text-white border-blue-500'
+                              : 'bg-blue-950/50 text-blue-300 border-blue-800/40'
+                          }`}
+                        >
+                          Port {p} {p === port.port && '(Active)'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Process Tree if available */}
+                {identity && identity.processTree.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-[11px] text-zinc-400">Process Ancestry Tree</div>
+                    <div className="bg-zinc-900/90 border border-zinc-800/80 rounded p-3 text-xs font-mono space-y-1">
+                      {identity.processTree.map((node, index) => (
+                        <div
+                          key={`${node.pid}_${index}`}
+                          style={{ paddingLeft: `${node.depth * 16}px` }}
+                          className={`flex items-center gap-2 ${
+                            node.isTarget ? 'text-blue-300 font-semibold' : 'text-zinc-400'
+                          }`}
+                        >
+                          <span className="text-zinc-600">{node.depth === 0 ? '●' : '└──'}</span>
+                          <span>{node.name}</span>
+                          <span className="text-zinc-600 text-[11px]">(PID {node.pid})</span>
+                          {node.isTarget && (
+                            <span className="text-[9px] bg-blue-600 text-white px-1 rounded uppercase font-sans font-bold">
+                              Target
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Executable Path */}
                 <div className="space-y-1">
@@ -261,7 +363,7 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
         {/* Modal Footer */}
         <div className="px-6 py-3 border-t border-zinc-800 bg-zinc-900/90 flex items-center justify-between">
           <div className="text-[11px] text-zinc-500">
-            Snapshot data discovered via Win32 IP Helper API
+            Snapshot data discovered via Win32 IP Helper and ProcessIdentityService
           </div>
           <button
             onClick={onClose}

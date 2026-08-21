@@ -61,7 +61,17 @@ DevHub provides a unified control layer over local development processes without
   - Dedicated Listening Ports & Processes interactive table with searching, column sorting, clipboard copying, and auto-refresh (3s)
   - Deep networking fundamentals and systems architecture chapters added to `LEARNING.md`
 
-*Next Milestone: Milestone 3 — Process Identity*
+- **Milestone 3: Process Identity (Complete)**
+  - Rich `ProcessIdentity` domain entity composing process metadata, runtime, package manager, parent info, ancestry tree, and listening ports
+  - Conservative software runtime classification (`Node.js`, `Python`, `Java`, `.NET`, `Go`, `Rust`, `Unknown`) via `RuntimeDetector`
+  - Dual-source package manager detection (`npm`, `pnpm`, `yarn`, `bun`, `Unknown`) via command-line parsing and ancestry inspection
+  - Reconstructed process ancestry tree (`ProcessTreeBuilder`) with $O(P)$ hash map indexing, $O(D)$ traversal, `HashSet<u32>` cycle protection, self-parent protection, and depth limits ($D \le 32$)
+  - Multi-port association allowing a single process to own multiple distinct listening sockets
+  - Interactive Process Ancestry Tree visualization in the Process Details Panel with current process highlighting
+  - Enriched process table with runtime badges, package manager tags, port chips, and deep search across all identity dimensions
+  - Comprehensive educational guide chapters 28–39 added to `LEARNING.md` covering process identity, ancestry algorithms, and systems interview preparation
+
+*Next Milestone: Milestone 4 — Server Dashboard*
 
 ---
 
@@ -125,21 +135,22 @@ DevHub/
 ├── src/                      # React Frontend
 │   ├── components/           # Reusable UI components
 │   │   ├── ports/            # PortTable, PortDetailsModal
-│   │   ├── processes/        # ProcessTable, ProcessDetailsModal
+│   │   ├── processes/        # ProcessTable, ProcessDetailsModal (Process Tree & Identity)
 │   │   ├── Sidebar.tsx       # Navigation sidebar
 │   │   ├── Header.tsx        # Top header
 │   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── types/                # TypeScript interfaces (port.ts, process.ts, index.ts)
+│   ├── types/                # TypeScript interfaces (identity.ts, port.ts, process.ts, index.ts)
 │   ├── lib/                  # Typed Tauri command wrappers & API client (commands.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (ports.rs, processes.rs, system.rs)
+│   │   ├── commands/         # Tauri IPC commands (identity.rs, ports.rs, processes.rs, system.rs)
 │   │   ├── discovery/        # Discovery services (port.rs, process.rs)
-│   │   ├── models/           # Domain models (port.rs, process.rs)
+│   │   ├── identity/         # Process identity engine (detector.rs, service.rs, tree.rs)
+│   │   ├── models/           # Domain models (identity.rs, port.rs, process.rs)
 │   │   ├── windows/          # Windows Win32 networking (networking.rs)
 │   │   ├── lib.rs            # Tauri application entry point & handler registry
 │   │   └── main.rs           # Desktop binary entry

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { SystemInfo, ProcessInfo, PortInfo } from '../types';
+import type { SystemInfo, ProcessInfo, PortInfo, ProcessIdentity } from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
   return invoke<SystemInfo>('get_system_info');
@@ -13,12 +13,25 @@ export async function getListeningPorts(): Promise<PortInfo[]> {
   return invoke<PortInfo[]>('get_listening_ports');
 }
 
+export async function getProcessIdentities(): Promise<ProcessIdentity[]> {
+  return invoke<ProcessIdentity[]>('get_process_identities');
+}
+
+export async function getProcessIdentity(pid: number): Promise<ProcessIdentity | null> {
+  return invoke<ProcessIdentity | null>('get_process_identity', { pid });
+}
+
 export const processApi = {
   getProcesses,
 };
 
 export const portApi = {
   getListeningPorts,
+};
+
+export const identityApi = {
+  getProcessIdentities,
+  getProcessIdentity,
 };
 
 export const systemApi = {

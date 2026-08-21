@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { processApi, portApi, systemApi } from '../lib/commands';
-import type { ProcessInfo, PortInfo, JoinedPortProcess, SystemInfo } from '../types';
+import { identityApi, portApi, systemApi } from '../lib/commands';
+import type { ProcessIdentity, PortInfo, JoinedPortProcess, SystemInfo } from '../types';
 import { PortTable, type PortSortField, type SortDirection as PortSortDirection } from '../components/ports/PortTable';
 import { PortDetailsModal } from '../components/ports/PortDetailsModal';
-import { ProcessTable, type SortField as ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
+import { ProcessTable, type ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
 import { ProcessDetailsModal } from '../components/processes/ProcessDetailsModal';
 
 type ActiveView = 'ports' | 'processes';
@@ -11,42 +11,42 @@ type ActiveView = 'ports' | 'processes';
 const Dashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>('ports');
   const [ports, setPorts] = useState<PortInfo[]>([]);
-  const [processes, setProcesses] = useState<ProcessInfo[]>([]);
+  const [identities, setIdentities] = useState<ProcessIdentity[]>([]);
   const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
+
   // Port sorting state
   const [portSortField, setPortSortField] = useState<PortSortField>('port');
   const [portSortDirection, setPortSortDirection] = useState<PortSortDirection>('asc');
-  
+
   // Process sorting state
   const [processSortField, setProcessSortField] = useState<ProcessSortField>('name');
   const [processSortDirection, setProcessSortDirection] = useState<ProcessSortDirection>('asc');
 
   // Selected item modals
   const [selectedPortItem, setSelectedPortItem] = useState<JoinedPortProcess | null>(null);
-  const [selectedProcess, setSelectedProcess] = useState<ProcessInfo | null>(null);
+  const [selectedIdentity, setSelectedIdentity] = useState<ProcessIdentity | null>(null);
 
   // Auto-refresh & timestamp
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Fetch listening ports and processes concurrently
+  // Fetch listening ports and enriched process identities concurrently
   const refreshAll = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setRefreshing(true);
     }
     try {
-      const [fetchedPorts, fetchedProcesses] = await Promise.all([
+      const [fetchedPorts, fetchedIdentities] = await Promise.all([
         portApi.getListeningPorts(),
-        processApi.getProcesses(),
+        identityApi.getProcessIdentities(),
       ]);
 
       setPorts(fetchedPorts);
-      setProcesses(fetchedProcesses);
+      setIdentities(fetchedIdentities);
       setError(null);
       setLastUpdated(new Date());
     } catch (err) {
@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
       setError(
         typeof err === 'string'
           ? err
-          : 'Unable to inspect Windows ports or processes. Access may be restricted.'
+          : 'Unable to inspect Windows ports or process identities. Access may be restricted.'
       );
     } finally {
       setLoading(false);
@@ -77,22 +77,26 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshAll]);
 
-  // Efficient O(P) Process Map construction
-  const processMap = useMemo(() => {
-    const map = new Map<number, ProcessInfo>();
-    for (const proc of processes) {
-      map.set(proc.pid, proc);
+  // Efficient O(P) Process Identity Map construction
+  const identityMap = useMemo(() => {
+    const map = new Map<number, ProcessIdentity>();
+    for (const id of identities) {
+      map.set(id.process.pid, id);
     }
     return map;
-  }, [processes]);
+  }, [identities]);
 
-  // Efficient O(S) Port -> Process Join
+  // Efficient O(S) Port -> Process Identity Join
   const joinedEndpoints = useMemo<JoinedPortProcess[]>(() => {
-    return ports.map((port) => ({
-      port,
-      process: processMap.get(port.pid) ?? null,
-    }));
-  }, [ports, processMap]);
+    return ports.map((port) => {
+      const id = identityMap.get(port.pid);
+      return {
+        port,
+        process: id ? id.process : null,
+        identity: id ?? null,
+      };
+    });
+  }, [ports, identityMap]);
 
   // Handle Port Sort
   const handlePortSort = (field: PortSortField) => {
@@ -119,7 +123,7 @@ const Dashboard: React.FC = () => {
     if (!searchQuery.trim()) return joinedEndpoints;
     const q = searchQuery.toLowerCase().trim();
 
-    return joinedEndpoints.filter(({ port, process }) => {
+    return joinedEndpoints.filter(({ port, process, identity }) => {
       const matchPort = port.port.toString().includes(q);
       const matchPid = port.pid.toString().includes(q);
       const matchAddress = port.address.toLowerCase().includes(q);
@@ -127,8 +131,20 @@ const Dashboard: React.FC = () => {
       const matchName = process ? process.name.toLowerCase().includes(q) : false;
       const matchCmd = process?.commandLine ? process.commandLine.toLowerCase().includes(q) : false;
       const matchCwd = process?.workingDirectory ? process.workingDirectory.toLowerCase().includes(q) : false;
+      const matchRuntime = identity?.runtime ? identity.runtime.toLowerCase().includes(q) : false;
+      const matchPkgMgr = identity?.packageManager ? identity.packageManager.toLowerCase().includes(q) : false;
 
-      return matchPort || matchPid || matchAddress || matchProtocol || matchName || matchCmd || matchCwd;
+      return (
+        matchPort ||
+        matchPid ||
+        matchAddress ||
+        matchProtocol ||
+        matchName ||
+        matchCmd ||
+        matchCwd ||
+        matchRuntime ||
+        matchPkgMgr
+      );
     });
   }, [joinedEndpoints, searchQuery]);
 
@@ -156,6 +172,12 @@ const Dashboard: React.FC = () => {
           comparison = nameA.localeCompare(nameB);
           break;
         }
+        case 'runtime': {
+          const runA = a.identity?.runtime ?? '';
+          const runB = b.identity?.runtime ?? '';
+          comparison = runA.localeCompare(runB);
+          break;
+        }
         case 'command': {
           const cmdA = a.process?.commandLine ?? '';
           const cmdB = b.process?.commandLine ?? '';
@@ -169,40 +191,65 @@ const Dashboard: React.FC = () => {
   }, [filteredEndpoints, portSortField, portSortDirection]);
 
   // Filter Processes client-side
-  const filteredProcesses = useMemo(() => {
-    if (!searchQuery.trim()) return processes;
+  const filteredIdentities = useMemo(() => {
+    if (!searchQuery.trim()) return identities;
     const q = searchQuery.toLowerCase().trim();
 
-    return processes.filter((p) => {
+    return identities.filter((id) => {
+      const p = id.process;
       const matchPid = p.pid.toString().includes(q);
       const matchName = p.name.toLowerCase().includes(q);
       const matchParent = p.parentPid ? p.parentPid.toString().includes(q) : false;
+      const matchParentName = id.parent ? id.parent.name.toLowerCase().includes(q) : false;
       const matchCmd = p.commandLine ? p.commandLine.toLowerCase().includes(q) : false;
       const matchExe = p.executablePath ? p.executablePath.toLowerCase().includes(q) : false;
       const matchCwd = p.workingDirectory ? p.workingDirectory.toLowerCase().includes(q) : false;
+      const matchRuntime = id.runtime.toLowerCase().includes(q);
+      const matchPkgMgr = id.packageManager.toLowerCase().includes(q);
+      const matchPorts = id.listeningPorts.some((portNum) => portNum.toString().includes(q));
 
-      return matchPid || matchName || matchParent || matchCmd || matchExe || matchCwd;
+      return (
+        matchPid ||
+        matchName ||
+        matchParent ||
+        matchParentName ||
+        matchCmd ||
+        matchExe ||
+        matchCwd ||
+        matchRuntime ||
+        matchPkgMgr ||
+        matchPorts
+      );
     });
-  }, [processes, searchQuery]);
+  }, [identities, searchQuery]);
 
   // Sort Processes
-  const sortedProcesses = useMemo(() => {
-    return [...filteredProcesses].sort((a, b) => {
+  const sortedIdentities = useMemo(() => {
+    return [...filteredIdentities].sort((a, b) => {
       let comparison = 0;
 
       switch (processSortField) {
         case 'pid':
-          comparison = a.pid - b.pid;
-          break;
-        case 'parentPid':
-          comparison = (a.parentPid ?? 0) - (b.parentPid ?? 0);
+          comparison = a.process.pid - b.process.pid;
           break;
         case 'name':
-          comparison = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+          comparison = a.process.name.localeCompare(b.process.name, undefined, { sensitivity: 'base' });
           break;
+        case 'runtime':
+          comparison = a.runtime.localeCompare(b.runtime);
+          break;
+        case 'packageManager':
+          comparison = a.packageManager.localeCompare(b.packageManager);
+          break;
+        case 'ports': {
+          const portA = a.listeningPorts[0] ?? 0;
+          const portB = b.listeningPorts[0] ?? 0;
+          comparison = portA - portB;
+          break;
+        }
         case 'commandLine': {
-          const cmdA = a.commandLine ?? '';
-          const cmdB = b.commandLine ?? '';
+          const cmdA = a.process.commandLine ?? '';
+          const cmdB = b.process.commandLine ?? '';
           comparison = cmdA.localeCompare(cmdB);
           break;
         }
@@ -210,7 +257,7 @@ const Dashboard: React.FC = () => {
 
       return processSortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [filteredProcesses, processSortField, processSortDirection]);
+  }, [filteredIdentities, processSortField, processSortDirection]);
 
   // Unique owning processes for ports
   const uniquePortPids = useMemo(() => {
@@ -221,14 +268,19 @@ const Dashboard: React.FC = () => {
     return pids.size;
   }, [ports]);
 
+  // Detected Development Runtimes Count
+  const identifiedRuntimesCount = useMemo(() => {
+    return identities.filter((i) => i.runtime !== 'Unknown').length;
+  }, [identities]);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Top Hero Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">System Discovery</h2>
+          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">System Discovery & Identity</h2>
           <p className="text-zinc-400 text-sm mt-0.5">
-            Discover active Windows listening TCP ports and running processes with PID mapping.
+            Discover active Windows listening ports, process identities, runtimes, package managers, and ancestry trees.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -286,28 +338,26 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Total Windows Processes */}
+        {/* Total Windows Processes & Identified Runtimes */}
         <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Total Processes</div>
+          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Process Identities</div>
           <div className="mt-2 text-2xl font-bold text-zinc-100 font-mono">
-            {loading ? '...' : processes.length.toLocaleString()}
+            {loading ? '...' : identities.length.toLocaleString()}
           </div>
           <div className="mt-2 text-[11px] text-zinc-500">
-            {searchQuery && activeView === 'processes'
-              ? `${filteredProcesses.length} matching search`
-              : 'Windows active processes'}
+            {identifiedRuntimesCount} identified dev runtimes
           </div>
         </div>
 
         {/* Discovery Engine */}
         <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Discovery Engine</div>
+          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Identity Engine</div>
           <div className="mt-2 text-2xl font-bold text-emerald-400 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Rust Native
+            ProcessIdentity
           </div>
           <div className="mt-2 text-[11px] text-zinc-500">
-            {sysInfo ? sysInfo.platform : 'Windows'} • IP Helper + sysinfo
+            {sysInfo ? sysInfo.platform : 'Windows'} • Ancestry Tree + Runtimes
           </div>
         </div>
 
@@ -379,7 +429,7 @@ const Dashboard: React.FC = () => {
                 <rect width="7" height="9" x="14" y="12" rx="1" />
                 <rect width="7" height="5" x="3" y="16" rx="1" />
               </svg>
-              <span>All Processes ({processes.length})</span>
+              <span>Process Identities ({identities.length})</span>
             </button>
           </div>
 
@@ -407,8 +457,8 @@ const Dashboard: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 activeView === 'ports'
-                  ? 'Search by port (e.g. 3000), PID, process, address, command...'
-                  : 'Search by name, PID, command, path, working directory...'
+                  ? 'Search by port (e.g. 3000), PID, process, runtime, command...'
+                  : 'Search by name, PID, runtime (e.g. Node.js), pkg mgr, command, CWD...'
               }
               className="w-full bg-zinc-800/50 border border-zinc-700/60 rounded-lg pl-9 pr-8 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
@@ -436,7 +486,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Dynamic Content Area: Loading, Error, Empty, or Active Table */}
+        {/* Dynamic Content Area */}
         {loading ? (
           <div className="border border-zinc-800 rounded-xl p-16 text-center bg-zinc-900/30 flex flex-col items-center justify-center gap-3">
             <svg
@@ -452,8 +502,8 @@ const Dashboard: React.FC = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <p className="text-sm text-zinc-300 font-medium">Discovering Windows ports and processes...</p>
-            <p className="text-xs text-zinc-500">Querying Win32 IP Helper and process subsystems via Rust</p>
+            <p className="text-sm text-zinc-300 font-medium">Discovering Windows ports and process identities...</p>
+            <p className="text-xs text-zinc-500">Querying process ancestry, runtimes, and Win32 IP Helper via Rust</p>
           </div>
         ) : error ? (
           <div className="border border-red-900/60 bg-red-950/20 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
@@ -495,8 +545,8 @@ const Dashboard: React.FC = () => {
           />
         ) : (
           <ProcessTable
-            processes={sortedProcesses}
-            onSelectProcess={setSelectedProcess}
+            identities={sortedIdentities}
+            onSelectIdentity={setSelectedIdentity}
             sortField={processSortField}
             sortDirection={processSortDirection}
             onSort={handleProcessSort}
@@ -513,10 +563,10 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Process Details Modal */}
-      {selectedProcess && (
+      {selectedIdentity && (
         <ProcessDetailsModal
-          process={selectedProcess}
-          onClose={() => setSelectedProcess(null)}
+          identity={selectedIdentity}
+          onClose={() => setSelectedIdentity(null)}
         />
       )}
     </div>

@@ -1,25 +1,31 @@
 import React from 'react';
-import type { ProcessInfo } from '../../types';
+import type { ProcessIdentity, Runtime, PackageManager } from '../../types';
 
-export type SortField = 'pid' | 'name' | 'parentPid' | 'commandLine';
+export type ProcessSortField =
+  | 'pid'
+  | 'name'
+  | 'runtime'
+  | 'packageManager'
+  | 'commandLine'
+  | 'ports';
 export type SortDirection = 'asc' | 'desc';
 
 interface ProcessTableProps {
-  processes: ProcessInfo[];
-  onSelectProcess: (process: ProcessInfo) => void;
-  sortField: SortField;
+  identities: ProcessIdentity[];
+  onSelectIdentity: (identity: ProcessIdentity) => void;
+  sortField: ProcessSortField;
   sortDirection: SortDirection;
-  onSort: (field: SortField) => void;
+  onSort: (field: ProcessSortField) => void;
 }
 
 export const ProcessTable: React.FC<ProcessTableProps> = ({
-  processes,
-  onSelectProcess,
+  identities,
+  onSelectIdentity,
   sortField,
   sortDirection,
   onSort,
 }) => {
-  const renderSortIndicator = (field: SortField) => {
+  const renderSortIndicator = (field: ProcessSortField) => {
     if (sortField !== field) {
       return (
         <span className="opacity-0 group-hover:opacity-40 transition-opacity ml-1 inline-block">
@@ -34,7 +40,77 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
     );
   };
 
-  const renderStatus = (status: ProcessInfo['status']) => {
+  const renderRuntimeBadge = (runtime: Runtime) => {
+    switch (runtime) {
+      case 'Node.js':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-green-950/60 text-green-400 border border-green-800/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+            Node.js
+          </span>
+        );
+      case 'Python':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-yellow-950/60 text-yellow-400 border border-yellow-800/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+            Python
+          </span>
+        );
+      case 'Java':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-950/60 text-red-400 border border-red-800/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+            Java
+          </span>
+        );
+      case '.NET':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-950/60 text-purple-400 border border-purple-800/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+            .NET
+          </span>
+        );
+      case 'Go':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-950/60 text-cyan-400 border border-cyan-800/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            Go
+          </span>
+        );
+      case 'Rust':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-orange-950/60 text-orange-400 border border-orange-800/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+            Rust
+          </span>
+        );
+      default:
+        return <span className="text-zinc-600 text-xs">-</span>;
+    }
+  };
+
+  const renderPackageManagerBadge = (pm: PackageManager) => {
+    if (pm === 'Unknown') return <span className="text-zinc-600 text-xs">-</span>;
+
+    const colors: Record<string, string> = {
+      npm: 'bg-red-950/40 text-red-300 border-red-800/30',
+      pnpm: 'bg-amber-950/40 text-amber-300 border-amber-800/30',
+      yarn: 'bg-blue-950/40 text-blue-300 border-blue-800/30',
+      bun: 'bg-orange-950/40 text-orange-300 border-orange-800/30',
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border ${
+          colors[pm] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+        }`}
+      >
+        {pm}
+      </span>
+    );
+  };
+
+  const renderStatus = (status: ProcessIdentity['process']['status']) => {
     switch (status) {
       case 'running':
         return (
@@ -60,7 +136,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
     }
   };
 
-  if (processes.length === 0) {
+  if (identities.length === 0) {
     return (
       <div className="border border-dashed border-zinc-800 rounded-xl p-12 text-center bg-zinc-900/30">
         <svg
@@ -88,7 +164,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
             <tr className="bg-zinc-800/70 border-b border-zinc-800 text-zinc-400 select-none font-medium">
               <th
                 onClick={() => onSort('pid')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-20"
               >
                 <div className="flex items-center">
                   <span>PID</span>
@@ -97,7 +173,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('name')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-48"
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-44"
               >
                 <div className="flex items-center">
                   <span>Process Name</span>
@@ -105,12 +181,30 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
                 </div>
               </th>
               <th
-                onClick={() => onSort('parentPid')}
+                onClick={() => onSort('runtime')}
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-28"
+              >
+                <div className="flex items-center">
+                  <span>Runtime</span>
+                  {renderSortIndicator('runtime')}
+                </div>
+              </th>
+              <th
+                onClick={() => onSort('packageManager')}
                 className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
               >
                 <div className="flex items-center">
-                  <span>PPID</span>
-                  {renderSortIndicator('parentPid')}
+                  <span>Pkg Mgr</span>
+                  {renderSortIndicator('packageManager')}
+                </div>
+              </th>
+              <th
+                onClick={() => onSort('ports')}
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-28"
+              >
+                <div className="flex items-center">
+                  <span>Ports</span>
+                  {renderSortIndicator('ports')}
                 </div>
               </th>
               <th
@@ -122,63 +216,71 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
                   {renderSortIndicator('commandLine')}
                 </div>
               </th>
-              <th className="py-3 px-4 min-w-[200px]">Executable Path</th>
               <th className="py-3 px-4 min-w-[160px]">Working Directory</th>
               <th className="py-3 px-4 w-28 text-center">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
-            {processes.map((proc) => (
-              <tr
-                key={proc.pid}
-                onClick={() => onSelectProcess(proc)}
-                className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
-              >
-                <td className="py-2.5 px-4 font-mono font-medium text-zinc-200">
-                  {proc.pid}
-                </td>
-                <td className="py-2.5 px-4 font-medium text-zinc-100 group-hover:text-blue-400 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate max-w-[180px]" title={proc.name}>
-                      {proc.name}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-2.5 px-4 font-mono text-zinc-400">
-                  {proc.parentPid ?? <span className="text-zinc-600">-</span>}
-                </td>
-                <td className="py-2.5 px-4 font-mono text-zinc-300 max-w-xs truncate">
-                  {proc.commandLine ? (
-                    <span title={proc.commandLine} className="truncate block">
-                      {proc.commandLine}
-                    </span>
-                  ) : (
-                    <span className="text-zinc-600 italic">unavailable</span>
-                  )}
-                </td>
-                <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-xs truncate">
-                  {proc.executablePath ? (
-                    <span title={proc.executablePath} className="truncate block">
-                      {proc.executablePath}
-                    </span>
-                  ) : (
-                    <span className="text-zinc-600 italic">unavailable</span>
-                  )}
-                </td>
-                <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-[180px] truncate">
-                  {proc.workingDirectory ? (
-                    <span title={proc.workingDirectory} className="truncate block">
-                      {proc.workingDirectory}
-                    </span>
-                  ) : (
-                    <span className="text-zinc-600 italic">unavailable</span>
-                  )}
-                </td>
-                <td className="py-2.5 px-4 text-center">
-                  {renderStatus(proc.status)}
-                </td>
-              </tr>
-            ))}
+            {identities.map((id) => {
+              const { process: proc, runtime, packageManager, listeningPorts } = id;
+              return (
+                <tr
+                  key={proc.pid}
+                  onClick={() => onSelectIdentity(id)}
+                  className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
+                >
+                  <td className="py-2.5 px-4 font-mono font-medium text-zinc-200">
+                    {proc.pid}
+                  </td>
+                  <td className="py-2.5 px-4 font-medium text-zinc-100 group-hover:text-blue-400 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate max-w-[170px] font-mono" title={proc.name}>
+                        {proc.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4">{renderRuntimeBadge(runtime)}</td>
+                  <td className="py-2.5 px-4">{renderPackageManagerBadge(packageManager)}</td>
+                  <td className="py-2.5 px-4 font-mono">
+                    {listeningPorts.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {listeningPorts.map((p) => (
+                          <span
+                            key={p}
+                            className="bg-blue-950/60 border border-blue-800/40 px-1.5 py-0.5 rounded text-[11px] text-blue-300 font-semibold"
+                          >
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-zinc-600 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-4 font-mono text-zinc-300 max-w-xs truncate">
+                    {proc.commandLine ? (
+                      <span title={proc.commandLine} className="truncate block">
+                        {proc.commandLine}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-600 italic">unavailable</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-[180px] truncate">
+                    {proc.workingDirectory ? (
+                      <span title={proc.workingDirectory} className="truncate block">
+                        {proc.workingDirectory}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-600 italic">unavailable</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-4 text-center">
+                    {renderStatus(proc.status)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

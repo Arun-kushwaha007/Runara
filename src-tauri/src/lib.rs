@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod discovery;
+pub mod identity;
 pub mod models;
 pub mod windows;
 
@@ -10,7 +11,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::system::get_system_info,
             commands::processes::get_processes,
-            commands::ports::get_listening_ports
+            commands::ports::get_listening_ports,
+            commands::identity::get_process_identities,
+            commands::identity::get_process_identity
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

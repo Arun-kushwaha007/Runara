@@ -1,7 +1,14 @@
 import React from 'react';
-import type { JoinedPortProcess } from '../../types';
+import type { JoinedPortProcess, Runtime } from '../../types';
 
-export type PortSortField = 'port' | 'pid' | 'process' | 'address' | 'protocol' | 'command';
+export type PortSortField =
+  | 'port'
+  | 'pid'
+  | 'process'
+  | 'runtime'
+  | 'address'
+  | 'protocol'
+  | 'command';
 export type SortDirection = 'asc' | 'desc';
 
 interface PortTableProps {
@@ -39,6 +46,31 @@ export const PortTable: React.FC<PortTableProps> = ({
 
   const isWildcard = (addr: string) =>
     addr === '0.0.0.0' || addr === '[::]' || addr === '::';
+
+  const renderRuntimeBadge = (runtime?: Runtime) => {
+    if (!runtime || runtime === 'Unknown') {
+      return <span className="text-zinc-600 text-xs">-</span>;
+    }
+
+    const map: Record<string, string> = {
+      'Node.js': 'bg-green-950/60 text-green-300 border-green-800/40',
+      Python: 'bg-yellow-950/60 text-yellow-300 border-yellow-800/40',
+      Java: 'bg-red-950/60 text-red-300 border-red-800/40',
+      '.NET': 'bg-purple-950/60 text-purple-300 border-purple-800/40',
+      Go: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
+      Rust: 'bg-orange-950/60 text-orange-300 border-orange-800/40',
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+          map[runtime] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+        }`}
+      >
+        {runtime}
+      </span>
+    );
+  };
 
   if (items.length === 0) {
     return (
@@ -90,7 +122,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('pid')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-20"
               >
                 <div className="flex items-center">
                   <span>PID</span>
@@ -99,11 +131,20 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('process')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-44"
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-40"
               >
                 <div className="flex items-center">
                   <span>Process Name</span>
                   {renderSortIndicator('process')}
+                </div>
+              </th>
+              <th
+                onClick={() => onSort('runtime')}
+                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
+              >
+                <div className="flex items-center">
+                  <span>Runtime</span>
+                  {renderSortIndicator('runtime')}
                 </div>
               </th>
               <th
@@ -115,13 +156,13 @@ export const PortTable: React.FC<PortTableProps> = ({
                   {renderSortIndicator('command')}
                 </div>
               </th>
-              <th className="py-3 px-4 min-w-[180px]">Working Directory</th>
+              <th className="py-3 px-4 min-w-[160px]">Working Directory</th>
               <th className="py-3 px-4 w-28 text-center">State</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
             {items.map((item, idx) => {
-              const { port, process } = item;
+              const { port, process, identity } = item;
               const uniqueKey = `${port.address}_${port.port}_${port.pid}_${idx}`;
               const localhost = isLocalhost(port.address);
               const wildcard = isWildcard(port.address);
@@ -165,7 +206,7 @@ export const PortTable: React.FC<PortTableProps> = ({
                   {/* Process Name */}
                   <td className="py-2.5 px-4 font-medium text-zinc-100 group-hover:text-blue-400 transition-colors">
                     {process ? (
-                      <span className="truncate max-w-[160px] block font-mono" title={process.name}>
+                      <span className="truncate max-w-[150px] block font-mono" title={process.name}>
                         {process.name}
                       </span>
                     ) : (
@@ -174,6 +215,9 @@ export const PortTable: React.FC<PortTableProps> = ({
                       </span>
                     )}
                   </td>
+
+                  {/* Runtime */}
+                  <td className="py-2.5 px-4">{renderRuntimeBadge(identity?.runtime)}</td>
 
                   {/* Command Line */}
                   <td className="py-2.5 px-4 font-mono text-zinc-300 max-w-xs truncate">
@@ -187,7 +231,7 @@ export const PortTable: React.FC<PortTableProps> = ({
                   </td>
 
                   {/* Working Directory */}
-                  <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-[180px] truncate">
+                  <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-[160px] truncate">
                     {process?.workingDirectory ? (
                       <span title={process.workingDirectory} className="truncate block">
                         {process.workingDirectory}
