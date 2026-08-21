@@ -1,0 +1,232 @@
+import React from 'react';
+import type { DashboardServer } from '../../types';
+import { CopyButton } from '../common/CopyButton';
+import { getBrowserUrl } from '../../lib/serverUtils';
+
+interface ServerCardProps {
+  server: DashboardServer;
+  onInspect: (server: DashboardServer) => void;
+  onOpenBrowser?: (url: string) => void;
+}
+
+export const ServerCard: React.FC<ServerCardProps> = ({
+  server,
+  onInspect,
+  onOpenBrowser,
+}) => {
+  const browserUrl = getBrowserUrl(server.address, server.primaryPort);
+  const extraPortsCount = server.allPorts.length - 1;
+
+  const handleOpenBrowser = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onOpenBrowser) {
+      onOpenBrowser(browserUrl);
+    } else {
+      window.open(browserUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  return (
+    <div
+      onClick={() => onInspect(server)}
+      className="group relative bg-zinc-900/60 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-zinc-700 rounded-xl p-5 transition-all duration-150 flex flex-col justify-between gap-4 cursor-pointer shadow-xs hover:shadow-md"
+    >
+      {/* Header: Title + Status + Environment */}
+      <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3
+              className="text-base font-bold text-zinc-100 group-hover:text-blue-400 transition-colors truncate tracking-tight"
+              title={server.name}
+            >
+              {server.name}
+            </h3>
+
+            {/* Sub-header: Runtime & Package Manager */}
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {server.runtime !== 'Unknown' ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-950/60 text-blue-300 border border-blue-800/40">
+                  <span>{server.runtime}</span>
+                  {server.packageManager !== 'Unknown' && (
+                    <>
+                      <span className="text-blue-500">•</span>
+                      <span className="text-blue-200 font-semibold">{server.packageManager}</span>
+                    </>
+                  )}
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                  Process
+                </span>
+              )}
+
+              {/* Environment badge */}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800/60 text-zinc-400 border border-zinc-700/40">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-blue-400"
+                >
+                  <rect width="20" height="14" x="2" y="3" rx="2" />
+                  <line x1="8" x2="16" y1="21" y2="21" />
+                  <line x1="12" x2="12" y1="17" y2="21" />
+                </svg>
+                <span>Windows</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Status Badge */}
+          <div className="shrink-0">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>RUNNING</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Primary Port & Endpoint Banner */}
+        <div className="mt-3.5 flex items-center justify-between bg-zinc-950/60 border border-zinc-800/90 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-blue-400 shrink-0"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" x2="22" y1="12" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span className="font-mono font-bold text-sm text-zinc-100">
+              localhost:{server.primaryPort}
+            </span>
+            {extraPortsCount > 0 && (
+              <span
+                className="text-[10px] font-mono text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700"
+                title={`Additional ports: ${server.allPorts.slice(1).join(', ')}`}
+              >
+                +{extraPortsCount} {extraPortsCount === 1 ? 'port' : 'ports'}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <CopyButton
+              textToCopy={server.primaryPort.toString()}
+              label="Port"
+              title={`Copy port ${server.primaryPort}`}
+            />
+            <button
+              type="button"
+              onClick={handleOpenBrowser}
+              title={`Open ${browserUrl} in browser`}
+              className="p-1 text-zinc-400 hover:text-blue-300 hover:bg-zinc-800 rounded transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" x2="21" y1="14" y2="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Details: CWD, Command, Process */}
+        <div className="mt-3.5 space-y-2 text-xs">
+          {/* Working Directory */}
+          <div className="flex items-center justify-between text-zinc-400 gap-2">
+            <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium shrink-0">
+              Path
+            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className="font-mono text-zinc-300 truncate text-[11px]"
+                title={server.workingDirectory ?? 'Unavailable'}
+              >
+                {server.workingDirectory ?? 'Unavailable'}
+              </span>
+              {server.workingDirectory && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CopyButton
+                    textToCopy={server.workingDirectory}
+                    showIconOnly
+                    title="Copy working directory path"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Command Line */}
+          <div className="flex items-center justify-between text-zinc-400 gap-2">
+            <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium shrink-0">
+              Cmd
+            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className="font-mono text-zinc-300 truncate text-[11px]"
+                title={server.commandLine ?? 'Unavailable'}
+              >
+                {server.commandLine ?? 'Unavailable'}
+              </span>
+              {server.commandLine && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CopyButton
+                    textToCopy={server.commandLine}
+                    showIconOnly
+                    title="Copy command line"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer: PID + Inspect Button */}
+      <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2 text-zinc-400">
+          <span className="font-mono font-medium text-zinc-300">
+            PID {server.pid}
+          </span>
+          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-400 truncate max-w-[120px]" title={server.processName}>
+            {server.processName}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onInspect(server)}
+          className="px-3 py-1.5 bg-zinc-800 hover:bg-blue-600 hover:text-white text-zinc-200 text-xs font-semibold rounded-lg border border-zinc-700/60 hover:border-blue-500 transition-all cursor-pointer shadow-xs"
+        >
+          Inspect
+        </button>
+      </div>
+    </div>
+  );
+};

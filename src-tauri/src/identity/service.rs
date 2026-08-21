@@ -297,4 +297,29 @@ mod tests {
             assert!(id.process_tree.last().unwrap().is_target, "Last node in tree must be the target process");
         }
     }
+
+    #[test]
+    fn test_live_server_detection_with_active_tcp_listener() {
+        use std::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind test TCP port");
+        let local_port = listener.local_addr().unwrap().port();
+        let current_pid = std::process::id();
+
+        let service = ProcessIdentityService::new();
+        let identities = service.discover_all().expect("Live discovery should succeed");
+
+        let current_identity = identities.iter().find(|id| id.process.pid == current_pid);
+        assert!(current_identity.is_some(), "Current process PID {} must be discovered", current_pid);
+
+        let id = current_identity.unwrap();
+        assert!(
+            id.listening_ports.contains(&local_port),
+            "Discovered listening ports {:?} must contain bound test port {}",
+            id.listening_ports,
+            local_port
+        );
+        assert!(!id.process.name.is_empty());
+        assert!(!id.process_tree.is_empty());
+        assert!(id.process_tree.last().unwrap().is_target);
+    }
 }

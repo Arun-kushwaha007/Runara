@@ -71,7 +71,20 @@ DevHub provides a unified control layer over local development processes without
   - Enriched process table with runtime badges, package manager tags, port chips, and deep search across all identity dimensions
   - Comprehensive educational guide chapters 28–39 added to `LEARNING.md` covering process identity, ancestry algorithms, and systems interview preparation
 
-*Next Milestone: Milestone 4 — Server Dashboard*
+- **Milestone 4: Server Dashboard (Complete)**
+  - Developer-oriented `DashboardServer` view model and multi-port process aggregation
+  - Conservative server name inference (workspace directory folder name → runtime fallback → process name)
+  - Summary metrics cards (Running Servers, Listening Ports, Windows Processes, WSL status)
+  - Instant client-side search-as-you-type across name, port, PID, runtime, package manager, command, and CWD
+  - Dynamic runtime filtering, environment selectors, and multi-field stable sorting (Port, PID, Name, Runtime)
+  - 3-tier progressive disclosure: developer server cards + deep server inspection modal
+  - Embedded process ancestry lineage visualizer with target process highlighting
+  - One-click clipboard copy triggers for PIDs, ports, paths, and commands with visual feedback
+  - Safe browser launching for localhost development endpoints
+  - Auto-refresh polling (3s) with clean lifecycle unmount handling
+  - Chapters 40–49 added to `LEARNING.md` covering View Models, Derived State, UI Data Pipelines, UX State Machines, and HLD/LLD Interview Q&A
+
+*Next Milestone: Milestone 5 — Process Control*
 
 ---
 

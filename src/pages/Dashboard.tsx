@@ -1,15 +1,41 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { identityApi, portApi, systemApi } from '../lib/commands';
-import type { ProcessIdentity, PortInfo, JoinedPortProcess, SystemInfo } from '../types';
+import type {
+  ProcessIdentity,
+  PortInfo,
+  JoinedPortProcess,
+  SystemInfo,
+  DashboardServer,
+  ServerSortField,
+  ServerSortDirection,
+  ServerFilterOptions,
+  Runtime,
+} from '../types';
+import { deriveDashboardServers, filterServers, sortServers } from '../lib/serverUtils';
+import { SummaryCards } from '../components/dashboard/SummaryCards';
+import { ServerToolbar } from '../components/dashboard/ServerToolbar';
+import { ServerList } from '../components/dashboard/ServerList';
+import { ServerDetailsModal } from '../components/dashboard/ServerDetailsModal';
 import { PortTable, type PortSortField, type SortDirection as PortSortDirection } from '../components/ports/PortTable';
 import { PortDetailsModal } from '../components/ports/PortDetailsModal';
 import { ProcessTable, type ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
 import { ProcessDetailsModal } from '../components/processes/ProcessDetailsModal';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
-type ActiveView = 'ports' | 'processes';
+type DashboardTab = 'servers' | 'ports' | 'processes';
 
-const Dashboard: React.FC = () => {
-  const [activeView, setActiveView] = useState<ActiveView>('ports');
+const STANDARD_RUNTIMES: Runtime[] = [
+  'Node.js',
+  'Python',
+  'Rust',
+  '.NET',
+  'Java',
+  'Go',
+  'Unknown',
+];
+
+export const Dashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<DashboardTab>('servers');
   const [ports, setPorts] = useState<PortInfo[]>([]);
   const [identities, setIdentities] = useState<ProcessIdentity[]>([]);
   const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
@@ -18,15 +44,25 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Port sorting state
+  // Server Filters & Sorting
+  const [filters, setFilters] = useState<ServerFilterOptions>({
+    environment: 'all',
+    runtime: 'all',
+    status: 'all',
+  });
+  const [sortField, setSortField] = useState<ServerSortField>('port');
+  const [sortDirection, setSortDirection] = useState<ServerSortDirection>('asc');
+
+  // Port sorting state (for advanced Ports tab)
   const [portSortField, setPortSortField] = useState<PortSortField>('port');
   const [portSortDirection, setPortSortDirection] = useState<PortSortDirection>('asc');
 
-  // Process sorting state
+  // Process sorting state (for advanced Processes tab)
   const [processSortField, setProcessSortField] = useState<ProcessSortField>('name');
   const [processSortDirection, setProcessSortDirection] = useState<ProcessSortDirection>('asc');
 
-  // Selected item modals
+  // Modal selections
+  const [selectedServer, setSelectedServer] = useState<DashboardServer | null>(null);
   const [selectedPortItem, setSelectedPortItem] = useState<JoinedPortProcess | null>(null);
   const [selectedIdentity, setSelectedIdentity] = useState<ProcessIdentity | null>(null);
 
@@ -77,7 +113,63 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshAll]);
 
-  // Efficient O(P) Process Identity Map construction
+  // Derive DashboardServer views in O(P + S) time
+  const allServers = useMemo(() => {
+    return deriveDashboardServers(ports, identities);
+  }, [ports, identities]);
+
+  // Extract available runtimes for dynamic filter dropdown
+  const availableRuntimes = useMemo<Runtime[]>(() => {
+    const detected = new Set<Runtime>();
+    for (const server of allServers) {
+      if (server.runtime !== 'Unknown') {
+        detected.add(server.runtime);
+      }
+    }
+    for (const r of STANDARD_RUNTIMES) {
+      detected.add(r);
+    }
+    return Array.from(detected);
+  }, [allServers]);
+
+  // Client-side filtering
+  const filteredServers = useMemo(() => {
+    return filterServers(allServers, searchQuery, filters);
+  }, [allServers, searchQuery, filters]);
+
+  // Client-side sorting
+  const visibleServers = useMemo(() => {
+    return sortServers(filteredServers, sortField, sortDirection);
+  }, [filteredServers, sortField, sortDirection]);
+
+  // Check if filtering is active
+  const isFiltered = useMemo(() => {
+    return (
+      searchQuery.trim().length > 0 ||
+      filters.environment !== 'all' ||
+      filters.runtime !== 'all' ||
+      filters.status !== 'all'
+    );
+  }, [searchQuery, filters]);
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setFilters({ environment: 'all', runtime: 'all', status: 'all' });
+  };
+
+  const handleToggleSortDirection = () => {
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
+  const handleOpenBrowser = async (url: string) => {
+    try {
+      await openUrl(url);
+    } catch {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Efficient O(P) Process Identity Map for Ports Tab
   const identityMap = useMemo(() => {
     const map = new Map<number, ProcessIdentity>();
     for (const id of identities) {
@@ -86,7 +178,7 @@ const Dashboard: React.FC = () => {
     return map;
   }, [identities]);
 
-  // Efficient O(S) Port -> Process Identity Join
+  // Efficient O(S) Port -> Process Identity Join for Ports Tab
   const joinedEndpoints = useMemo<JoinedPortProcess[]>(() => {
     return ports.map((port) => {
       const id = identityMap.get(port.pid);
@@ -98,61 +190,27 @@ const Dashboard: React.FC = () => {
     });
   }, [ports, identityMap]);
 
-  // Handle Port Sort
-  const handlePortSort = (field: PortSortField) => {
-    if (portSortField === field) {
-      setPortSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setPortSortField(field);
-      setPortSortDirection('asc');
-    }
-  };
-
-  // Handle Process Sort
-  const handleProcessSort = (field: ProcessSortField) => {
-    if (processSortField === field) {
-      setProcessSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setProcessSortField(field);
-      setProcessSortDirection('asc');
-    }
-  };
-
-  // Filter Port Endpoints client-side
-  const filteredEndpoints = useMemo(() => {
-    if (!searchQuery.trim()) return joinedEndpoints;
-    const q = searchQuery.toLowerCase().trim();
-
-    return joinedEndpoints.filter(({ port, process, identity }) => {
-      const matchPort = port.port.toString().includes(q);
-      const matchPid = port.pid.toString().includes(q);
-      const matchAddress = port.address.toLowerCase().includes(q);
-      const matchProtocol = port.protocol.toLowerCase().includes(q);
-      const matchName = process ? process.name.toLowerCase().includes(q) : false;
-      const matchCmd = process?.commandLine ? process.commandLine.toLowerCase().includes(q) : false;
-      const matchCwd = process?.workingDirectory ? process.workingDirectory.toLowerCase().includes(q) : false;
-      const matchRuntime = identity?.runtime ? identity.runtime.toLowerCase().includes(q) : false;
-      const matchPkgMgr = identity?.packageManager ? identity.packageManager.toLowerCase().includes(q) : false;
-
-      return (
-        matchPort ||
-        matchPid ||
-        matchAddress ||
-        matchProtocol ||
-        matchName ||
-        matchCmd ||
-        matchCwd ||
-        matchRuntime ||
-        matchPkgMgr
-      );
-    });
-  }, [joinedEndpoints, searchQuery]);
-
-  // Sort Port Endpoints
+  // Filter & sort for raw ports tab
   const sortedEndpoints = useMemo(() => {
-    return [...filteredEndpoints].sort((a, b) => {
-      let comparison = 0;
+    let list = joinedEndpoints;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(({ port, process, identity }) => {
+        return (
+          port.port.toString().includes(q) ||
+          port.pid.toString().includes(q) ||
+          port.address.toLowerCase().includes(q) ||
+          port.protocol.toLowerCase().includes(q) ||
+          (process ? process.name.toLowerCase().includes(q) : false) ||
+          (process?.commandLine ? process.commandLine.toLowerCase().includes(q) : false) ||
+          (process?.workingDirectory ? process.workingDirectory.toLowerCase().includes(q) : false) ||
+          (identity?.runtime ? identity.runtime.toLowerCase().includes(q) : false)
+        );
+      });
+    }
 
+    return [...list].sort((a, b) => {
+      let comparison = 0;
       switch (portSortField) {
         case 'port':
           comparison = a.port.port - b.port.port;
@@ -185,49 +243,31 @@ const Dashboard: React.FC = () => {
           break;
         }
       }
-
       return portSortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [filteredEndpoints, portSortField, portSortDirection]);
+  }, [joinedEndpoints, searchQuery, portSortField, portSortDirection]);
 
-  // Filter Processes client-side
-  const filteredIdentities = useMemo(() => {
-    if (!searchQuery.trim()) return identities;
-    const q = searchQuery.toLowerCase().trim();
-
-    return identities.filter((id) => {
-      const p = id.process;
-      const matchPid = p.pid.toString().includes(q);
-      const matchName = p.name.toLowerCase().includes(q);
-      const matchParent = p.parentPid ? p.parentPid.toString().includes(q) : false;
-      const matchParentName = id.parent ? id.parent.name.toLowerCase().includes(q) : false;
-      const matchCmd = p.commandLine ? p.commandLine.toLowerCase().includes(q) : false;
-      const matchExe = p.executablePath ? p.executablePath.toLowerCase().includes(q) : false;
-      const matchCwd = p.workingDirectory ? p.workingDirectory.toLowerCase().includes(q) : false;
-      const matchRuntime = id.runtime.toLowerCase().includes(q);
-      const matchPkgMgr = id.packageManager.toLowerCase().includes(q);
-      const matchPorts = id.listeningPorts.some((portNum) => portNum.toString().includes(q));
-
-      return (
-        matchPid ||
-        matchName ||
-        matchParent ||
-        matchParentName ||
-        matchCmd ||
-        matchExe ||
-        matchCwd ||
-        matchRuntime ||
-        matchPkgMgr ||
-        matchPorts
-      );
-    });
-  }, [identities, searchQuery]);
-
-  // Sort Processes
+  // Filter & sort for raw processes tab
   const sortedIdentities = useMemo(() => {
-    return [...filteredIdentities].sort((a, b) => {
-      let comparison = 0;
+    let list = identities;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((id) => {
+        const p = id.process;
+        return (
+          p.pid.toString().includes(q) ||
+          p.name.toLowerCase().includes(q) ||
+          (p.commandLine ? p.commandLine.toLowerCase().includes(q) : false) ||
+          (p.workingDirectory ? p.workingDirectory.toLowerCase().includes(q) : false) ||
+          id.runtime.toLowerCase().includes(q) ||
+          id.packageManager.toLowerCase().includes(q) ||
+          id.listeningPorts.some((portNum) => portNum.toString().includes(q))
+        );
+      });
+    }
 
+    return [...list].sort((a, b) => {
+      let comparison = 0;
       switch (processSortField) {
         case 'pid':
           comparison = a.process.pid - b.process.pid;
@@ -254,135 +294,58 @@ const Dashboard: React.FC = () => {
           break;
         }
       }
-
       return processSortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [filteredIdentities, processSortField, processSortDirection]);
-
-  // Unique owning processes for ports
-  const uniquePortPids = useMemo(() => {
-    const pids = new Set<number>();
-    for (const p of ports) {
-      pids.add(p.pid);
-    }
-    return pids.size;
-  }, [ports]);
-
-  // Detected Development Runtimes Count
-  const identifiedRuntimesCount = useMemo(() => {
-    return identities.filter((i) => i.runtime !== 'Unknown').length;
-  }, [identities]);
+  }, [identities, searchQuery, processSortField, processSortDirection]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Top Hero Section */}
+      {/* Dashboard Hero Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">System Discovery & Identity</h2>
-          <p className="text-zinc-400 text-sm mt-0.5">
-            Discover active Windows listening ports, process identities, runtimes, package managers, and ancestry trees.
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">
+              Local Development Control Center
+            </h2>
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-950/80 text-blue-300 border border-blue-800/50">
+              {sysInfo ? sysInfo.platform : 'Windows'}
+            </span>
+          </div>
+          <p className="text-zinc-400 text-xs mt-1">
+            Real-time discovery, port ownership, process ancestry, and server inspection across your local machine.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Auto Refresh Toggle */}
-          <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer bg-zinc-800/40 border border-zinc-700/50 px-3 py-2 rounded-lg hover:bg-zinc-800/70 transition-colors select-none">
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="rounded bg-zinc-900 border-zinc-700 text-blue-500 focus:ring-0 focus:ring-offset-0"
-            />
-            <span>Auto-refresh (3s)</span>
-          </label>
 
-          {/* Refresh Button */}
-          <button
-            onClick={() => refreshAll(true)}
-            disabled={loading || refreshing}
-            className="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors shadow-xs"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={refreshing ? 'animate-spin' : ''}
-            >
-              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-              <path d="M16 21h5v-5" />
-            </svg>
-            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
-          </button>
+        {/* Status & Last Updated */}
+        <div className="flex items-center gap-3 text-xs text-zinc-400">
+          <div className="text-right">
+            <div className="text-[11px] text-zinc-500 font-medium">Last updated</div>
+            <div className="font-mono text-zinc-300">
+              {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Pending'}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Metrics Summary Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Total Listening Ports */}
-        <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Listening TCP Ports</div>
-          <div className="mt-2 text-2xl font-bold text-blue-400 font-mono">
-            {loading ? '...' : ports.length.toLocaleString()}
-          </div>
-          <div className="mt-2 text-[11px] text-zinc-500">
-            {searchQuery && activeView === 'ports'
-              ? `${filteredEndpoints.length} matching search`
-              : `Across ${uniquePortPids} distinct processes`}
-          </div>
-        </div>
+      {/* Summary Metrics Cards */}
+      <SummaryCards
+        runningServersCount={allServers.length}
+        listeningPortsCount={ports.length}
+        processesCount={identities.length}
+        loading={loading}
+      />
 
-        {/* Total Windows Processes & Identified Runtimes */}
-        <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Process Identities</div>
-          <div className="mt-2 text-2xl font-bold text-zinc-100 font-mono">
-            {loading ? '...' : identities.length.toLocaleString()}
-          </div>
-          <div className="mt-2 text-[11px] text-zinc-500">
-            {identifiedRuntimesCount} identified dev runtimes
-          </div>
-        </div>
-
-        {/* Discovery Engine */}
-        <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Identity Engine</div>
-          <div className="mt-2 text-2xl font-bold text-emerald-400 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            ProcessIdentity
-          </div>
-          <div className="mt-2 text-[11px] text-zinc-500">
-            {sysInfo ? sysInfo.platform : 'Windows'} • Ancestry Tree + Runtimes
-          </div>
-        </div>
-
-        {/* Last Updated */}
-        <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-xl p-4 flex flex-col justify-between">
-          <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Last Updated</div>
-          <div className="mt-2 text-sm font-mono text-zinc-200">
-            {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Pending'}
-          </div>
-          <div className="mt-2 text-[11px] text-zinc-500">
-            {autoRefresh ? 'Live Polling Active (3s)' : 'Manual refresh mode'}
-          </div>
-        </div>
-      </section>
-
-      {/* View Switcher Tabs & Search Toolbar */}
-      <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
-          {/* Navigation Tabs */}
+      {/* Main View Tabs */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
           <div className="flex items-center gap-2">
+            {/* 1. Development Servers Tab (Primary M4 View) */}
             <button
-              onClick={() => setActiveView('ports')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-                activeView === 'ports'
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+              type="button"
+              onClick={() => setActiveTab('servers')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                activeTab === 'servers'
+                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -402,14 +365,44 @@ const Dashboard: React.FC = () => {
                 <line x1="6" x2="6.01" y1="6" y2="6" />
                 <line x1="6" x2="6.01" y1="18" y2="18" />
               </svg>
+              <span>Development Servers ({allServers.length})</span>
+            </button>
+
+            {/* 2. Raw Listening Ports Tab */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('ports')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === 'ports'
+                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" x2="22" y1="12" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
               <span>Listening Ports ({ports.length})</span>
             </button>
 
+            {/* 3. Raw Process Identities Tab */}
             <button
-              onClick={() => setActiveView('processes')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
-                activeView === 'processes'
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+              type="button"
+              onClick={() => setActiveTab('processes')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                activeTab === 'processes'
+                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
                   : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
@@ -432,129 +425,111 @@ const Dashboard: React.FC = () => {
               <span>Process Identities ({identities.length})</span>
             </button>
           </div>
-
-          {/* Search Input */}
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                activeView === 'ports'
-                  ? 'Search by port (e.g. 3000), PID, process, runtime, command...'
-                  : 'Search by name, PID, runtime (e.g. Node.js), pkg mgr, command, CWD...'
-              }
-              className="w-full bg-zinc-800/50 border border-zinc-700/60 rounded-lg pl-9 pr-8 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-200"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            )}
-          </div>
         </div>
 
-        {/* Dynamic Content Area */}
-        {loading ? (
-          <div className="border border-zinc-800 rounded-xl p-16 text-center bg-zinc-900/30 flex flex-col items-center justify-center gap-3">
-            <svg
-              className="animate-spin h-7 w-7 text-blue-500"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <p className="text-sm text-zinc-300 font-medium">Discovering Windows ports and process identities...</p>
-            <p className="text-xs text-zinc-500">Querying process ancestry, runtimes, and Win32 IP Helper via Rust</p>
-          </div>
-        ) : error ? (
-          <div className="border border-red-900/60 bg-red-950/20 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-red-900/40 text-red-400 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-red-300">System discovery failed</h4>
-              <p className="text-xs text-red-400/80 mt-1 max-w-md">{error}</p>
-            </div>
-            <button
-              onClick={() => refreshAll(true)}
-              className="mt-2 px-4 py-1.5 bg-red-800 hover:bg-red-700 text-red-100 text-xs font-medium rounded-lg transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        ) : activeView === 'ports' ? (
-          <PortTable
-            items={sortedEndpoints}
-            onSelectItem={setSelectedPortItem}
-            sortField={portSortField}
-            sortDirection={portSortDirection}
-            onSort={handlePortSort}
-          />
-        ) : (
-          <ProcessTable
-            identities={sortedIdentities}
-            onSelectIdentity={setSelectedIdentity}
-            sortField={processSortField}
-            sortDirection={processSortDirection}
-            onSort={handleProcessSort}
-          />
-        )}
-      </section>
+        {/* Tab 1: Development Servers View */}
+        {activeTab === 'servers' && (
+          <div className="space-y-4">
+            <ServerToolbar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filters={filters}
+              onFilterChange={setFilters}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSortChange={setSortField}
+              onToggleSortDirection={handleToggleSortDirection}
+              availableRuntimes={availableRuntimes}
+              autoRefresh={autoRefresh}
+              onToggleAutoRefresh={setAutoRefresh}
+              onRefresh={() => refreshAll(true)}
+              loading={loading}
+              refreshing={refreshing}
+            />
 
-      {/* Port Details Modal */}
+            <ServerList
+              servers={visibleServers}
+              totalServersCount={allServers.length}
+              loading={loading}
+              error={error}
+              onRetry={() => refreshAll(true)}
+              onInspect={setSelectedServer}
+              onOpenBrowser={handleOpenBrowser}
+              onClearFilters={handleClearFilters}
+              isFiltered={isFiltered}
+            />
+          </div>
+        )}
+
+        {/* Tab 2: Raw Listening Ports View */}
+        {activeTab === 'ports' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search listening ports by port, PID, process, runtime, command..."
+                className="w-full max-w-md bg-zinc-900 border border-zinc-700/60 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <PortTable
+              items={sortedEndpoints}
+              onSelectItem={setSelectedPortItem}
+              sortField={portSortField}
+              sortDirection={portSortDirection}
+              onSort={(field) => {
+                if (portSortField === field) {
+                  setPortSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                } else {
+                  setPortSortField(field);
+                  setPortSortDirection('asc');
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* Tab 3: Raw Process Identities View */}
+        {activeTab === 'processes' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search processes by name, PID, runtime, package manager, command..."
+                className="w-full max-w-md bg-zinc-900 border border-zinc-700/60 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <ProcessTable
+              identities={sortedIdentities}
+              onSelectIdentity={setSelectedIdentity}
+              sortField={processSortField}
+              sortDirection={processSortDirection}
+              onSort={(field) => {
+                if (processSortField === field) {
+                  setProcessSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+                } else {
+                  setProcessSortField(field);
+                  setProcessSortDirection('asc');
+                }
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Selected Server Details Modal */}
+      {selectedServer && (
+        <ServerDetailsModal
+          server={selectedServer}
+          onClose={() => setSelectedServer(null)}
+          onOpenBrowser={handleOpenBrowser}
+        />
+      )}
+
+      {/* Port Modal for raw ports tab */}
       {selectedPortItem && (
         <PortDetailsModal
           item={selectedPortItem}
@@ -562,7 +537,7 @@ const Dashboard: React.FC = () => {
         />
       )}
 
-      {/* Process Details Modal */}
+      {/* Process Modal for raw processes tab */}
       {selectedIdentity && (
         <ProcessDetailsModal
           identity={selectedIdentity}

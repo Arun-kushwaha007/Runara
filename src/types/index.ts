@@ -11,3 +11,4 @@ export type NavPage = 'dashboard' | 'servers' | 'projects' | 'settings';
 export * from './process';
 export * from './port';
 export * from './identity';
+export * from './server';
