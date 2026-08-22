@@ -30,14 +30,16 @@ When running multiple frontend applications, backend services, workers, and AI c
 - **Ancestry Tree Visualizer**: Visualizes process trees with cycle protection ($D \le 32$) to disambiguate child servers from parent shells.
 - **Smart Naming Heuristics**: Resolves developer-friendly project names from workspace directories.
 
-### 3. Safe Windows Process Control
-- **9-Point Pre-Termination Verification**: Mitigates TOCTOU and PID-reuse vulnerabilities before calling Win32 `TerminateProcess`.
-- **Ancestor Protection Rule**: Guarantees parent shells (`pwsh.exe`, `cmd.exe`, `bash`) and IDEs (`Code.exe`) are never terminated.
-- **Descendant Tree Discovery**: BFS traversal terminates worker child processes before terminating parent processes.
+### 3. Safe Cross-Environment Process Control (Windows & WSL)
+- **7-Signal Pre-Termination Verification**: Mitigates TOCTOU and PID-reuse vulnerabilities before signaling or terminating processes.
+- **POSIX Signal Architecture for WSL**: Sends graceful `SIGTERM` (15) and uncatchable `SIGKILL` (9) via structured argument vectors directly to `/bin/kill` inside Linux distributions (no unescaped shell strings).
+- **Ancestor Protection Rule**: Guarantees parent shells (`pwsh.exe`, `cmd.exe`, `bash`, `zsh`) and IDEs (`Code.exe`, IDE server) are never terminated.
+- **Descendant Tree Discovery**: Leaf-to-root BFS traversal terminates worker child processes before terminating parent processes.
+- **Post-Termination Port Verification**: Confirms port release or reports diagnostic notices if the port was rebound by another process (`PortOwnerChanged`).
 
 ### 4. Server Profiles & Startup Subsystem
 - **Persistent Server Profiles**: Store startup commands, working directories, environments, and expected ports in an embedded SQLite database (WAL mode).
-- **Cross-Environment Launchers**: One-click launching across Windows (`cmd.exe /D /C`) and WSL (`wsl.exe -d <distro>`).
+- **Cross-Environment Launchers & Restarts**: One-click launching and live restart across both Windows and WSL distributions.
 - **Pre-Flight Port Conflict Protection**: Prevents collisions if a port is already in use and reveals live occupant metadata.
 - **Safe Restart Flow**: Stop &rarr; verify release &rarr; fresh launch with non-blocking readiness polling.
 
@@ -46,8 +48,10 @@ When running multiple frontend applications, backend services, workers, and AI c
 
 ### 6. Project Groups & Sequential Orchestration
 - **Sequential Startup Engine**: Spawns multi-service development projects in defined order with fail-fast safety.
+- **Reverse-Order Teardown**: Gracefully tears down services in reverse startup order across both Windows and WSL.
+- **Cross-Environment Project Restart**: Full teardown and restart orchestration across mixed Windows and WSL project stacks.
 - **Dynamic 8-Tier Runtime State**: Calculates aggregated project health (`Running`, `Partial`, `Stopped`, `Error`) from live process telemetry without stale database flags.
-- **Concurrency Locks**: Prevents duplicate in-flight operations on the same project.
+- **Concurrency Locks**: Prevents duplicate in-flight operations on the same project or server PID.
 
 ### 7. Polished Developer UX & Settings
 - **5-View Navigation**: Dashboard, Live Servers, Server Profiles, Project Groups, Settings.

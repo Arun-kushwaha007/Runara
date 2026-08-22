@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-212%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
+[![Tests](https://img.shields.io/badge/Tests-222%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
 
 DevHub is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
@@ -36,11 +36,12 @@ This leads to constant friction:
 │                               DEVHUB CAPABILITIES                                 │
 ├─────────────────────┬──────────────────────┬──────────────────────────────────────┤
 │ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration                     │
-│ • Win32 IP Helper   │ • 9-Point Pre-Term   │ • Persistent Server Profiles (SQLite)│
-│ • Sub-ms TCP Scan   │   Verification       │ • Sequential Fail-Fast Startup       │
+│ • Win32 IP Helper   │ • 7-Signal Pre-Term  │ • Persistent Server Profiles (SQLite)│
+│ • Sub-ms TCP Scan   │   Verification Gate  │ • Sequential Fail-Fast Startup       │
 │ • WSL 2 Multi-Distro│ • Ancestor Guardrail │ • Pre-Flight Port Conflict Resolv    │
-│ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Dynamic 8-Tier State Machine       │
-│ • 9D Process Ident  │ • Release Check      │ • Unknown Server Adoption Heuristics │
+│ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Cross-Environment Restarts         │
+│ • 9D Process Ident  │ • Windows & WSL POSIX│ • Dynamic 8-Tier State Machine       │
+│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Unknown Server Adoption Heuristics │
 └─────────────────────┴──────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -48,10 +49,10 @@ This leads to constant friction:
 * **Dual-Environment Architecture**: Seamlessly discovers and aggregates development processes running on the Windows host and inside active WSL 2 Linux distributions (Ubuntu, Debian, Fedora, Arch).
 * **9-Dimensional Process Identity**: Classifies runtimes (`Node.js`, `Python`, `Rust`, `.NET`, `Go`, `Java`) and package managers (`npm`, `pnpm`, `yarn`, `bun`, `cargo`), resolving human-friendly workspace folder names.
 * **Process Ancestry Tree Visualization**: Reconstructs hierarchical process lineages with cycle protection ($D \le 32$) to disambiguate child servers from parent wrappers.
-* **Safe Win32 Process Control**: Eliminates PID reuse and TOCTOU vulnerabilities with a 9-point verification gate. Ancestor protection guarantees shells (`pwsh.exe`, `cmd.exe`) and IDEs (`Code.exe`) are never terminated.
-* **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution and non-blocking readiness polling.
+* **Safe Win32 & WSL Linux Process Control**: Eliminates PID reuse and TOCTOU vulnerabilities with a multi-environment validation gate. Ancestor protection guarantees shells (`pwsh.exe`, `cmd.exe`, `bash`) and IDEs (`Code.exe`, IDE server) are never terminated. Supports graceful `SIGTERM` and forceful `SIGKILL` on Linux.
+* **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution, non-blocking readiness polling, and live restart.
 * **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment.
-* **Project Groups & Sequential Orchestration**: Groups related microservices into logical projects with deterministic sequential startup, concurrency locks, and aggregate health derivation.
+* **Project Groups & Sequential Orchestration**: Groups related microservices into logical projects with deterministic sequential startup, reverse-order teardown, concurrency locks, and aggregate health derivation across Windows and WSL.
 * **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
 
 ---
@@ -109,7 +110,7 @@ For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)*
 | **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript 5.8](https://www.typescriptlang.org/) |
 | **Bundler & Tooling** | [Vite 7](https://vite.dev/) |
 | **Styling & UI Tokens** | [Tailwind CSS v4](https://tailwindcss.com/) (Dark Mode First) |
-| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (102 tests) & `cargo test` (110 tests) |
+| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (104 tests) & `cargo test` (118 tests) |
 
 ---
 
@@ -150,14 +151,14 @@ npm run dev
 
 ## 🧪 Testing & Verification
 
-DevHub enforces a strict test-driven quality standard with **212 automated tests**:
+DevHub enforces a strict test-driven quality standard with **222 automated tests**:
 
 ```bash
-# Run Rust backend unit & integration tests (110 tests)
+# Run Rust backend unit & integration tests (118 tests)
 cd src-tauri
 cargo test
 
-# Run frontend unit & component tests (102 tests)
+# Run frontend unit & component tests (104 tests)
 npm test
 
 # Run strict TypeScript typecheck and production build
@@ -201,7 +202,7 @@ DevHub/
 │   │   ├── profile/              # Profile validation, adoption heuristics, and startup service
 │   │   ├── project/              # Project service and sequential orchestration engine
 │   │   ├── windows/              # Native Win32 FFI bindings (networking.rs, process.rs)
-│   │   ├── wsl/                  # WSL subsystem adapter (distro.rs, executor.rs, port.rs, process.rs)
+│   │   ├── wsl/                  # WSL subsystem adapter (distro.rs, executor.rs, port.rs, process.rs, control.rs)
 │   │   ├── lib.rs                # Tauri handler registry & dependency injection
 │   │   └── main.rs               # Desktop executable entry point
 │   ├── Cargo.toml                # Rust dependencies and package configuration
@@ -209,7 +210,7 @@ DevHub/
 ├── doc/
 │   └── PRD.md                    # Product Requirements Document
 ├── ARCHITECTURE.md               # Systems Architecture Specification
-├── LEARNING.md                   # Cumulative Engineering Learning Guide (114 Chapters)
+├── LEARNING.md                   # Cumulative Engineering Learning Guide (129 Chapters)
 ├── RELEASE_CHECKLIST.md          # MVP Release Verification Matrix
 ├── RELEASE_NOTES.md              # Version 0.1.0 Release Notes
 └── README.md                     # Project Presentation & Documentation
@@ -219,8 +220,8 @@ DevHub/
 
 ## 📚 Engineering Documentation
 
-* **[ARCHITECTURE.md](ARCHITECTURE.md)** — In-depth architectural blueprint covering domain invariants, Win32 FFI, TOCTOU safety, sequential orchestration, and concurrency locks.
-* **[LEARNING.md](LEARNING.md)** — 114-chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
+* **[ARCHITECTURE.md](ARCHITECTURE.md)** — In-depth architectural blueprint covering domain invariants, Win32 FFI, POSIX signals, TOCTOU safety, sequential orchestration, and concurrency locks.
+* **[LEARNING.md](LEARNING.md)** — 129-chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
 * **[PRD.md](doc/PRD.md)** — Complete Product Requirements Document.
 * **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** — MVP verification matrix.
 * **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release notes and changelog.

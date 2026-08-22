@@ -15,17 +15,17 @@ Release Status: Ready for MVP Release
 
 | Checklist Item | Requirement | Status | Verification Evidence |
 | :--- | :--- | :--- | :--- |
-| **Rust Backend Tests** | 100% unit and integration test pass rate | `PASSED` | 110/110 `cargo test` passing |
+| **Rust Backend Tests** | 100% unit and integration test pass rate | `PASSED` | 118/118 `cargo test` passing |
 | **Rust Compilation** | Zero errors, zero compiler warnings | `PASSED` | `cargo check` clean |
-| **Frontend Unit Tests** | 100% Vitest test pass rate | `PASSED` | 102/102 `vitest run` passing across 8 test suites |
-| **Frontend Build** | Strict TypeScript check & Vite production bundle | `PASSED` | `tsc && vite build` built in $<5\text{s}$ |
+| **Frontend Unit Tests** | 100% Vitest test pass rate | `PASSED` | 104/104 `vitest run` passing across 8 test suites |
+| **Frontend Build** | Strict TypeScript check & Vite production bundle | `PASSED` | `tsc && vite build` built clean in $<7\text{s}$ |
 | **Win32 IP Helper Sockets** | Sub-millisecond TCP port discovery | `PASSED` | `GetExtendedTcpTable` tested on IPv4, IPv6, loopback |
-| **Process Control Safety** | 9-point pre-termination verification gate | `PASSED` | PID reuse & path mismatch safety verified in tests |
-| **Ancestor Safety Rule** | Protect parent shells & IDEs from termination | `PASSED` | Tested in `process::service::tests` |
-| **WSL 2 Integration** | UTF-16LE decoding & Linux distro isolation | `PASSED` | Composite `(Environment, PID)` keys tested |
+| **Process Control Safety** | 7-signal multi-environment verification gate | `PASSED` | PID reuse & path mismatch safety verified in tests |
+| **Ancestor Safety Rule** | Protect parent shells & IDEs from termination | `PASSED` | Tested in `process::service::tests` for Windows and Linux |
+| **WSL 2 Process Control** | POSIX signals (`SIGTERM`, `SIGKILL`, `kill -0`) via structured arg vectors | `PASSED` | Tested in `wsl::control::tests` and `process::service::tests` |
 | **SQLite Persistence** | WAL mode, foreign keys, schema migrations | `PASSED` | Migrations 1 & 2 verified from clean DB |
 | **Unknown Server Adoption** | Multi-signal matching & transient draft synthesis | `PASSED` | Tested in `profileAssociation.test.ts` |
-| **Sequential Orchestration** | Fail-fast multi-service startup & lock concurrency | `PASSED` | Tested in `orchestrator.rs` & `Projects.test.tsx` |
+| **Sequential Orchestration** | Fail-fast multi-service startup, reverse teardown, and restart | `PASSED` | Tested in `orchestrator.rs` & `Projects.test.tsx` |
 
 ---
 
@@ -39,7 +39,7 @@ Release Status: Ready for MVP Release
 - [x] **Long Text Safety**: Monospace typography with `truncate`, `break-all`, and `title` tooltips.
 - [x] **Standardized Toast Notifications**: Reusable toast component with auto-dismiss (5s) for operational feedback.
 - [x] **Startup Experience**: Smooth initialization loader with fatal SQLite error screen.
-- [x] **No Milestone Residue**: Removed temporary milestone strings from UI tooltips and placeholders.
+- [x] **Full Process Control UI**: Enabled Stop & Restart buttons for both Windows and WSL running servers, profiles, and projects.
 
 ---
 
@@ -47,15 +47,17 @@ Release Status: Ready for MVP Release
 
 - [x] **No Electron / Node in UI**: Clean WebView2 security boundary via Tauri 2 IPC.
 - [x] **Safe URL Opener**: Endpoints resolve `0.0.0.0`, `127.0.0.1`, `[::]`, and `[::1]` to `localhost`.
-- [x] **WSL Safety Boundary**: Linux process termination marked read-only with clear user notices.
+- [x] **WSL Command Injection Prevention**: Structured argument vectors passed directly to `wsl.exe` (no unescaped shell strings).
 - [x] **Port Conflict Guard**: Launches abort safely without killing existing port occupants, displaying owner diagnostic modal.
+- [x] **Cross-Environment PID Disambiguation**: Scoped composite keys `(Environment, PID)` preventing cross-environment signal misdirection.
 
 ---
 
 ## 4. Documentation & Artifacts
 
-- [x] **`README.md`**: Complete rewrite with project overview, feature matrix, architecture, and dev guide.
+- [x] **`README.md`**: Complete overview with project architecture, test metrics (222 tests), and features.
 - [x] **`ARCHITECTURE.md`**: Detailed system architecture specification.
 - [x] **`doc/PRD.md`**: Complete Product Requirements Document.
-- [x] **`LEARNING.md`**: Comprehensive cumulative learning guide spanning Milestones 0 through 10.
+- [x] **`LEARNING.md`**: Comprehensive cumulative learning guide spanning 129 chapters across Milestones 0 through 11.
 - [x] **`RELEASE_NOTES.md`**: Complete release notes for MVP v0.1.0.
+

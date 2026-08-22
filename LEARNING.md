@@ -5468,6 +5468,550 @@ In **Write-Ahead Logging (WAL) mode**:
 | [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | Recruiter-ready, GitHub-ready project overview | Project Showcase | GitHub | - |
 | [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | 114-chapter cumulative engineering learning guide | Systems Learning Blueprint | Developers, Interviewees | - |
 
+---
+
+# PART XII: MILESTONE 11 — WSL PROCESS CONTROL
+
+## 115. Linux Process Signals & Control Deep Dive
+
+Process management in Unix-like operating systems (such as Linux distributions hosted within WSL2) relies fundamentally on **POSIX signals** rather than explicit object handles. A POSIX signal is an asynchronous inter-process notification delivered directly to a thread or process by the Linux kernel.
+
+### POSIX Signal Fundamentals
+
+| Signal | Number | Name | Default Action | Catchable? | Purpose in DevHub |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `SIGTERM` | `15` | Termination Signal | Process Termination | **Yes** | Graceful server shutdown. Allows runtimes (Node.js, Python, Rust) to close database pools, finish HTTP requests, and flush file handles. |
+| `SIGKILL` | `9` | Kill Signal | Unconditional Termination | **No** (Kernel-enforced) | Force stop. Immediately unmaps the process address space and frees kernel resources when a process hangs or ignores `SIGTERM`. |
+| `SIGINT` | `2` | Interrupt Signal | Process Termination | **Yes** | Interactive terminal interrupt (equivalent to pressing `Ctrl+C` in a terminal shell). |
+| `0` (Null Signal) | `0` | Liveness Check | None (Error checking only) | N/A | Process existence probe (`kill -0 <pid>`). Validates whether a PID exists and is accessible without delivering any actual signal. |
+
+### The `kill -0` Liveness Probe Semantics
+In POSIX systems, invoking `kill(pid, 0)` does not send a real signal to the target process. Instead, the Linux kernel performs permission and existence checks:
+1. **Return `0` (Success)**: The process with PID `pid` exists, is alive, and the caller has sufficient permissions to signal it.
+2. **Return `ESRCH` (No such process)**: The process does not exist (it has already exited or never existed).
+3. **Return `EPERM` (Operation not permitted)**: The process exists, but the caller lacks permission to signal it (e.g., a root process probed by an unprivileged user). In DevHub, `EPERM` confirms that the process is **still alive**, preventing false "already exited" assumptions.
+
+### Process Groups vs. Process Trees
+In Linux, every process belongs to a **Process Group** identified by a Process Group ID (`PGID`). When a user runs a command in an interactive terminal (e.g. `npm run dev`), the shell creates a new process group for the command pipeline.
+However, process groups can be dangerous for automated process control tools:
+- A server process may detach from its process group (`setpgid`, `setsid`).
+- Sending a signal to a process group (`kill -TERM -<pgid>`) might inadvertently signal processes that the developer did not intend to terminate.
+
+DevHub avoids process group ambiguity by constructing an explicit **Hierarchical Process Tree** derived from parent PID (`PPID`) references in `/proc`. DevHub traverses the tree using Breadth-First Search (BFS) and terminates descendants in **leaf-to-root order**.
+
+---
+
+## 116. Windows vs. Linux Process Control Comparison
+
+| Architectural Dimension | Windows Process Control (Win32) | Linux / WSL Process Control (POSIX) | DevHub Cross-Environment Abstraction |
+| :--- | :--- | :--- | :--- |
+| **Identity Model** | 32-bit Integer PID in global Windows namespace | 32-bit Integer PID scoped to WSL guest PID namespace | `ProcessTarget` with `(Environment, PID)` composite identity |
+| **Process Access Model** | Kernel Object Handles opened via `OpenProcess()` with granular access masks (`PROCESS_TERMINATE`, `SYNCHRONIZE`) | Signal delivery via system calls (`kill(pid, sig)`) or CLI tool `/bin/kill` inside distro | `WindowsProcessController` vs `WslProcessController` |
+| **Graceful Termination** | Window messages (`WM_CLOSE`), console control events (`GenerateConsoleCtrlEvent`), or process exit signals | `SIGTERM` (`kill -15 <pid>`), allowing signal handlers to clean up resources | `terminate_graceful()` issuing `SIGTERM` on Linux |
+| **Forceful Termination** | `TerminateProcess(hProcess, exit_code)` unmapping memory immediately | `SIGKILL` (`kill -9 <pid>`), uncatchable kernel destruction | `terminate_force()` issuing `SIGKILL` on Linux |
+| **Liveness Probing** | `GetExitCodeProcess(handle)` checking for `STILL_ACTIVE` (259) | `kill -0 <pid>` checking `errno` for `ESRCH` vs `EPERM` | `is_process_alive(&self, distro, pid)` |
+| **Exit Synchronization** | `WaitForSingleObject(handle, timeout_ms)` kernel wait queue | Polling loop with bounded sleep (`wait_for_exit` in 100ms slices) | `wait_for_exit(&self, distro, pid, timeout_ms)` |
+| **Process Tree Model** | Toolhelp32 snapshot or NtQueryInformationProcess parent links | `ps -eo pid,ppid` or `/proc/<pid>/stat` parent links | Adjacency Map + Cycle-Protected BFS traversal |
+
+---
+
+## 117. Cross-Environment Process Identity & Safety Invariants
+
+### The Cross-Environment PID Collision Hazard
+In multi-environment development environments where Windows and multiple WSL2 distributions coexist, **PID values are not unique globally**.
+
+```
+Host OS: Windows 11
+  ├─ PID 421: "svchost.exe" (Windows System Service) ── [CRITICAL OS PROCESS]
+  └─ PID 18240: "node.exe" (Windows Next.js Dev Server)
+
+WSL Distribution: Ubuntu-24.04
+  ├─ PID 1: "systemd" (Linux Init Daemon) ───────────── [CRITICAL OS PROCESS]
+  └─ PID 421: "node index.js" (Express API Server)
+
+WSL Distribution: Fedora-44
+  ├─ PID 1: "systemd" (Linux Init Daemon)
+  └─ PID 421: "python3 app.py" (Flask Backend)
+```
+
+> [!CAUTION]
+> If a process control tool operates solely on integer PIDs without environment awareness:
+> 1. Calling `stop_server(421)` on Windows could attempt to kill Windows `svchost.exe`.
+> 2. Calling `stop_server(421)` on Ubuntu could kill the Express server, while targeting Fedora would kill Python.
+> 3. An error in environment dispatch could terminate vital operating system daemons.
+
+### The DevHub 7-Signal Identity Tuple
+DevHub enforces that every process control operation must be qualified with the 7-signal composite identity tuple:
+
+$$\text{TargetIdentity} = (\text{Environment}, \text{Distribution}, \text{PID}, \text{ProcessName}, \text{ExecutablePath}, \text{WorkingDirectory}, \text{ExpectedPorts})$$
+
+Before any signal or termination call is dispatched:
+1. **Environment Match**: The target must specify `Environment::Windows` or `Environment::Wsl { distro }`.
+2. **Distribution State Gate**: The target WSL distribution must exist and report `WslDistroState::Running`.
+3. **PID Boundary Check**: Refuse PID `0` and `4` on Windows; refuse PID `0` and `1` on Linux.
+4. **Protected Binary Check**: Refuse Windows system binaries (`csrss.exe`, `explorer.exe`) and Linux system daemons (`systemd`, `init`, `kthreadd`, `dbus-daemon`, `sshd`).
+5. **Name Normalization Gate**: Strip `.exe` and compare case-insensitively (`node` == `node.exe`).
+6. **Executable & Working Directory Gate**: If paths are present in both target and live snapshot, normalize slashes and verify exact disk path match.
+7. **Port Ownership Verification**: If the target PID is missing, check if the expected port was reclaimed by another PID (`PortOwnerChanged`).
+
+---
+
+## 118. Cross-Environment Process Control Architecture
+
+DevHub maintains a unified application service layer (`ProcessControlService`) that dispatches environment-specific operations to specialized controller adapters through the **Dependency Inversion Principle**:
+
+```mermaid
+graph TD
+    UI[Frontend UI: ServerCard / ServerDetailsModal / ProfileCard / ProjectCard] -->|IPC: stop_server / force_stop_server| CMD[Tauri Command: commands/control.rs]
+    CMD --> PCS[ProcessControlService: process/service.rs]
+    
+    PCS -->|Windows Target| WPC[WindowsProcessController: windows/process.rs]
+    PCS -->|WSL Target| LPC[DefaultWslProcessController: wsl/control.rs]
+    
+    WPC -->|Win32 API| KERNEL_WIN[Windows Kernel: OpenProcess / TerminateProcess]
+    
+    LPC -->|Structured Args: kill -15 / kill -9| WE[WslExecutor: wsl/executor.rs]
+    WE -->|wsl.exe -d distro -- kill sig pids| KERNEL_LINUX[WSL2 Linux Kernel: /bin/kill]
+```
+
+### Direct Argument Vector Safety
+To eliminate command injection vulnerabilities, DevHub **never passes unescaped shell strings** to WSL. Instead, `DefaultWslProcessController` builds structured argument vectors:
+
+```rust
+let sig_str = format!("-{}", signal.abs());
+let pid_strings: Vec<String> = pids.iter().map(|p| p.to_string()).collect();
+let mut args: Vec<&str> = Vec::with_capacity(1 + pid_strings.len());
+args.push(&sig_str);
+for pid_s in &pid_strings {
+    args.push(pid_s.as_str());
+}
+
+self.executor.execute(distro, "kill", &args, WSL_SIGNAL_TIMEOUT_MS)
+```
+
+The underlying `WslExecutor` executes:
+```powershell
+wsl.exe -d FedoraLinux-44 -- kill -15 421 422
+```
+This guarantees complete immunity to shell metacharacter expansion (`;`, `&&`, `|`, `` ` ``, `$()`).
+
+---
+
+## 119. Graceful vs. Forceful Termination Flow & Bounded Timeouts
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as Frontend Client
+    participant Service as ProcessControlService
+    participant Discovery as WslProcessDiscovery / WslPortDiscovery
+    participant Controller as WslProcessController
+    participant Linux as WSL Linux Kernel
+
+    Client->>Service: stop_server(target, force: false)
+    Note over Service: Step 1: Acquire In-Flight Op Lock (wsl:distro:pid)
+    Service->>Discovery: enumerate(distro) (Fresh Snapshot)
+    Discovery-->>Service: (processes, ports)
+    Note over Service: Step 2: Validate Target (PID, name, cwd, ports)
+    Note over Service: Step 3: Resolve Descendants (PPID BFS)
+    Service->>Controller: terminate_graceful(distro, [descendants..., target_pid])
+    Controller->>Linux: kill -15 <descendants> <target_pid>
+    
+    loop Polling Loop (up to 3000ms, 100ms slices)
+        Service->>Controller: wait_for_exit(distro, target_pid, 100ms)
+        Controller->>Linux: kill -0 target_pid
+        Linux-->>Controller: ESRCH (Process Exited)
+    end
+
+    Service->>Discovery: enumerate(distro) (Post-Termination Snapshot)
+    Discovery-->>Service: (fresh_processes, fresh_ports)
+    Note over Service: Step 4: Verify PID gone & Port released
+    Note over Service: Step 5: Release In-Flight Op Lock
+    Service-->>Client: ControlResult { status: Stopped, released_ports: [5000] }
+```
+
+If the target process ignores `SIGTERM` and does not exit within the 3000ms window, `ProcessControlService` returns `ProcessControlError { code: Timeout, message: "Server process did not exit within 3000 ms. Try using Force Stop." }`.
+
+When the user confirms **Force Stop**, `stop_server` is invoked with `force: true`, which executes:
+```
+kill -9 <descendants> <target_pid>
+```
+The Linux kernel immediately tears down the process tables and releases all file descriptors and network sockets.
+
+---
+
+## 120. Process Tree Construction & Ancestor Protection Guarantee
+
+When a server is launched from a terminal or IDE in WSL, the Linux process hierarchy looks like this:
+
+```
+PID 1: /init (WSL Init Daemon)
+  └─ PID 942: systemd
+       └─ PID 968: sh (.antigravity-ide-server)
+            └─ PID 1007: node (ptyHost terminal manager)
+                 └─ PID 1557: bash (Interactive Developer Shell) ── [ANCESTOR]
+                      └─ PID 2224: npm run dev ───────────────────── [PARENT]
+                           └─ PID 2235: node ... next dev ────────── [TARGET]
+                                └─ PID 2247: next-server ─────────── [DESCENDANT]
+```
+
+### The Ancestor Protection Invariant
+If DevHub were to terminate process groups indiscriminately or signal parent PIDs, it would terminate:
+- The developer's interactive `bash` shell (closing their terminal window).
+- The IDE terminal daemon (`ptyHost`).
+- The entire WSL session.
+
+### DevHub's Breadth-First Descendant Resolution
+1. **Adjacency Map Construction**: Build `HashMap<parent_pid, Vec<child_pid>>` from the distribution's `/proc` snapshot.
+2. **Strict Descendant Traversal**: BFS queue is initialized **exclusively with immediate children of `target_pid`**:
+   ```rust
+   let mut visited = HashSet::new();
+   visited.insert(target_pid); // Prevents cycles from re-adding target
+   if let Some(immediate_children) = children_by_parent.get(&target_pid) {
+       for &child_pid in immediate_children {
+           if visited.insert(child_pid) {
+               queue.push_back((child_pid, 1));
+               descendants.push(child_pid);
+           }
+       }
+   }
+   ```
+3. **Ancestor Exclusion**: Since traversal only follows `parent -> child` edges downwards from `target_pid`, parents (`npm` PID 2224), shells (`bash` PID 1557), and init daemons (`/init` PID 1) are **never visited or signaled**.
+
+---
+
+## 121. Post-Termination Verification & Port Rebind Diagnostics
+
+After a termination signal is delivered, `ProcessControlService` executes post-termination verification against fresh OS snapshots:
+
+| Scenario | Post-Stop Condition | Result Status | DevHub User Experience |
+| :--- | :--- | :--- | :--- |
+| **Clean Stop** | Target PID gone; expected port released. | `ControlStatus::Stopped` | Success toast: *"Server stopped. Port 3000 freed."* Server Card transitions to stopped. |
+| **Port Rebound by New Process** | Target PID gone; expected port is now bound by another PID (e.g. PID 4890 `python3`). | `ControlStatus::PortOwnerChanged` | Warning toast: *"Process exited, but port 3000 is now owned by python3 (PID 4890)."* UI auto-updates to reflect new owner. |
+| **Socket in TIME_WAIT / Lingering** | Target PID gone; socket stack still holding port in kernel cleanup state. | `ControlStatus::PortStillInUse` | Info toast: *"Process terminated, but port remains occupied by Linux socket stack."* |
+| **Process Exited Prior to Signal** | Target PID was already gone before signal dispatch. | `ProcessControlErrorCode::AlreadyStopped` | Friendly feedback: *"Process is no longer running. It may have already exited."* |
+
+---
+
+## 122. Concurrency & In-Flight Operation Locking
+
+To prevent race conditions, rapid double-clicks, and competing operations on the same server, DevHub implements composite operation locking:
+
+```rust
+let op_key = match &env {
+    Environment::Windows => format!("win:{}", target.pid),
+    Environment::Wsl { distro } => format!("wsl:{}:{}", distro, target.pid),
+};
+
+{
+    let mut ops = self.active_operations.lock().unwrap();
+    if ops.contains(&op_key) {
+        return Err(ProcessControlError {
+            code: ProcessControlErrorCode::OperationInProgress,
+            message: format!("A stop operation is already in progress for PID {} ({}).", target.pid, env.display_name()),
+            pid: Some(target.pid),
+        });
+    }
+    ops.insert(op_key.clone());
+}
+```
+
+This guarantees that:
+- Two simultaneous clicks on the "Stop" button cannot issue duplicate signals.
+- A background project stop and an individual card stop on the same process serialize cleanly.
+- Windows PID 421 and WSL Fedora PID 421 have independent lock keys (`win:421` vs `wsl:Fedora:421`), allowing simultaneous management across environments without cross-blocking.
+
+---
+
+## 123. Server Profile & Project Lifecycle Unification
+
+With Milestone 11, the entire DevHub feature suite supports cross-environment orchestration:
+
+### 1. Server Profile Restart Flow
+```
+Developer clicks "Restart" on WSL Profile
+  │
+  ├─ 1. Query Unified Snapshot to find active PID inside WSL distribution
+  ├─ 2. Construct ProcessTarget with Environment::Wsl { distro }
+  ├─ 3. ProcessControlService::stop_server(target) (Graceful SIGTERM + exit wait)
+  ├─ 4. Settle delay (300ms) for socket unbind
+  └─ 5. ServerStartService::start_profile(profile_id) (WslLauncher executes command)
+```
+
+### 2. Multi-Environment Project Orchestration
+Projects containing a mix of Windows and WSL services now support complete lifecycle control:
+
+```mermaid
+graph TD
+    P[Project: Fullstack E-Commerce]
+    P --> S1[Service 1: Next.js Frontend - Windows :3000]
+    P --> S2[Service 2: FastAPI Microservice - WSL:Fedora :8000]
+    P --> S3[Service 3: Celery Worker - WSL:Fedora]
+
+    subgraph "Start Project Sequence (1 → 2 → 3)"
+        S1_S[1. Start Windows Frontend] --> S2_S[2. Start WSL FastAPI] --> S3_S[3. Start WSL Worker]
+    end
+
+    subgraph "Stop Project Sequence (3 → 2 → 1)"
+        S3_X[1. Stop WSL Worker - SIGTERM] --> S2_X[2. Stop WSL FastAPI - SIGTERM] --> S1_X[3. Stop Windows Frontend]
+    end
+
+    subgraph "Restart Project Sequence"
+        STOP_ALL[Stop All in Reverse Order] --> SETTLE[500ms Settle Delay] --> START_ALL[Start All in Order]
+    end
+```
+
+---
+
+## 124. Milestone 11 High-Level Design (HLD) Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             DEVHUB DESKTOP APPLICATION                           │
+│                                                                                  │
+│  ┌────────────────────────────────────────────────────────────────────────────┐  │
+│  │                               PRESENTATION LAYER                           │  │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌────────────────┐ │  │
+│  │  │ Dashboard.tsx │ │  Servers.tsx  │ │ Profiles.tsx  │ │  Projects.tsx  │ │  │
+│  │  └───────┬───────┘ └───────┬───────┘ └───────┬───────┘ └────────┬───────┘ │  │
+│  │          └─────────────────┴────────┬────────┴──────────────────┘         │  │
+│  │                                     │                                      │  │
+│  │                         ┌───────────▼───────────┐                         │  │
+│  │                         │ commands.ts (API Map) │                         │  │
+│  │                         └───────────┬───────────┘                         │  │
+│  └─────────────────────────────────────┼──────────────────────────────────────┘  │
+│                                        │ Tauri IPC (stop_server / restart)       │
+│  ┌─────────────────────────────────────▼──────────────────────────────────────┐  │
+│  │                                CORE SERVICE LAYER                         │  │
+│  │                                                                            │  │
+│  │  ┌──────────────────────────────────────────────────────────────────────┐  │  │
+│  │  │               ProcessControlService (Multi-Environment)             │  │  │
+│  │  │  - 7-Signal Target Validation Gate                                    │  │  │
+│  │  │  - Cycle-Protected Descendant Resolution                              │  │  │
+│  │  │  - In-Flight Operation Concurrency Locks                              │  │  │
+│  │  │  - Post-Stop Port Verification & Diagnostics                         │  │  │
+│  │  └───┬──────────────────────────────────────────────────────────────┬───┘  │  │
+│  │      │                                                              │      │  │
+│  │  ┌───▼───────────────────────────┐      ┌───────────────────────────▼───┐  │  │
+│  │  │   WindowsProcessController    │      │   DefaultWslProcessController │  │  │
+│  │  │   - OpenProcess / Terminate   │      │   - SIGTERM (15) / SIGKILL (9)│  │  │
+│  │  │   - WaitForSingleObject       │      │   - kill -0 Liveness Check    │  │  │
+│  │  └───┬───────────────────────────┘      └───┬───────────────────────────┘  │  │
+│  └──────┼──────────────────────────────────────┼──────────────────────────────┘  │
+│         │                                      │                                 │
+│  ┌──────┼──────────────────────────────────────┼──────────────────────────────┐  │
+│  │  ┌───▼───────────────┐                  ┌───▼───────────────┐              │  │
+│  │  │    Win32 Kernel   │                  │    WslExecutor    │              │  │
+│  │  │  (kernel32.dll)   │                  │  (wsl.exe vector) │              │  │
+│  │  └───────────────────┘                  └───┬───────────────┘              │  │
+│  │                                             │                              │  │
+│  │                                         ┌───▼───────────────┐              │  │
+│  │                                         │  WSL Linux Kernel │              │  │
+│  │                                         │   (/bin/kill)     │              │  │
+│  │                                         └───────────────────┘              │  │
+│  │                           OPERATING SYSTEM LAYER                           │  │
+│  └────────────────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 125. Milestone 11 Low-Level Design (LLD) Component Signatures & Contracts
+
+### 1. `WslProcessController` Trait ([`src-tauri/src/wsl/control.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/wsl/control.rs))
+```rust
+pub trait WslProcessController: Send + Sync {
+    fn send_signal(
+        &self,
+        distro: &str,
+        pids: &[u32],
+        signal: i32,
+    ) -> Result<WslCommandOutput, WslExecutionError>;
+
+    fn is_process_alive(&self, distro: &str, pid: u32) -> bool;
+
+    fn terminate_graceful(&self, distro: &str, pids: &[u32]) -> Result<(), WslExecutionError>;
+
+    fn terminate_force(&self, distro: &str, pids: &[u32]) -> Result<(), WslExecutionError>;
+
+    fn wait_for_exit(
+        &self,
+        distro: &str,
+        pid: u32,
+        timeout_ms: u64,
+    ) -> Result<bool, WslExecutionError>;
+}
+```
+
+### 2. `ProcessControlService` Multi-Environment Extension ([`src-tauri/src/process/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/process/service.rs))
+```rust
+pub struct ProcessControlService {
+    windows_process_discovery: Arc<dyn ProcessDiscovery>,
+    windows_port_discovery: Arc<dyn PortDiscovery>,
+    windows_process_controller: Arc<dyn ProcessController>,
+    wsl_distro_discovery: Arc<dyn WslDistroDiscovery>,
+    wsl_process_discovery: Arc<dyn WslProcessDiscovery>,
+    wsl_port_discovery: Arc<dyn WslPortDiscovery>,
+    wsl_process_controller: Arc<dyn WslProcessController>,
+    active_operations: Arc<Mutex<HashSet<String>>>,
+}
+
+impl ProcessControlService {
+    pub fn new() -> Self;
+    
+    pub fn validate_target(
+        &self,
+        target: &ProcessTarget,
+        current_processes: &[ProcessInfo],
+        current_ports: &[PortInfo],
+    ) -> Result<ProcessInfo, ProcessControlError>;
+
+    pub fn find_descendants(
+        &self,
+        target_pid: u32,
+        process_map: &HashMap<u32, &ProcessInfo>,
+    ) -> Vec<u32>;
+
+    pub fn stop_server(
+        &self,
+        target: &ProcessTarget,
+    ) -> Result<ControlResult, ProcessControlError>;
+}
+```
+
+---
+
+## 126. End-to-End Execution Code Trace: WSL Server Stop & Force Stop
+
+Let us trace the exact line-by-line execution flow when a developer clicks **"Stop"** on a WSL development server:
+
+```
+1. USER ACTION: Developer clicks "Stop" button on WSL Server Card (PID 421, FedoraLinux-44, Port 5000).
+2. FRONTEND: ServerCard.tsx invokes `onStop(server)`.
+3. MODAL: StopConfirmationModal.tsx renders pre-flight confirmation:
+   - Target PID: 421
+   - Environment: WSL / FedoraLinux-44
+   - Binary: node
+   - Bound Port: :5000
+4. CONFIRMATION: User clicks "Stop Server" (force = false).
+5. IPC DISPATCH: `controlApi.stopServer(target)` calls Tauri command `stop_server`.
+6. BACKEND COMMAND: `src-tauri/src/commands/control.rs::stop_server()` invokes `ProcessControlService::stop_server(&target)`.
+7. CONCURRENCY LOCK: `ProcessControlService` computes key `wsl:FedoraLinux-44:421` and acquires mutex lock in `active_operations`.
+8. DISTRIBUTION CHECK: Queries `WslDistroDiscovery::enumerate()`. Confirms `FedoraLinux-44` exists and state is `WslDistroState::Running`.
+9. DISCOVERY SNAPSHOT:
+   - `WslProcessDiscovery::enumerate("FedoraLinux-44")` runs `ps -eo pid,ppid,comm,args --no-headers`.
+   - `WslPortDiscovery::enumerate("FedoraLinux-44")` runs `ss -tlpn -H`.
+10. PRE-TERMINATION VALIDATION:
+    - Verifies PID 421 != 0 and != 1.
+    - Verifies binary "node" is not a protected system daemon.
+    - Finds PID 421 in FedoraLinux-44 process snapshot.
+    - Validates process name "node" matches expected target.
+11. DESCENDANT RESOLUTION:
+    - Builds adjacency map from process snapshot.
+    - Discovers child worker PID 422 (`node worker.js`).
+    - Ancestors (PID 300 `bash`, PID 1 `systemd`) are explicitly excluded.
+12. SIGNAL DISPATCH:
+    - `DefaultWslProcessController::terminate_graceful("FedoraLinux-44", &[422, 421])`.
+    - `DefaultWslExecutor` executes: `wsl.exe -d FedoraLinux-44 -- kill -15 422 421`.
+13. BOUNDED WAIT:
+    - `wait_for_exit` polls `kill -0 421` every 100ms.
+    - Within 200ms, Linux kernel reports `ESRCH` (PID 421 exited).
+14. POST-STOP VERIFICATION:
+    - Fresh `WslPortDiscovery::enumerate("FedoraLinux-44")` confirms port 5000 is no longer in `ss` output.
+    - Returns `ControlResult { status: ControlStatus::Stopped, pid: 421, released_ports: [5000] }`.
+15. LOCK RELEASE: `active_operations` removes `wsl:FedoraLinux-44:421`.
+16. FRONTEND REACTION:
+    - Dashboard receives `ControlResult`.
+    - Dispatches success toast: "Server 'node' (PID 421) in WSL / FedoraLinux-44 was safely stopped."
+    - Refreshes unified snapshot; server card unmounts or transitions to stopped state.
+```
+
+---
+
+## 127. End-to-End Execution Code Trace: Mixed-Environment Project Restart
+
+```
+1. USER ACTION: Developer clicks "Restart Project" on "E-Commerce Platform" (contains Windows Next.js frontend + WSL FastAPI backend).
+2. FRONTEND: ProjectCard.tsx dispatches `projectApi.restartProject("proj-1")`.
+3. ORCHESTRATOR: `ProjectOrchestrator::restart_project("proj-1")` starts execution.
+4. PHASE 1 (TEARDOWN - REVERSE ORDER):
+   - Member 2 (WSL FastAPI, PID 421):
+     - `ProcessControlService::stop_server` sends `SIGTERM` via `wsl.exe -d Ubuntu -- kill -15 421`.
+     - Verifies PID 421 exits and port 8000 is freed.
+   - Member 1 (Windows Next.js, PID 18240):
+     - `ProcessControlService::stop_server` terminates child esbuild workers, then sends `TerminateProcess` on PID 18240.
+     - Verifies PID 18240 exits and port 3000 is freed.
+5. PHASE 2 (SETTLE DELAY):
+   - Orchestrator sleeps for 500ms to allow both Windows and Linux OS socket stacks to exit `TIME_WAIT`.
+6. PHASE 3 (STARTUP - CONFIGURED ORDER):
+   - Member 1 (Windows Next.js):
+     - `WindowsLauncher` spawns `cmd.exe /c npm run dev` in `C:\Projects\frontend`.
+     - Startup monitor verifies PID 19100 binds port 3000.
+   - Member 2 (WSL FastAPI):
+     - `WslLauncher` spawns `wsl.exe -d Ubuntu -- bash -ic "python3 main.py"` in `/home/dev/backend`.
+     - Startup monitor verifies PID 5100 binds port 8000.
+7. RESULT: `ProjectOperationResult { status: Running, started_profiles: ["Next.js", "FastAPI"], stopped_profiles: ["FastAPI", "Next.js"] }`.
+8. UI REACTION: Progress modal displays clean execution breakdown; project card glows emerald running.
+```
+
+---
+
+## 128. Systems Engineering & HLD/LLD Interview Questions & Answers for Milestone 11
+
+### Q1: Why is sending POSIX signals via `wsl.exe` preferable to running a persistent agent daemon inside the WSL distribution?
+**Answer**:
+1. **Zero-Installation Footprint**: DevHub requires zero guest-side agent daemons, systemd service units, or background open ports inside the developer's Linux distributions.
+2. **Distribution Agnosticism**: Standard CLI tools (`/bin/kill`, `ps`, `ss`) exist identically across Ubuntu, Debian, Fedora, Arch, Alpine, and custom enterprise distributions.
+3. **Privilege Boundary Safety**: `wsl.exe -d <distro> -- <cmd>` runs in the context of the configured default Linux user, preventing accidental privilege escalation and matching the developer's exact execution identity.
+4. **Lifecycle Coherence**: If a distribution is stopped or suspended, DevHub detects the state from Windows without waking up or freezing daemon connections.
+
+### Q2: Why is leaf-to-root termination critical when stopping modern web servers on Linux?
+**Answer**:
+Modern web frameworks (such as Next.js, Vite, and Turbopack) fork multi-process worker architectures (worker threads, build workers, transpile daemons).
+If the parent server process is terminated first (`SIGTERM` on parent):
+1. Child worker processes may get orphaned and reparented to `init` (PID 1).
+2. The orphaned workers remain active in the background, keeping file locks and listening sockets open.
+3. A subsequent startup attempt fails with `EADDRINUSE` (Port Already in Use).
+
+DevHub prevents this by resolving the descendant tree downwards and terminating child workers first before terminating the parent server process.
+
+### Q3: How does DevHub prevent command injection when executing `kill` commands inside WSL?
+**Answer**:
+DevHub enforces strict argument vector passing through `std::process::Command`. Rather than constructing a single shell string (`format!("wsl -d {} kill -9 {}", distro, pids)`), DevHub passes:
+```rust
+Command::new("wsl.exe")
+    .arg("-d")
+    .arg(distro)
+    .arg("--")
+    .arg("kill")
+    .arg("-15")
+    .args(pid_strings)
+```
+The Windows kernel and WSL runtime pass the argument vector directly to the Linux `execve` syscall, eliminating shell interpolation, globbing, and metacharacter parsing.
+
+---
+
+## 129. Milestone 11 Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/wsl/control.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/wsl/control.rs) | WSL Infrastructure | `WslProcessController` trait and implementation for POSIX signals (`SIGTERM`, `SIGKILL`, `kill -0`) | POSIX Signals, Liveness Probing, Bounded Exits | `ProcessControlService` | `WslExecutor` |
+| [`src-tauri/src/process/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/process/service.rs) | Application Domain | Multi-environment process control service with 7-signal validation and leaf-to-root teardown | 7-Signal Target Gate, In-Flight Locks, Descendant BFS | `commands/control.rs`, `ServerStartService`, `ProjectOrchestrator` | `WindowsProcessController`, `WslProcessController` |
+| [`src-tauri/src/profile/start_service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/profile/start_service.rs) | Application Domain | Server profile launch, port conflict detection, and cross-environment restart | Profile Lifecycle, Pre-Flight Port Check | `commands/profile.rs`, `ProjectOrchestrator` | `ProcessControlService`, `WslLauncher` |
+| [`src-tauri/src/project/orchestrator.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/project/orchestrator.rs) | Orchestration | Sequential startup, reverse-order teardown, and restart of mixed Windows + WSL projects | Multi-Environment Orchestration, Teardown Order | `commands/project.rs` | `ServerStartService`, `ProcessControlService` |
+| [`src-tauri/src/models/control.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/control.rs) | Domain Models | `ProcessTarget`, `ControlResult`, `ControlStatus`, and structured error codes | Cross-Language Contracts, Error Codes | IPC, Services | - |
+| [`src/components/dashboard/ServerCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerCard.tsx) | Presentation | Server card with enabled Stop button for both Windows and WSL servers | Component UI, Stop Trigger | `ServerList.tsx` | `StopConfirmationModal.tsx` |
+| [`src/components/dashboard/ServerDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerDetailsModal.tsx) | Presentation | Server inspection modal with enabled Stop Server button for WSL processes | Modal UI, Deep Inspection | `Dashboard.tsx`, `Servers.tsx` | `StopConfirmationModal.tsx` |
+| [`src/components/profiles/ProfileCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/ProfileCard.tsx) | Presentation | Profile card with enabled Stop and Restart action buttons for WSL profiles | Profile Controls, Multi-Env Actions | `Profiles.tsx`, `Servers.tsx` | `commands.ts` |
+| [`src/components/projects/ProjectCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectCard.tsx) | Presentation | Project card with enabled Restart button for projects containing WSL services | Project Actions, Grouping | `Projects.tsx` | `ProjectDetailsModal.tsx` |
+| [`src/components/projects/ProjectDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectDetailsModal.tsx) | Presentation | Project details modal with enabled Restart Project button and multi-env status | Project Management, Orchestration UI | `Projects.tsx` | `commands.ts` |
+| [`src/pages/Dashboard.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Dashboard.tsx) | Page Container | Main control center with full Windows + WSL process control support | Multi-Environment Dashboard | `App.tsx` | Dashboard Components, `lib/` |
+| [`src/pages/Servers.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.tsx) | Page Container | Development servers and profiles management with unified stop/restart | Server Management | `App.tsx` | Profile & Server Components |
+| [`src/pages/Projects.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Projects.tsx) | Page Container | Multi-service project groups with start, stop, and restart across Windows and WSL | Project Orchestration | `App.tsx` | Project Components |
+| [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | 129-chapter cumulative engineering master guide | Systems Engineering Master Blueprint | Developers, Interviewees | - |
+| [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | Project overview detailing Windows and WSL process discovery, start, stop, and restart | Project Showcase | GitHub, Community | - |
+
+
 
 
 
