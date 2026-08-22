@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type {
   SystemInfo,
+  SystemDiagnostics,
   ProcessInfo,
   PortInfo,
   ProcessIdentity,
@@ -26,6 +27,10 @@ import type {
 
 export async function getSystemInfo(): Promise<SystemInfo> {
   return invoke<SystemInfo>('get_system_info');
+}
+
+export async function getDiagnostics(): Promise<SystemDiagnostics> {
+  return invoke<SystemDiagnostics>('get_diagnostics');
 }
 
 export async function getProcesses(): Promise<ProcessInfo[]> {
@@ -184,6 +189,7 @@ export const controlApi = {
 
 export const systemApi = {
   getSystemInfo,
+  getDiagnostics,
 };
 
 export const wslApi = {
