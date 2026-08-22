@@ -26,5 +26,6 @@ sysinfo = "0.39.6"
 rusqlite = { version = "0.32", features = ["bundled"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+tauri-plugin-dialog = "2"
 
 

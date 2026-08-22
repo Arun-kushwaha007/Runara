@@ -1,5 +1,6 @@
 pub mod control;
 pub mod environment;
+pub mod filesystem;
 pub mod identity;
 pub mod port;
 pub mod process;
@@ -14,6 +15,7 @@ pub use environment::{
     DiscoveryDiagnostic, Environment, EnvironmentInfo, UnifiedSnapshot, WslDistribution,
     WslDistroState,
 };
+pub use filesystem::{DirectoryEntry, DirectoryListing, PathValidationResult};
 pub use identity::{
     PackageManager, ProcessIdentity, ProcessParentInfo, ProcessTreeNode, Runtime,
 };

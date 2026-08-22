@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod db;
 pub mod discovery;
+pub mod filesystem;
 pub mod identity;
 pub mod launcher;
 pub mod models;
@@ -17,6 +18,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Determine local application data directory for SQLite persistence
             let app_data_dir = app
@@ -52,12 +54,14 @@ pub fn run() {
                 process_control_service,
                 discovery_service.clone(),
             ));
+            let filesystem_service = Arc::new(filesystem::FilesystemService::new());
 
             app.manage(profile_service);
             app.manage(discovery_service);
             app.manage(start_service);
             app.manage(project_service);
             app.manage(project_orchestrator);
+            app.manage(filesystem_service);
 
             Ok(())
         })
@@ -93,7 +97,10 @@ pub fn run() {
             commands::project::get_project_views,
             commands::project::start_project,
             commands::project::stop_project,
-            commands::project::restart_project
+            commands::project::restart_project,
+            commands::filesystem::pick_folder,
+            commands::filesystem::list_wsl_directories,
+            commands::filesystem::validate_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

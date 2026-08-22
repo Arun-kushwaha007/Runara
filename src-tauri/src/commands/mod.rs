@@ -1,5 +1,6 @@
 pub mod adoption;
 pub mod control;
+pub mod filesystem;
 pub mod identity;
 pub mod ports;
 pub mod processes;
