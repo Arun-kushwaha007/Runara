@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Dashboard from './Dashboard';
-import { controlApi, identityApi, portApi, systemApi, unifiedApi } from '../lib/commands';
+import { controlApi, identityApi, portApi, systemApi, unifiedApi, profileApi } from '../lib/commands';
 import type { ProcessIdentity, PortInfo, SystemInfo, ControlResult, UnifiedSnapshot } from '../types';
 
 // Mock the API commands module
@@ -25,6 +25,12 @@ vi.mock('../lib/commands', () => ({
   },
   wslApi: {
     getWslDistributions: vi.fn(),
+  },
+  profileApi: {
+    getProfiles: vi.fn(),
+    getProfilesWithStatus: vi.fn(),
+    createProfile: vi.fn(),
+    findDuplicates: vi.fn(),
   },
 }));
 
@@ -174,6 +180,7 @@ describe('Dashboard Component (Milestones 4, 5, & 6)', () => {
     vi.mocked(unifiedApi.getUnifiedSnapshot).mockResolvedValue(mockSnapshot);
     vi.mocked(portApi.getListeningPorts).mockResolvedValue(mockPorts);
     vi.mocked(identityApi.getProcessIdentities).mockResolvedValue(mockIdentities);
+    vi.mocked(profileApi.getProfiles).mockResolvedValue([]);
   });
 
   it('renders Dashboard with hero header, metrics cards, and discovered server cards across Windows and WSL', async () => {
@@ -371,6 +378,33 @@ describe('Dashboard Component (Milestones 4, 5, & 6)', () => {
       expect(screen.getByText(/Unable to inspect local development servers/i)).toBeInTheDocument();
       expect(screen.getByText(/Access to TCP table was denied/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Retry Discovery/i })).toBeInTheDocument();
+    });
+  });
+
+  it('renders Unmanaged badges and opens AdoptionFormModal when Adopt is clicked', async () => {
+    vi.mocked(profileApi.findDuplicates).mockResolvedValue({ hasDuplicates: false, duplicates: [] });
+
+    render(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('company-frontend')).toBeInTheDocument();
+    });
+
+    // When no profiles match, servers should show "Unmanaged" badge and "Adopt" button
+    const unmanagedBadges = screen.getAllByText('Unmanaged');
+    expect(unmanagedBadges.length).toBeGreaterThan(0);
+
+    const adoptButtons = screen.getAllByRole('button', { name: /Adopt/i });
+    expect(adoptButtons.length).toBeGreaterThan(0);
+
+    // Click the first Adopt button
+    fireEvent.click(adoptButtons[0]);
+
+    // Adoption modal should open
+    await waitFor(() => {
+      expect(screen.getByText('Adopt Running Server')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('company-frontend')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('npm run dev')).toBeInTheDocument();
     });
   });
 });

@@ -9,6 +9,7 @@ interface ServerDetailsModalProps {
   onClose: () => void;
   onOpenBrowser?: (url: string) => void;
   onStopServer?: (server: DashboardServer) => void;
+  onAdopt?: (server: DashboardServer) => void;
   isStopping?: boolean;
 }
 
@@ -17,6 +18,7 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
   onClose,
   onOpenBrowser,
   onStopServer,
+  onAdopt,
   isStopping = false,
 }) => {
   const browserUrl = getBrowserUrl(server.address, server.primaryPort);
@@ -73,6 +75,30 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span>RUNNING</span>
+                </span>
+              )}
+              {server.managed ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700/60">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-emerald-400"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Managed Profile</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                  <span>Unmanaged Server</span>
                 </span>
               )}
               {isWsl ? (
@@ -186,6 +212,33 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
                   <line x1="10" x2="21" y1="14" y2="3" />
                 </svg>
               </button>
+
+              {!server.managed && onAdopt && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onAdopt(server);
+                    onClose();
+                  }}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
+                  <span>Adopt as Profile</span>
+                </button>
+              )}
 
               {onStopServer && (
                 <button

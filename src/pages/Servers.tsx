@@ -14,7 +14,7 @@ import type {
   StartError,
   WslDistribution,
 } from '../types';
-import { deriveDashboardServers, filterServers, sortServers } from '../lib/serverUtils';
+import { deriveDashboardServers, filterServers, sortServers, annotateWithProfiles } from '../lib/serverUtils';
 import { ServerList } from '../components/dashboard/ServerList';
 import { ServerDetailsModal } from '../components/dashboard/ServerDetailsModal';
 import { StopConfirmationModal } from '../components/dashboard/StopConfirmationModal';
@@ -23,6 +23,7 @@ import { ProfileCard } from '../components/profiles/ProfileCard';
 import { ProfileFormModal } from '../components/profiles/ProfileFormModal';
 import { DeleteProfileModal } from '../components/profiles/DeleteProfileModal';
 import { PortConflictModal } from '../components/profiles/PortConflictModal';
+import { AdoptionFormModal } from '../components/adoption/AdoptionFormModal';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
 type ServersViewTab = 'profiles' | 'active';
@@ -60,11 +61,16 @@ export const Servers: React.FC = () => {
   const [isExecutingStop, setIsExecutingStop] = useState<boolean>(false);
   const [stoppingPids, setStoppingPids] = useState<Set<number>>(new Set());
 
+  // Server Adoption State (Milestone 8)
+  const [serverToAdopt, setServerToAdopt] = useState<DashboardServer | null>(null);
+  const [isSavingAdoption, setIsSavingAdoption] = useState<boolean>(false);
+
   // Filters & Sorting
   const [filters, setFilters] = useState<ServerFilterOptions>({
     environment: 'all',
     runtime: 'all',
     status: 'all',
+    managedStatus: 'all',
   });
   const [sortField, setSortField] = useState<ServerSortField>('port');
   const [sortDirection, setSortDirection] = useState<ServerSortDirection>('asc');
@@ -102,7 +108,9 @@ export const Servers: React.FC = () => {
       setProfileViews(fetchedViews);
       setWslDistros(distros);
 
-      const live = deriveDashboardServers(snapshot.ports, snapshot.identities);
+      const rawLive = deriveDashboardServers(snapshot.ports, snapshot.identities);
+      const profilesList = fetchedViews.map((v) => v.profile);
+      const live = annotateWithProfiles(rawLive, profilesList);
       setDiscoveredServers(live);
       setError(null);
     } catch (err) {
@@ -223,6 +231,29 @@ export const Servers: React.FC = () => {
       throw err;
     } finally {
       setIsSavingProfile(false);
+    }
+  };
+
+  // Adopt server flow (Milestone 8)
+  const handleAdoptServer = (server: DashboardServer) => {
+    setServerToAdopt(server);
+  };
+
+  const handleSaveAdoption = async (req: CreateProfileRequest) => {
+    setIsSavingAdoption(true);
+    try {
+      await profileApi.createProfile(req);
+      setServerToAdopt(null);
+      setFeedbackToast({
+        type: 'success',
+        message: `Server adopted as profile "${req.name}" successfully.`,
+      });
+      await refreshAll(true);
+    } catch (err: unknown) {
+      console.error('Failed to adopt server:', err);
+      throw err;
+    } finally {
+      setIsSavingAdoption(false);
     }
   };
 
@@ -723,10 +754,11 @@ export const Servers: React.FC = () => {
             setServerToStop(server);
             setStopError(null);
           }}
+          onAdopt={handleAdoptServer}
           onOpenBrowser={handleOpenBrowser}
           onClearFilters={() => {
             setSearchQuery('');
-            setFilters({ environment: 'all', runtime: 'all', status: 'all' });
+            setFilters({ environment: 'all', runtime: 'all', status: 'all', managedStatus: 'all' });
           }}
           isFiltered={isFiltered}
           stoppingServerPids={stoppingPids}
@@ -744,6 +776,21 @@ export const Servers: React.FC = () => {
             setProfileToEdit(null);
           }}
           isSaving={isSavingProfile}
+        />
+      )}
+
+      {/* Server Adoption Modal (Milestone 8) */}
+      {serverToAdopt && (
+        <AdoptionFormModal
+          server={serverToAdopt}
+          isSaving={isSavingAdoption}
+          onSave={handleSaveAdoption}
+          onClose={() => setServerToAdopt(null)}
+          onUseExistingProfile={(existingProfile) => {
+            setActiveTab('profiles');
+            setProfileToEdit(existingProfile);
+            setIsFormModalOpen(true);
+          }}
         />
       )}
 
@@ -781,6 +828,7 @@ export const Servers: React.FC = () => {
             setServerToStop(server);
             setStopError(null);
           }}
+          onAdopt={handleAdoptServer}
           isStopping={stoppingPids.has(selectedServer.pid)}
         />
       )}

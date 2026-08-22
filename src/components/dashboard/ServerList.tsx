@@ -13,6 +13,7 @@ interface ServerListProps {
   onRetry: () => void;
   onInspect: (server: DashboardServer) => void;
   onStop?: (server: DashboardServer) => void;
+  onAdopt?: (server: DashboardServer) => void;
   onOpenBrowser?: (url: string) => void;
   onClearFilters: () => void;
   isFiltered: boolean;
@@ -27,6 +28,7 @@ export const ServerList: React.FC<ServerListProps> = ({
   onRetry,
   onInspect,
   onStop,
+  onAdopt,
   onOpenBrowser,
   onClearFilters,
   isFiltered,
@@ -66,6 +68,7 @@ export const ServerList: React.FC<ServerListProps> = ({
             server={server}
             onInspect={onInspect}
             onStop={onStop}
+            onAdopt={onAdopt}
             onOpenBrowser={onOpenBrowser}
             isStopping={stoppingServerPids?.has(server.pid)}
           />

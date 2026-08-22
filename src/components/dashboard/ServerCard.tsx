@@ -7,6 +7,7 @@ interface ServerCardProps {
   server: DashboardServer;
   onInspect: (server: DashboardServer) => void;
   onStop?: (server: DashboardServer) => void;
+  onAdopt?: (server: DashboardServer) => void;
   onOpenBrowser?: (url: string) => void;
   isStopping?: boolean;
 }
@@ -15,6 +16,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
   server,
   onInspect,
   onStop,
+  onAdopt,
   onOpenBrowser,
   isStopping = false,
 }) => {
@@ -116,8 +118,39 @@ export const ServerCard: React.FC<ServerCardProps> = ({
             </div>
           </div>
 
-          {/* Status Badge */}
-          <div className="shrink-0">
+          {/* Status Badges */}
+          <div className="shrink-0 flex items-center gap-1.5">
+            {server.managed ? (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/50 text-emerald-300 border border-emerald-800/40 shadow-xs"
+                title="Managed by DevHub Server Profile"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-emerald-400"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Managed</span>
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800/80 text-zinc-400 border border-zinc-700/60 shadow-xs"
+                title="Unmanaged server process (can be adopted into a profile)"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
+                <span>Unmanaged</span>
+              </span>
+            )}
+
             {isStopping ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/70 text-amber-300 border border-amber-700/50 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
@@ -263,6 +296,34 @@ export const ServerCard: React.FC<ServerCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {!server.managed && onAdopt && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdopt(server);
+              }}
+              title={`Adopt ${server.name} as a managed profile`}
+              className="px-2.5 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 text-xs font-semibold rounded-lg border border-emerald-800/60 hover:border-emerald-600 transition-all cursor-pointer shadow-xs flex items-center gap-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <span>Adopt</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => onInspect(server)}

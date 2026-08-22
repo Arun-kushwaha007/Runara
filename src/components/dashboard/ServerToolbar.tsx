@@ -227,6 +227,31 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
               ))}
             </select>
           </div>
+
+          {/* Managed State Filter (Milestone 8) */}
+          <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-zinc-800 rounded-lg px-2.5 py-1">
+            <span className="text-zinc-500 text-[11px] font-medium">Status:</span>
+            <select
+              value={filters.managedStatus ?? 'all'}
+              onChange={(e) =>
+                onFilterChange({
+                  ...filters,
+                  managedStatus: e.target.value as 'all' | 'managed' | 'unmanaged',
+                })
+              }
+              className="bg-transparent text-xs text-zinc-200 focus:outline-hidden cursor-pointer"
+            >
+              <option value="all" className="bg-zinc-900 text-zinc-200">
+                All Profiles & Processes
+              </option>
+              <option value="managed" className="bg-zinc-900 text-emerald-300">
+                Managed Only
+              </option>
+              <option value="unmanaged" className="bg-zinc-900 text-amber-300">
+                Unmanaged Only
+              </option>
+            </select>
+          </div>
         </div>
 
         {/* Sort Controls */}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { controlApi, identityApi, portApi, systemApi, unifiedApi } from '../lib/commands';
+import { controlApi, identityApi, portApi, systemApi, unifiedApi, profileApi } from '../lib/commands';
 import type {
   ProcessIdentity,
   PortInfo,
@@ -14,13 +14,16 @@ import type {
   ProcessControlError,
   WslDistribution,
   DiscoveryDiagnostic,
+  ServerProfile,
+  CreateProfileRequest,
 } from '../types';
-import { deriveDashboardServers, filterServers, sortServers } from '../lib/serverUtils';
+import { deriveDashboardServers, filterServers, sortServers, annotateWithProfiles } from '../lib/serverUtils';
 import { SummaryCards } from '../components/dashboard/SummaryCards';
 import { ServerToolbar } from '../components/dashboard/ServerToolbar';
 import { ServerList } from '../components/dashboard/ServerList';
 import { ServerDetailsModal } from '../components/dashboard/ServerDetailsModal';
 import { StopConfirmationModal } from '../components/dashboard/StopConfirmationModal';
+import { AdoptionFormModal } from '../components/adoption/AdoptionFormModal';
 import { PortTable, type PortSortField, type SortDirection as PortSortDirection } from '../components/ports/PortTable';
 import { PortDetailsModal } from '../components/ports/PortDetailsModal';
 import { ProcessTable, type ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
@@ -43,6 +46,7 @@ export const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('servers');
   const [ports, setPorts] = useState<PortInfo[]>([]);
   const [identities, setIdentities] = useState<ProcessIdentity[]>([]);
+  const [profiles, setProfiles] = useState<ServerProfile[]>([]);
   const [wslDistros, setWslDistros] = useState<WslDistribution[]>([]);
   const [diagnostics, setDiagnostics] = useState<DiscoveryDiagnostic[]>([]);
   const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
@@ -57,6 +61,7 @@ export const Dashboard: React.FC = () => {
     environment: 'all',
     runtime: 'all',
     status: 'all',
+    managedStatus: 'all',
   });
   const [sortField, setSortField] = useState<ServerSortField>('port');
   const [sortDirection, setSortDirection] = useState<ServerSortDirection>('asc');
@@ -73,6 +78,10 @@ export const Dashboard: React.FC = () => {
   const [selectedServer, setSelectedServer] = useState<DashboardServer | null>(null);
   const [selectedPortItem, setSelectedPortItem] = useState<JoinedPortProcess | null>(null);
   const [selectedIdentity, setSelectedIdentity] = useState<ProcessIdentity | null>(null);
+
+  // Server Adoption State (Milestone 8)
+  const [serverToAdopt, setServerToAdopt] = useState<DashboardServer | null>(null);
+  const [isSavingAdoption, setIsSavingAdoption] = useState<boolean>(false);
 
   // Auto-refresh & timestamp
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
@@ -97,27 +106,39 @@ export const Dashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, [feedbackToast]);
 
-  // Fetch unified snapshot across Windows and WSL distributions
+  // Fetch unified snapshot across Windows and WSL distributions + Server Profiles
   const refreshAll = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setRefreshing(true);
     }
     try {
+      // Fetch saved profiles in parallel with discovery snapshot
+      const fetchProfilesPromise = profileApi.getProfiles().catch((profileErr) => {
+        console.warn('Failed to load server profiles for association:', profileErr);
+        return [] as ServerProfile[];
+      });
+
       // Try unified discovery endpoint
       try {
-        const snapshot = await unifiedApi.getUnifiedSnapshot();
+        const [snapshot, loadedProfiles] = await Promise.all([
+          unifiedApi.getUnifiedSnapshot(),
+          fetchProfilesPromise,
+        ]);
         setPorts(snapshot.ports);
         setIdentities(snapshot.identities);
         setWslDistros(snapshot.distributions);
         setDiagnostics(snapshot.diagnostics);
+        setProfiles(loadedProfiles);
       } catch (unifiedErr) {
         console.warn('Unified snapshot failed, falling back to legacy port & identity API:', unifiedErr);
-        const [fetchedPorts, fetchedIdentities] = await Promise.all([
+        const [fetchedPorts, fetchedIdentities, loadedProfiles] = await Promise.all([
           portApi.getListeningPorts(),
           identityApi.getProcessIdentities(),
+          fetchProfilesPromise,
         ]);
         setPorts(fetchedPorts);
         setIdentities(fetchedIdentities);
+        setProfiles(loadedProfiles);
       }
 
       setError(null);
@@ -238,10 +259,11 @@ export const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshAll]);
 
-  // Derive DashboardServer views in O(P + S) time
+  // Derive DashboardServer views in O(P + S) time and annotate with profile associations
   const allServers = useMemo(() => {
-    return deriveDashboardServers(ports, identities);
-  }, [ports, identities]);
+    const rawServers = deriveDashboardServers(ports, identities);
+    return annotateWithProfiles(rawServers, profiles);
+  }, [ports, identities, profiles]);
 
   // Extract available runtimes for dynamic filter dropdown
   const availableRuntimes = useMemo<Runtime[]>(() => {
@@ -273,17 +295,41 @@ export const Dashboard: React.FC = () => {
       searchQuery.trim().length > 0 ||
       filters.environment !== 'all' ||
       filters.runtime !== 'all' ||
-      filters.status !== 'all'
+      filters.status !== 'all' ||
+      (Boolean(filters.managedStatus) && filters.managedStatus !== 'all')
     );
   }, [searchQuery, filters]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
-    setFilters({ environment: 'all', runtime: 'all', status: 'all' });
+    setFilters({ environment: 'all', runtime: 'all', status: 'all', managedStatus: 'all' });
   };
 
   const handleToggleSortDirection = () => {
     setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
+  // Adopt server flow (Milestone 8)
+  const handleAdoptServer = useCallback((server: DashboardServer) => {
+    setServerToAdopt(server);
+  }, []);
+
+  const handleSaveAdoption = async (req: CreateProfileRequest) => {
+    setIsSavingAdoption(true);
+    try {
+      await profileApi.createProfile(req);
+      setServerToAdopt(null);
+      setFeedbackToast({
+        type: 'success',
+        message: `Server adopted as profile "${req.name}" successfully.`,
+      });
+      await refreshAll();
+    } catch (err) {
+      console.error('Failed to adopt server:', err);
+      throw err;
+    } finally {
+      setIsSavingAdoption(false);
+    }
   };
 
   const handleOpenBrowser = async (url: string) => {
@@ -696,6 +742,7 @@ export const Dashboard: React.FC = () => {
               onRetry={() => refreshAll(true)}
               onInspect={setSelectedServer}
               onStop={handleRequestStop}
+              onAdopt={handleAdoptServer}
               onOpenBrowser={handleOpenBrowser}
               onClearFilters={handleClearFilters}
               isFiltered={isFiltered}
@@ -770,7 +817,18 @@ export const Dashboard: React.FC = () => {
           onClose={() => setSelectedServer(null)}
           onOpenBrowser={handleOpenBrowser}
           onStopServer={handleRequestStop}
+          onAdopt={handleAdoptServer}
           isStopping={stoppingPids.has(selectedServer.pid)}
+        />
+      )}
+
+      {/* Server Adoption Modal (Milestone 8) */}
+      {serverToAdopt && (
+        <AdoptionFormModal
+          server={serverToAdopt}
+          isSaving={isSavingAdoption}
+          onSave={handleSaveAdoption}
+          onClose={() => setServerToAdopt(null)}
         />
       )}
 
