@@ -7,7 +7,9 @@ import type {
   ServerFilterOptions,
   Runtime,
   Environment,
+  ServerProfile,
 } from '../types';
+import { associateServerWithProfile } from './profileAssociation';
 
 /**
  * Returns a unique composite key for indexing a process within its execution environment.
@@ -256,6 +258,15 @@ export function filterServers(
     result = result.filter((s) => s.status === filters.status);
   }
 
+  // Managed/unmanaged filter (Milestone 8)
+  if (filters.managedStatus && filters.managedStatus !== 'all') {
+    if (filters.managedStatus === 'managed') {
+      result = result.filter((s) => s.managed);
+    } else if (filters.managedStatus === 'unmanaged') {
+      result = result.filter((s) => !s.managed);
+    }
+  }
+
   // Client-side search across multiple fields
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase().trim();
@@ -321,5 +332,33 @@ export function sortServers(
     }
 
     return sortDirection === 'asc' ? comparison : -comparison;
+  });
+}
+
+/**
+ * Annotates a list of DashboardServer views with profile association state.
+ *
+ * For each server, runs the deterministic matching algorithm against all saved profiles
+ * and sets `managed` and `profileId` accordingly.
+ *
+ * This function is the single source of truth for managed/unmanaged state.
+ * It must be called after both the discovery snapshot and profile list are loaded.
+ * The result is never persisted — it is recalculated on every refresh.
+ *
+ * @param servers  - Raw DashboardServer list from deriveDashboardServers()
+ * @param profiles - Current list of saved ServerProfiles from the profile service
+ * @returns        New array with managed/profileId fields populated
+ */
+export function annotateWithProfiles(
+  servers: DashboardServer[],
+  profiles: ServerProfile[]
+): DashboardServer[] {
+  return servers.map((server) => {
+    const association = associateServerWithProfile(server, profiles);
+    return {
+      ...server,
+      managed: association.managed,
+      profileId: association.profileId,
+    };
   });
 }
