@@ -6,14 +6,37 @@ import type {
   ServerSortDirection,
   ServerFilterOptions,
   Runtime,
+  Environment,
 } from '../types';
+
+/**
+ * Returns a unique composite key for indexing a process within its execution environment.
+ * Examples: "windows:18240", "wsl:Ubuntu:421", "wsl:Fedora:421"
+ */
+export function getProcessEnvironmentKey(env: Environment, pid: number): string {
+  if (env.type === 'wsl') {
+    return `wsl:${env.distro}:${pid}`;
+  }
+  return `windows:${pid}`;
+}
+
+/**
+ * Returns a human-friendly display label for an environment.
+ * Examples: "Windows", "WSL / Fedora", "WSL / Ubuntu"
+ */
+export function formatEnvironmentLabel(env: Environment): string {
+  if (env.type === 'wsl') {
+    return `WSL / ${env.distro}`;
+  }
+  return 'Windows';
+}
 
 /**
  * Extracts a conservative, developer-friendly display name for a server.
  * Priority order:
- * 1. Working directory project folder name (e.g. "C:\Projects\company-frontend" -> "company-frontend")
+ * 1. Working directory project folder name (e.g. "C:\Projects\company-frontend" -> "company-frontend", "/home/dev/api" -> "api")
  * 2. Command/runtime fallback (e.g. "Node.js Development Server")
- * 3. Process image name (e.g. "node.exe")
+ * 3. Process image name (e.g. "node.exe", "python3")
  */
 export function deriveServerName(
   workingDirectory?: string | null,
@@ -62,7 +85,7 @@ export function deriveServerName(
  */
 export function getBrowserUrl(address: string, port: number): string {
   const cleanAddr = address.replace(/^\[|\]$/g, '').trim().toLowerCase();
-  
+
   if (
     cleanAddr === '0.0.0.0' ||
     cleanAddr === '127.0.0.1' ||
@@ -84,31 +107,38 @@ export function getBrowserUrl(address: string, port: number): string {
 
 /**
  * Derives a unified list of DashboardServer views from listening ports and process identities in O(P + S) time.
- * Groups multiple listening ports under the owning process identity.
+ * Groups multiple listening ports under the owning process identity, strictly isolated by environment.
  */
 export function deriveDashboardServers(
   ports: PortInfo[],
   identities: ProcessIdentity[]
 ): DashboardServer[] {
-  // Step 1: Index Process Identities by PID in O(P) time
-  const identityMap = new Map<number, ProcessIdentity>();
+  // Step 1: Index Process Identities by (Environment, PID) in O(P) time
+  const identityMap = new Map<string, ProcessIdentity>();
   for (const id of identities) {
-    identityMap.set(id.process.pid, id);
+    const key = getProcessEnvironmentKey(id.environment, id.process.pid);
+    identityMap.set(key, id);
   }
 
-  // Step 2: Group listening ports by PID in O(S) time
-  const portsByPid = new Map<number, PortInfo[]>();
+  // Step 2: Group listening ports by (Environment, PID) in O(S) time
+  const portsByEnvPid = new Map<string, PortInfo[]>();
   for (const port of ports) {
-    const list = portsByPid.get(port.pid) ?? [];
+    const key = getProcessEnvironmentKey(port.environment, port.pid);
+    const list = portsByEnvPid.get(key) ?? [];
     list.push(port);
-    portsByPid.set(port.pid, list);
+    portsByEnvPid.set(key, list);
   }
 
   const servers: DashboardServer[] = [];
 
-  // Step 3: For each unique PID with listening ports, construct a DashboardServer
-  for (const [pid, portList] of portsByPid.entries()) {
-    const identity = identityMap.get(pid);
+  // Step 3: For each unique (Environment, PID) with listening ports, construct a DashboardServer
+  for (const [key, portList] of portsByEnvPid.entries()) {
+    const identity = identityMap.get(key);
+    const primaryPortInfo = portList[0];
+    const env = primaryPortInfo.environment;
+    const pid = primaryPortInfo.pid;
+    const distro = env.type === 'wsl' ? env.distro : null;
+    const environmentLabel = formatEnvironmentLabel(env);
 
     // Sort ports numerically ascending
     const sortedPortNumbers = portList
@@ -117,7 +147,7 @@ export function deriveDashboardServers(
     const uniquePortNumbers = Array.from(new Set(sortedPortNumbers));
 
     const primaryPort = uniquePortNumbers[0] ?? 0;
-    const primaryPortInfo = portList.find((p) => p.port === primaryPort) ?? portList[0];
+    const idPrefix = env.type === 'wsl' ? `wsl-${distro}` : 'win';
 
     if (identity) {
       // Merge identity's listening ports with any freshly discovered ports
@@ -133,7 +163,7 @@ export function deriveDashboardServers(
       );
 
       servers.push({
-        id: `win-${pid}-${primaryPort}`,
+        id: `${idPrefix}-${pid}-${primaryPort}`,
         name,
         status: 'running',
         primaryPort,
@@ -149,13 +179,14 @@ export function deriveDashboardServers(
         packageManager: identity.packageManager,
         parent: identity.parent ?? null,
         processTree: identity.processTree,
-        environment: 'windows',
-        wslDistro: null,
+        environment: env,
+        environmentLabel,
+        wslDistro: distro,
       });
     } else {
       // Endpoint with restricted or exited process
       servers.push({
-        id: `win-unmatched-${pid}-${primaryPort}`,
+        id: `${idPrefix}-unmatched-${pid}-${primaryPort}`,
         name: `Port ${primaryPort} (PID ${pid})`,
         status: 'running',
         primaryPort,
@@ -173,14 +204,15 @@ export function deriveDashboardServers(
         processTree: [
           {
             pid,
-            name: `PID ${pid} (Access Restricted or Exited)`,
+            name: `PID ${pid} (${environmentLabel})`,
             commandLine: null,
             isTarget: true,
             depth: 0,
           },
         ],
-        environment: 'windows',
-        wslDistro: null,
+        environment: env,
+        environmentLabel,
+        wslDistro: distro,
       });
     }
   }
@@ -200,7 +232,16 @@ export function filterServers(
 
   // Environment filter
   if (filters.environment !== 'all') {
-    result = result.filter((s) => s.environment === filters.environment);
+    if (filters.environment === 'windows') {
+      result = result.filter((s) => s.environment.type === 'windows');
+    } else if (filters.environment === 'wsl') {
+      result = result.filter((s) => s.environment.type === 'wsl');
+    } else if (filters.environment.startsWith('wsl:')) {
+      const targetDistro = filters.environment.slice(4);
+      result = result.filter(
+        (s) => s.environment.type === 'wsl' && s.wslDistro === targetDistro
+      );
+    }
   }
 
   // Runtime filter
@@ -227,6 +268,7 @@ export function filterServers(
       const matchCmd = s.commandLine ? s.commandLine.toLowerCase().includes(q) : false;
       const matchCwd = s.workingDirectory ? s.workingDirectory.toLowerCase().includes(q) : false;
       const matchAddress = s.address.toLowerCase().includes(q);
+      const matchEnv = s.environmentLabel.toLowerCase().includes(q);
 
       return (
         matchName ||
@@ -238,7 +280,8 @@ export function filterServers(
         matchPkgMgr ||
         matchCmd ||
         matchCwd ||
-        matchAddress
+        matchAddress ||
+        matchEnv
       );
     });
   }
@@ -269,6 +312,9 @@ export function sortServers(
         break;
       case 'runtime':
         comparison = a.runtime.localeCompare(b.runtime);
+        break;
+      case 'environment':
+        comparison = a.environmentLabel.localeCompare(b.environmentLabel);
         break;
     }
 

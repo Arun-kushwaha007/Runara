@@ -1,3 +1,5 @@
+import type { Environment } from './environment';
+
 export type ProcessStatus = 'running' | 'unavailable' | 'accessrestricted' | 'unknown';
 
 export interface ProcessInfo {
@@ -8,4 +10,6 @@ export interface ProcessInfo {
   commandLine?: string | null;
   workingDirectory?: string | null;
   status: ProcessStatus;
+  environment: Environment;
 }
+

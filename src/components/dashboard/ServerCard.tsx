@@ -20,6 +20,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
 }) => {
   const browserUrl = getBrowserUrl(server.address, server.primaryPort);
   const extraPortsCount = server.allPorts.length - 1;
+  const isWsl = server.environment?.type === 'wsl';
 
   const handleOpenBrowser = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,7 +33,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
 
   const handleStop = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onStop && !isStopping) {
+    if (onStop && !isStopping && !isWsl) {
       onStop(server);
     }
   };
@@ -53,7 +54,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               {server.name}
             </h3>
 
-            {/* Sub-header: Runtime & Package Manager */}
+            {/* Sub-header: Runtime & Package Manager & Environment */}
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               {server.runtime !== 'Unknown' ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-950/60 text-blue-300 border border-blue-800/40">
@@ -72,25 +73,46 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               )}
 
               {/* Environment badge */}
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800/60 text-zinc-400 border border-zinc-700/40">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-blue-400"
-                >
-                  <rect width="20" height="14" x="2" y="3" rx="2" />
-                  <line x1="8" x2="16" y1="21" y2="21" />
-                  <line x1="12" x2="12" y1="17" y2="21" />
-                </svg>
-                <span>Windows</span>
-              </span>
+              {isWsl ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-950/60 text-purple-300 border border-purple-800/40">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-purple-400"
+                  >
+                    <polyline points="4 17 10 11 4 5" />
+                    <line x1="12" y1="19" x2="20" y2="19" />
+                  </svg>
+                  <span>WSL / {server.wslDistro || 'Linux'}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-950/40 text-blue-300/90 border border-blue-800/30">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-blue-400"
+                  >
+                    <rect width="20" height="14" x="2" y="3" rx="2" />
+                    <line x1="8" x2="16" y1="21" y2="21" />
+                    <line x1="12" x2="12" y1="17" y2="21" />
+                  </svg>
+                  <span>Windows</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -123,18 +145,18 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-blue-400 shrink-0"
+              className="text-blue-400"
             >
               <circle cx="12" cy="12" r="10" />
               <line x1="2" x2="22" y1="12" y2="12" />
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
             </svg>
-            <span className="font-mono font-bold text-sm text-zinc-100">
+            <span className="text-xs font-mono font-semibold text-zinc-100">
               localhost:{server.primaryPort}
             </span>
             {extraPortsCount > 0 && (
               <span
-                className="text-[10px] font-mono text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700"
+                className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700"
                 title={`Additional ports: ${server.allPorts.slice(1).join(', ')}`}
               >
                 +{extraPortsCount} {extraPortsCount === 1 ? 'port' : 'ports'}
@@ -142,22 +164,18 @@ export const ServerCard: React.FC<ServerCardProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <CopyButton
-              textToCopy={server.primaryPort.toString()}
-              label="Port"
-              title={`Copy port ${server.primaryPort}`}
-            />
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={handleOpenBrowser}
               title={`Open ${browserUrl} in browser`}
-              className="p-1 text-zinc-400 hover:text-blue-300 hover:bg-zinc-800 rounded transition-colors"
+              className="px-2 py-1 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
             >
+              <span>Open</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
+                width="11"
+                height="11"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -170,15 +188,22 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                 <line x1="10" x2="21" y1="14" y2="3" />
               </svg>
             </button>
+            <div onClick={(e) => e.stopPropagation()}>
+              <CopyButton
+                textToCopy={browserUrl}
+                showIconOnly
+                title="Copy browser URL to clipboard"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Details: CWD, Command, Process */}
-        <div className="mt-3.5 space-y-2 text-xs">
+        {/* Process Metadata Details */}
+        <div className="mt-3 space-y-1.5 text-xs">
           {/* Working Directory */}
           <div className="flex items-center justify-between text-zinc-400 gap-2">
             <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium shrink-0">
-              Path
+              Workspace
             </span>
             <div className="flex items-center gap-1.5 min-w-0">
               <span
@@ -249,16 +274,28 @@ export const ServerCard: React.FC<ServerCardProps> = ({
           {onStop && (
             <button
               type="button"
-              disabled={isStopping}
+              disabled={isStopping || isWsl}
               onClick={handleStop}
-              title={isStopping ? 'Server is stopping...' : `Stop ${server.name} (PID ${server.pid})`}
-              className="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed text-red-300 hover:text-red-100 text-xs font-semibold rounded-lg border border-red-800/50 hover:border-red-700 transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+              title={
+                isWsl
+                  ? 'WSL process control is read-only in Milestone 6'
+                  : isStopping
+                  ? 'Server is stopping...'
+                  : `Stop ${server.name} (PID ${server.pid})`
+              }
+              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-xs flex items-center gap-1.5 ${
+                isWsl
+                  ? 'bg-zinc-800/50 text-zinc-500 border-zinc-800 cursor-not-allowed opacity-60'
+                  : 'bg-red-950/40 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed text-red-300 hover:text-red-100 border-red-800/50 hover:border-red-700 cursor-pointer'
+              }`}
             >
               {isStopping ? (
                 <>
                   <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
                   <span>Stopping</span>
                 </>
+              ) : isWsl ? (
+                <span>Read-Only</span>
               ) : (
                 <span>Stop</span>
               )}

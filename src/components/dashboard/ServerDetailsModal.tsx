@@ -20,6 +20,7 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
   isStopping = false,
 }) => {
   const browserUrl = getBrowserUrl(server.address, server.primaryPort);
+  const isWsl = server.environment?.type === 'wsl';
 
   // Close modal on Escape key
   useEffect(() => {
@@ -74,9 +75,30 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
                   <span>RUNNING</span>
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
-                <span>Windows</span>
-              </span>
+              {isWsl ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-950/80 text-purple-300 border border-purple-700/60">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-purple-400"
+                  >
+                    <polyline points="4 17 10 11 4 5" />
+                    <line x1="12" y1="19" x2="20" y2="19" />
+                  </svg>
+                  <span>WSL / {server.wslDistro || 'Linux'}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  <span>Windows</span>
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2 mt-2 text-xs text-zinc-400">
@@ -168,91 +190,77 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
               {onStopServer && (
                 <button
                   type="button"
-                  disabled={isStopping}
+                  disabled={isStopping || isWsl}
                   onClick={() => onStopServer(server)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-950/70 hover:bg-red-900 text-red-300 hover:text-white disabled:opacity-50 text-xs font-semibold rounded-lg border border-red-800/60 transition-colors cursor-pointer shadow-xs"
+                  title={
+                    isWsl
+                      ? 'WSL process control is read-only in Milestone 6'
+                      : isStopping
+                      ? 'Stopping...'
+                      : `Stop ${server.name}`
+                  }
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors shadow-xs ${
+                    isWsl
+                      ? 'bg-zinc-800/50 text-zinc-500 border-zinc-800 cursor-not-allowed opacity-60'
+                      : 'bg-red-950/70 hover:bg-red-900 text-red-300 hover:text-white disabled:opacity-50 border-red-800/60 cursor-pointer'
+                  }`}
                 >
                   {isStopping ? (
                     <>
                       <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
                       <span>Stopping...</span>
                     </>
+                  ) : isWsl ? (
+                    <span>Read-Only</span>
                   ) : (
-                    <>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <rect width="6" height="6" x="9" y="9" rx="1" />
-                      </svg>
-                      <span>Stop Server</span>
-                    </>
+                    <span>Stop Server</span>
                   )}
                 </button>
               )}
             </div>
           </div>
 
-          {/* Grid of Key Metadata */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+          {/* Primary Details Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             {/* Runtime & Package Manager */}
-            <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-3.5">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-                Runtime & Tools
-              </span>
-              <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-zinc-200 font-mono">
-                  {server.runtime}
+            <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-4 space-y-2">
+              <div className="font-semibold text-zinc-400 uppercase text-[11px] tracking-wider">
+                Identity & Framework
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">Runtime:</span>
+                <span className="font-semibold text-zinc-200">{server.runtime}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">Package Manager:</span>
+                <span className="font-semibold text-zinc-200">{server.packageManager}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">Environment:</span>
+                <span className="font-semibold text-zinc-200">{server.environmentLabel}</span>
+              </div>
+            </div>
+
+            {/* Ports & Networking */}
+            <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-4 space-y-2">
+              <div className="font-semibold text-zinc-400 uppercase text-[11px] tracking-wider">
+                Port & Network Binding
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">Primary Port:</span>
+                <span className="font-mono font-semibold text-blue-400">
+                  {server.primaryPort} ({server.protocol.toUpperCase()})
                 </span>
-                {server.packageManager !== 'Unknown' && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-900/50 text-blue-300 border border-blue-700/50">
-                    {server.packageManager}
-                  </span>
-                )}
               </div>
-            </div>
-
-            {/* Listening Ports */}
-            <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-3.5">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-                Listening Ports ({server.allPorts.length})
-              </span>
-              <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                {server.allPorts.map((p) => (
-                  <span
-                    key={p}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono font-bold text-xs bg-zinc-900 text-blue-300 border border-zinc-700"
-                  >
-                    <span>{p}</span>
-                  </span>
-                ))}
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">All Listening Ports:</span>
+                <span className="font-mono font-semibold text-zinc-200">
+                  {server.allPorts.join(', ')}
+                </span>
               </div>
-            </div>
-
-            {/* Parent Process */}
-            <div className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-3.5">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-                Parent Process
-              </span>
-              <div className="mt-1.5">
-                {server.parent ? (
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className="font-mono text-zinc-200 font-medium">
-                      {server.parent.name}
-                    </span>
-                    <span className="text-zinc-500 font-mono">({server.parent.pid})</span>
-                  </div>
-                ) : (
-                  <span className="text-zinc-500 italic">None or Exited</span>
-                )}
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">Bound Interface:</span>
+                <span className="font-mono text-zinc-300">{server.address}</span>
               </div>
             </div>
           </div>
@@ -261,17 +269,17 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-zinc-400 uppercase text-[11px] tracking-wider">
-                Working Directory (Project Root)
+                Project Workspace Directory
               </span>
               {server.workingDirectory && (
                 <CopyButton
                   textToCopy={server.workingDirectory}
-                  label="Copy Path"
+                  label="Copy Workspace Path"
                   title="Copy working directory path"
                 />
               )}
             </div>
-            <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3 font-mono text-xs text-zinc-200 break-all select-all">
+            <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3 font-mono text-xs text-zinc-300 break-all select-all">
               {server.workingDirectory ?? (
                 <span className="text-zinc-500 italic">Unavailable (Access Restricted)</span>
               )}
@@ -282,19 +290,19 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-zinc-400 uppercase text-[11px] tracking-wider">
-                Startup Command Line
+                Full Command Line
               </span>
               {server.commandLine && (
                 <CopyButton
                   textToCopy={server.commandLine}
                   label="Copy Command"
-                  title="Copy command line string"
+                  title="Copy full command line"
                 />
               )}
             </div>
-            <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3 font-mono text-xs text-zinc-200 break-all select-all">
+            <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3 font-mono text-xs text-zinc-300 break-all select-all whitespace-pre-wrap">
               {server.commandLine ?? (
-                <span className="text-zinc-500 italic">Unavailable (Access Restricted)</span>
+                <span className="text-zinc-500 italic">Unavailable</span>
               )}
             </div>
           </div>

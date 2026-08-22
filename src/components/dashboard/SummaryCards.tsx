@@ -1,9 +1,11 @@
 import React from 'react';
+import type { WslDistribution } from '../../types';
 
 interface SummaryCardsProps {
   runningServersCount: number;
   listeningPortsCount: number;
   processesCount: number;
+  wslDistributions?: WslDistribution[];
   loading: boolean;
 }
 
@@ -11,8 +13,12 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
   runningServersCount,
   listeningPortsCount,
   processesCount,
+  wslDistributions = [],
   loading,
 }) => {
+  const runningDistros = wslDistributions.filter((d) => d.state === 'running');
+  const stoppedDistros = wslDistributions.filter((d) => d.state === 'stopped');
+
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       {/* 1. Running Servers */}
@@ -62,11 +68,11 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         </div>
       </div>
 
-      {/* 3. Windows Processes */}
+      {/* 3. Discovered Processes */}
       <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 flex flex-col justify-between shadow-xs">
         <div className="flex items-center justify-between text-zinc-400">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-            Windows Processes
+            Processes
           </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -89,25 +95,36 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           {loading ? '...' : processesCount.toLocaleString()}
         </div>
         <div className="mt-1.5 text-[11px] text-zinc-500">
-          Tracked OS process identities
+          Enriched across environments
         </div>
       </div>
 
-      {/* 4. WSL (Coming Soon) */}
-      <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-xl p-4 flex flex-col justify-between opacity-80">
-        <div className="flex items-center justify-between text-zinc-500">
-          <span className="text-xs font-semibold uppercase tracking-wider">
-            WSL Environment
+      {/* 4. WSL Distributions */}
+      <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-4 flex flex-col justify-between shadow-xs">
+        <div className="flex items-center justify-between text-zinc-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            WSL Distros
           </span>
-          <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
-            Milestone 6
-          </span>
+          {runningDistros.length > 0 ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-1.5 py-0.5 rounded">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>{runningDistros.length} Running</span>
+            </span>
+          ) : (
+            <span className="text-[10px] font-semibold text-zinc-500 bg-zinc-800/80 px-1.5 py-0.5 rounded">
+              {wslDistributions.length > 0 ? 'Stopped' : 'Unavailable'}
+            </span>
+          )}
         </div>
-        <div className="mt-2 text-lg font-bold text-zinc-500 flex items-center gap-2">
-          <span>Coming Soon</span>
+        <div className="mt-2 text-2xl font-bold text-purple-400 font-mono">
+          {loading ? '...' : wslDistributions.length.toLocaleString()}
         </div>
-        <div className="mt-1.5 text-[11px] text-zinc-500">
-          WSL discovery not connected yet
+        <div className="mt-1.5 text-[11px] text-zinc-500 truncate" title={
+          wslDistributions.map(d => `${d.name} (${d.state})`).join(', ')
+        }>
+          {wslDistributions.length > 0
+            ? `${runningDistros.length} running, ${stoppedDistros.length} stopped`
+            : 'No WSL distributions detected'}
         </div>
       </div>
     </section>

@@ -4,6 +4,7 @@ import type {
   ServerSortDirection,
   ServerFilterOptions,
   Runtime,
+  WslDistribution,
 } from '../../types';
 
 interface ServerToolbarProps {
@@ -16,6 +17,7 @@ interface ServerToolbarProps {
   onSortChange: (field: ServerSortField) => void;
   onToggleSortDirection: () => void;
   availableRuntimes: Runtime[];
+  wslDistributions?: WslDistribution[];
   autoRefresh: boolean;
   onToggleAutoRefresh: (val: boolean) => void;
   onRefresh: () => void;
@@ -33,12 +35,15 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
   onSortChange,
   onToggleSortDirection,
   availableRuntimes,
+  wslDistributions = [],
   autoRefresh,
   onToggleAutoRefresh,
   onRefresh,
   loading,
   refreshing,
 }) => {
+  const runningWslDistros = wslDistributions.filter((d) => d.state === 'running');
+
   return (
     <div className="space-y-3 bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4">
       {/* Top row: Search Bar & Actions */}
@@ -65,7 +70,7 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search servers by name, port (e.g. 3000), PID, runtime, command, CWD..."
+            placeholder="Search servers by name, port (e.g. 3000), PID, distro (e.g. Fedora), runtime, command..."
             className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-blue-500/80 rounded-lg pl-9 pr-8 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
           />
           {searchQuery && (
@@ -168,14 +173,41 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             </button>
             <button
               type="button"
-              disabled
-              title="WSL integration coming in Milestone 6"
-              className="px-2.5 py-1 rounded-md text-xs font-medium text-zinc-600 cursor-not-allowed opacity-60 flex items-center gap-1"
+              onClick={() => onFilterChange({ ...filters, environment: 'wsl' })}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                filters.environment === 'wsl' || filters.environment.startsWith('wsl:')
+                  ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 font-semibold'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
             >
               <span>WSL</span>
-              <span className="text-[9px] uppercase px-1 rounded bg-zinc-800 text-zinc-500">M6</span>
+              {runningWslDistros.length > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              )}
             </button>
           </div>
+
+          {/* If WSL filter is active and multiple running distros exist, allow selecting specific distro */}
+          {(filters.environment === 'wsl' || filters.environment.startsWith('wsl:')) &&
+            runningWslDistros.length > 1 && (
+              <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-purple-800/40 rounded-lg px-2.5 py-1">
+                <span className="text-purple-400 text-[11px] font-medium">Distro:</span>
+                <select
+                  value={filters.environment}
+                  onChange={(e) => onFilterChange({ ...filters, environment: e.target.value })}
+                  className="bg-transparent text-xs text-purple-200 focus:outline-hidden cursor-pointer"
+                >
+                  <option value="wsl" className="bg-zinc-900 text-zinc-200">
+                    All WSL ({runningWslDistros.length})
+                  </option>
+                  {runningWslDistros.map((d) => (
+                    <option key={d.name} value={`wsl:${d.name}`} className="bg-zinc-900 text-zinc-200">
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
           {/* Runtime Dropdown Filter */}
           <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-zinc-800 rounded-lg px-2.5 py-1">
@@ -217,6 +249,9 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
               </option>
               <option value="runtime" className="bg-zinc-900 text-zinc-200">
                 Runtime
+              </option>
+              <option value="environment" className="bg-zinc-900 text-zinc-200">
+                Environment
               </option>
             </select>
 

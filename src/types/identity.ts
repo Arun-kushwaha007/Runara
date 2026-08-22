@@ -1,4 +1,5 @@
 import type { ProcessInfo } from './process';
+import type { Environment } from './environment';
 
 export type Runtime =
   | 'Node.js'
@@ -32,4 +33,6 @@ export interface ProcessIdentity {
   parent?: ProcessParentInfo | null;
   processTree: ProcessTreeNode[];
   listeningPorts: number[];
+  environment: Environment;
 }
+

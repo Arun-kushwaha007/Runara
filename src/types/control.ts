@@ -1,3 +1,5 @@
+import type { Environment } from './environment';
+
 /**
  * Target process information payload sent to backend for process control operations.
  * Encapsulates multiple identity signals to enable fresh pre-termination verification.
@@ -15,6 +17,8 @@ export interface ProcessTarget {
   expectedPorts: number[];
   /** Whether to execute immediate force termination */
   force?: boolean;
+  /** Target execution environment (Windows or WSL) */
+  environment?: Environment | null;
 }
 
 /**

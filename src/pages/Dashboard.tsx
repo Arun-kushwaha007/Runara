@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { controlApi, identityApi, portApi, systemApi } from '../lib/commands';
+import { controlApi, identityApi, portApi, systemApi, unifiedApi } from '../lib/commands';
 import type {
   ProcessIdentity,
   PortInfo,
@@ -12,6 +12,8 @@ import type {
   Runtime,
   ProcessTarget,
   ProcessControlError,
+  WslDistribution,
+  DiscoveryDiagnostic,
 } from '../types';
 import { deriveDashboardServers, filterServers, sortServers } from '../lib/serverUtils';
 import { SummaryCards } from '../components/dashboard/SummaryCards';
@@ -41,11 +43,14 @@ export const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DashboardTab>('servers');
   const [ports, setPorts] = useState<PortInfo[]>([]);
   const [identities, setIdentities] = useState<ProcessIdentity[]>([]);
+  const [wslDistros, setWslDistros] = useState<WslDistribution[]>([]);
+  const [diagnostics, setDiagnostics] = useState<DiscoveryDiagnostic[]>([]);
   const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [dismissedDiagnostics, setDismissedDiagnostics] = useState<boolean>(false);
 
   // Server Filters & Sorting
   const [filters, setFilters] = useState<ServerFilterOptions>({
@@ -92,19 +97,29 @@ export const Dashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, [feedbackToast]);
 
-  // Fetch listening ports and enriched process identities concurrently
+  // Fetch unified snapshot across Windows and WSL distributions
   const refreshAll = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setRefreshing(true);
     }
     try {
-      const [fetchedPorts, fetchedIdentities] = await Promise.all([
-        portApi.getListeningPorts(),
-        identityApi.getProcessIdentities(),
-      ]);
+      // Try unified discovery endpoint
+      try {
+        const snapshot = await unifiedApi.getUnifiedSnapshot();
+        setPorts(snapshot.ports);
+        setIdentities(snapshot.identities);
+        setWslDistros(snapshot.distributions);
+        setDiagnostics(snapshot.diagnostics);
+      } catch (unifiedErr) {
+        console.warn('Unified snapshot failed, falling back to legacy port & identity API:', unifiedErr);
+        const [fetchedPorts, fetchedIdentities] = await Promise.all([
+          portApi.getListeningPorts(),
+          identityApi.getProcessIdentities(),
+        ]);
+        setPorts(fetchedPorts);
+        setIdentities(fetchedIdentities);
+      }
 
-      setPorts(fetchedPorts);
-      setIdentities(fetchedIdentities);
       setError(null);
       setLastUpdated(new Date());
     } catch (err) {
@@ -112,7 +127,7 @@ export const Dashboard: React.FC = () => {
       setError(
         typeof err === 'string'
           ? err
-          : 'Unable to inspect Windows ports or process identities. Access may be restricted.'
+          : 'Unable to inspect local development servers. Access may be restricted.'
       );
     } finally {
       setLoading(false);
@@ -122,6 +137,13 @@ export const Dashboard: React.FC = () => {
 
   // Request Stop Confirmation
   const handleRequestStop = useCallback((server: DashboardServer) => {
+    if (server.environment?.type === 'wsl') {
+      setFeedbackToast({
+        type: 'info',
+        message: 'WSL process control is read-only in Milestone 6. Direct termination of Linux processes is restricted.',
+      });
+      return;
+    }
     setServerToStop(server);
     setStopError(null);
   }, []);
@@ -138,6 +160,7 @@ export const Dashboard: React.FC = () => {
         workingDirectory: serverToStop.workingDirectory,
         expectedPorts: serverToStop.allPorts,
         force,
+        environment: serverToStop.environment,
       };
 
       setIsExecutingStop(true);
@@ -271,19 +294,25 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Efficient O(P) Process Identity Map for Ports Tab
+  // Efficient Process Identity Map for Ports Tab
   const identityMap = useMemo(() => {
-    const map = new Map<number, ProcessIdentity>();
+    const map = new Map<string, ProcessIdentity>();
     for (const id of identities) {
-      map.set(id.process.pid, id);
+      const key = id.environment?.type === 'wsl'
+        ? `wsl:${id.environment.distro}:${id.process.pid}`
+        : `win:${id.process.pid}`;
+      map.set(key, id);
     }
     return map;
   }, [identities]);
 
-  // Efficient O(S) Port -> Process Identity Join for Ports Tab
+  // Efficient Port -> Process Identity Join for Ports Tab
   const joinedEndpoints = useMemo<JoinedPortProcess[]>(() => {
     return ports.map((port) => {
-      const id = identityMap.get(port.pid);
+      const key = port.environment?.type === 'wsl'
+        ? `wsl:${port.environment.distro}:${port.pid}`
+        : `win:${port.pid}`;
+      const id = identityMap.get(key);
       return {
         port,
         process: id ? id.process : null,
@@ -359,11 +388,11 @@ export const Dashboard: React.FC = () => {
         return (
           p.pid.toString().includes(q) ||
           p.name.toLowerCase().includes(q) ||
-          (p.commandLine ? p.commandLine.toLowerCase().includes(q) : false) ||
-          (p.workingDirectory ? p.workingDirectory.toLowerCase().includes(q) : false) ||
           id.runtime.toLowerCase().includes(q) ||
           id.packageManager.toLowerCase().includes(q) ||
-          id.listeningPorts.some((portNum) => portNum.toString().includes(q))
+          (p.commandLine ? p.commandLine.toLowerCase().includes(q) : false) ||
+          (p.workingDirectory ? p.workingDirectory.toLowerCase().includes(q) : false) ||
+          id.listeningPorts.some((port) => port.toString().includes(q))
         );
       });
     }
@@ -473,6 +502,43 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
+      {/* WSL Diagnostics Alert Banner (Graceful Degradation) */}
+      {diagnostics.length > 0 && !dismissedDiagnostics && (
+        <div className="flex items-center justify-between p-4 rounded-xl border border-amber-800/60 bg-amber-950/40 text-amber-200 text-xs">
+          <div className="flex items-center gap-2.5">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-amber-400 shrink-0"
+            >
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <div>
+              <span className="font-semibold">WSL Telemetry Notice:</span>{' '}
+              <span>
+                {diagnostics.map((d) => `${d.distribution ?? d.source} (${d.operation}): ${d.error}`).join('; ')}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDismissedDiagnostics(true)}
+            className="text-amber-400 hover:text-amber-100 px-2 py-1 rounded hover:bg-amber-900/40 transition-colors shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Dashboard Hero Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -481,11 +547,11 @@ export const Dashboard: React.FC = () => {
               Local Development Control Center
             </h2>
             <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-950/80 text-blue-300 border border-blue-800/50">
-              {sysInfo ? sysInfo.platform : 'Windows'}
+              {sysInfo ? sysInfo.platform : 'Windows + WSL'}
             </span>
           </div>
           <p className="text-zinc-400 text-xs mt-1">
-            Real-time discovery, port ownership, process ancestry, and server inspection across your local machine.
+            Unified discovery, port ownership, process ancestry, and server inspection across Windows and WSL distributions.
           </p>
         </div>
 
@@ -505,6 +571,7 @@ export const Dashboard: React.FC = () => {
         runningServersCount={allServers.length}
         listeningPortsCount={ports.length}
         processesCount={identities.length}
+        wslDistributions={wslDistros}
         loading={loading}
       />
 
@@ -512,7 +579,7 @@ export const Dashboard: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
           <div className="flex items-center gap-2">
-            {/* 1. Development Servers Tab (Primary M4 View) */}
+            {/* 1. Development Servers Tab (Primary View) */}
             <button
               type="button"
               onClick={() => setActiveTab('servers')}
@@ -613,6 +680,7 @@ export const Dashboard: React.FC = () => {
               onSortChange={setSortField}
               onToggleSortDirection={handleToggleSortDirection}
               availableRuntimes={availableRuntimes}
+              wslDistributions={wslDistros}
               autoRefresh={autoRefresh}
               onToggleAutoRefresh={setAutoRefresh}
               onRefresh={() => refreshAll(true)}

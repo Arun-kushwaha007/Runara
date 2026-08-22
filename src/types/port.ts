@@ -1,5 +1,6 @@
 import type { ProcessInfo } from './process';
 import type { ProcessIdentity } from './identity';
+import type { Environment } from './environment';
 
 export interface PortInfo {
   port: number;
@@ -7,6 +8,7 @@ export interface PortInfo {
   protocol: string;
   address: string;
   state: string;
+  environment: Environment;
 }
 
 export interface JoinedPortProcess {
@@ -14,3 +16,4 @@ export interface JoinedPortProcess {
   process: ProcessInfo | null;
   identity?: ProcessIdentity | null;
 }
+

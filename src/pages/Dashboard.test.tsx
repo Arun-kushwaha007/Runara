@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Dashboard from './Dashboard';
-import { controlApi, identityApi, portApi, systemApi } from '../lib/commands';
-import type { ProcessIdentity, PortInfo, SystemInfo, ControlResult } from '../types';
+import { controlApi, identityApi, portApi, systemApi, unifiedApi } from '../lib/commands';
+import type { ProcessIdentity, PortInfo, SystemInfo, ControlResult, UnifiedSnapshot } from '../types';
 
 // Mock the API commands module
 vi.mock('../lib/commands', () => ({
@@ -20,6 +20,12 @@ vi.mock('../lib/commands', () => ({
     stopServer: vi.fn(),
     forceStopServer: vi.fn(),
   },
+  unifiedApi: {
+    getUnifiedSnapshot: vi.fn(),
+  },
+  wslApi: {
+    getWslDistributions: vi.fn(),
+  },
 }));
 
 // Mock tauri-plugin-opener
@@ -32,7 +38,7 @@ const mockSystemInfo: SystemInfo = {
   version: '0.1.0',
   backend: 'Rust',
   status: 'Ready',
-  platform: 'Windows',
+  platform: 'Windows + WSL',
 };
 
 const mockPorts: PortInfo[] = [
@@ -42,6 +48,7 @@ const mockPorts: PortInfo[] = [
     protocol: 'tcp',
     address: '127.0.0.1',
     state: 'listening',
+    environment: { type: 'windows' },
   },
   {
     port: 3001,
@@ -49,6 +56,7 @@ const mockPorts: PortInfo[] = [
     protocol: 'tcp',
     address: '127.0.0.1',
     state: 'listening',
+    environment: { type: 'windows' },
   },
   {
     port: 8000,
@@ -56,6 +64,15 @@ const mockPorts: PortInfo[] = [
     protocol: 'tcp',
     address: '0.0.0.0',
     state: 'listening',
+    environment: { type: 'windows' },
+  },
+  {
+    port: 5000,
+    pid: 421,
+    protocol: 'tcp',
+    address: '0.0.0.0',
+    state: 'listening',
+    environment: { type: 'wsl', distro: 'Ubuntu' },
   },
 ];
 
@@ -69,6 +86,7 @@ const mockIdentities: ProcessIdentity[] = [
       commandLine: 'npm run dev',
       workingDirectory: 'C:\\Projects\\company-frontend',
       status: 'running',
+      environment: { type: 'windows' },
     },
     runtime: 'Node.js',
     packageManager: 'npm',
@@ -84,6 +102,7 @@ const mockIdentities: ProcessIdentity[] = [
       { pid: 18240, name: 'node.exe', commandLine: 'npm run dev', isTarget: true, depth: 3 },
     ],
     listeningPorts: [3000, 3001],
+    environment: { type: 'windows' },
   },
   {
     process: {
@@ -94,6 +113,7 @@ const mockIdentities: ProcessIdentity[] = [
       commandLine: 'python -m uvicorn main:app --port 8000',
       workingDirectory: 'C:\\Projects\\api-service',
       status: 'running',
+      environment: { type: 'windows' },
     },
     runtime: 'Python',
     packageManager: 'Unknown',
@@ -107,18 +127,56 @@ const mockIdentities: ProcessIdentity[] = [
       { pid: 22096, name: 'python.exe', commandLine: 'python -m uvicorn main:app', isTarget: true, depth: 1 },
     ],
     listeningPorts: [8000],
+    environment: { type: 'windows' },
+  },
+  {
+    process: {
+      pid: 421,
+      parentPid: 300,
+      name: 'node',
+      executablePath: '/usr/bin/node',
+      commandLine: 'node index.js',
+      workingDirectory: '/home/dev/wsl-express',
+      status: 'running',
+      environment: { type: 'wsl', distro: 'Ubuntu' },
+    },
+    runtime: 'Node.js',
+    packageManager: 'npm',
+    parent: {
+      pid: 300,
+      name: 'bash',
+      commandLine: '-bash',
+    },
+    processTree: [
+      { pid: 300, name: 'bash', commandLine: '-bash', isTarget: false, depth: 0 },
+      { pid: 421, name: 'node', commandLine: 'node index.js', isTarget: true, depth: 1 },
+    ],
+    listeningPorts: [5000],
+    environment: { type: 'wsl', distro: 'Ubuntu' },
   },
 ];
 
-describe('Dashboard Component (Milestones 4 & 5)', () => {
+const mockSnapshot: UnifiedSnapshot = {
+  processes: mockIdentities.map((id) => id.process),
+  ports: mockPorts,
+  identities: mockIdentities,
+  distributions: [
+    { name: 'Ubuntu', state: 'running', isDefault: true, version: 2 },
+    { name: 'FedoraLinux-44', state: 'stopped', isDefault: false, version: 2 },
+  ],
+  diagnostics: [],
+};
+
+describe('Dashboard Component (Milestones 4, 5, & 6)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(systemApi.getSystemInfo).mockResolvedValue(mockSystemInfo);
+    vi.mocked(unifiedApi.getUnifiedSnapshot).mockResolvedValue(mockSnapshot);
     vi.mocked(portApi.getListeningPorts).mockResolvedValue(mockPorts);
     vi.mocked(identityApi.getProcessIdentities).mockResolvedValue(mockIdentities);
   });
 
-  it('renders Dashboard with hero header, metrics cards, and discovered server cards', async () => {
+  it('renders Dashboard with hero header, metrics cards, and discovered server cards across Windows and WSL', async () => {
     render(<Dashboard />);
 
     expect(screen.getByText(/Local Development Control Center/i)).toBeInTheDocument();
@@ -126,14 +184,18 @@ describe('Dashboard Component (Milestones 4 & 5)', () => {
     await waitFor(() => {
       expect(screen.getByText('company-frontend')).toBeInTheDocument();
       expect(screen.getByText('api-service')).toBeInTheDocument();
+      expect(screen.getByText('wsl-express')).toBeInTheDocument();
     });
 
     expect(screen.getByText(/localhost:3000/i)).toBeInTheDocument();
     expect(screen.getByText(/localhost:8000/i)).toBeInTheDocument();
+    expect(screen.getByText(/localhost:5000/i)).toBeInTheDocument();
     expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Python').length).toBeGreaterThan(0);
     expect(screen.getByText(/PID 18240/i)).toBeInTheDocument();
     expect(screen.getByText(/PID 22096/i)).toBeInTheDocument();
+    expect(screen.getByText(/PID 421/i)).toBeInTheDocument();
+    expect(screen.getByText(/WSL \/ Ubuntu/i)).toBeInTheDocument();
   });
 
   it('filters server list dynamically when user enters a search query', async () => {
@@ -147,6 +209,11 @@ describe('Dashboard Component (Milestones 4 & 5)', () => {
     fireEvent.change(searchInput, { target: { value: '8000' } });
 
     expect(screen.getByText('api-service')).toBeInTheDocument();
+    expect(screen.queryByText('company-frontend')).not.toBeInTheDocument();
+    expect(screen.queryByText('wsl-express')).not.toBeInTheDocument();
+
+    fireEvent.change(searchInput, { target: { value: 'ubuntu' } });
+    expect(screen.getByText('wsl-express')).toBeInTheDocument();
     expect(screen.queryByText('company-frontend')).not.toBeInTheDocument();
 
     fireEvent.change(searchInput, { target: { value: '' } });
@@ -175,7 +242,7 @@ describe('Dashboard Component (Milestones 4 & 5)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('opens stop confirmation modal with target details when Stop is clicked', async () => {
+  it('opens stop confirmation modal for Windows server when Stop is clicked', async () => {
     render(<Dashboard />);
 
     await waitFor(() => {
@@ -222,14 +289,17 @@ describe('Dashboard Component (Milestones 4 & 5)', () => {
     fireEvent.click(confirmStopBtn);
 
     await waitFor(() => {
-      expect(controlApi.stopServer).toHaveBeenCalledWith({
-        pid: 18240,
-        processName: 'node.exe',
-        executablePath: 'C:\\Program Files\\nodejs\\node.exe',
-        workingDirectory: 'C:\\Projects\\company-frontend',
-        expectedPorts: [3000, 3001],
-        force: false,
-      });
+      expect(controlApi.stopServer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pid: 18240,
+          processName: 'node.exe',
+          executablePath: 'C:\\Program Files\\nodejs\\node.exe',
+          workingDirectory: 'C:\\Projects\\company-frontend',
+          expectedPorts: [3000, 3001],
+          force: false,
+          environment: { type: 'windows' },
+        })
+      );
       expect(screen.getByText(/Server "company-frontend" \(PID 18240\) stopped/i)).toBeInTheDocument();
     });
   });
@@ -276,8 +346,13 @@ describe('Dashboard Component (Milestones 4 & 5)', () => {
   });
 
   it('renders empty state when no servers are detected', async () => {
-    vi.mocked(portApi.getListeningPorts).mockResolvedValue([]);
-    vi.mocked(identityApi.getProcessIdentities).mockResolvedValue([]);
+    vi.mocked(unifiedApi.getUnifiedSnapshot).mockResolvedValue({
+      processes: [],
+      ports: [],
+      identities: [],
+      distributions: [],
+      diagnostics: [],
+    });
 
     render(<Dashboard />);
 
@@ -287,15 +362,15 @@ describe('Dashboard Component (Milestones 4 & 5)', () => {
   });
 
   it('renders error state with retry button when backend discovery fails', async () => {
-    vi.mocked(portApi.getListeningPorts).mockRejectedValue('Access to Windows TCP table was denied');
+    vi.mocked(unifiedApi.getUnifiedSnapshot).mockRejectedValue('Access to TCP table was denied');
+    vi.mocked(portApi.getListeningPorts).mockRejectedValue('Access to TCP table was denied');
 
     render(<Dashboard />);
 
     await waitFor(() => {
       expect(screen.getByText(/Unable to inspect local development servers/i)).toBeInTheDocument();
-      expect(screen.getByText(/Access to Windows TCP table was denied/i)).toBeInTheDocument();
+      expect(screen.getByText(/Access to TCP table was denied/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Retry Discovery/i })).toBeInTheDocument();
     });
   });
 });
-

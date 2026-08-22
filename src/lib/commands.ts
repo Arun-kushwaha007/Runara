@@ -6,6 +6,8 @@ import type {
   ProcessIdentity,
   ProcessTarget,
   ControlResult,
+  WslDistribution,
+  UnifiedSnapshot,
 } from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
@@ -36,6 +38,14 @@ export async function forceStopServer(target: ProcessTarget): Promise<ControlRes
   return invoke<ControlResult>('force_stop_server', { target });
 }
 
+export async function getWslDistributions(): Promise<WslDistribution[]> {
+  return invoke<WslDistribution[]>('get_wsl_distributions');
+}
+
+export async function getUnifiedSnapshot(): Promise<UnifiedSnapshot> {
+  return invoke<UnifiedSnapshot>('get_unified_snapshot');
+}
+
 export const processApi = {
   getProcesses,
 };
@@ -57,4 +67,13 @@ export const controlApi = {
 export const systemApi = {
   getSystemInfo,
 };
+
+export const wslApi = {
+  getWslDistributions,
+};
+
+export const unifiedApi = {
+  getUnifiedSnapshot,
+};
+
 

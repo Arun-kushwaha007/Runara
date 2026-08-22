@@ -8,9 +8,11 @@ export interface SystemInfo {
 
 export type NavPage = 'dashboard' | 'servers' | 'projects' | 'settings';
 
+export * from './environment';
 export * from './process';
 export * from './port';
 export * from './identity';
 export * from './server';
 export * from './control';
+
 
