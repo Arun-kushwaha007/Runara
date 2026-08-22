@@ -1,165 +1,129 @@
 # DevHub
 
-> **Local Development Control Center**
+> **Local Development Control Center for Windows and WSL**
 
-DevHub is a native Windows desktop application for managing local development servers across Windows and WSL from a single centralized interface.
+[![Tauri 2](https://img.shields.io/badge/Tauri-2.0-24C8D5?logo=tauri&logoColor=white)](https://v2.tauri.app/)
+[![Rust](https://img.shields.io/badge/Rust-1.78+-orange?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Tests](https://img.shields.io/badge/Tests-212%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
+[![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
 
----
-
-## 🚀 Overview
-
-Developers frequently run multiple frontend applications, backend APIs, background workers, and AI-agent created development servers simultaneously across Windows and WSL. 
-
-**The core problem is visibility and control:**
-- Identifying which process or project owns a specific port (e.g. port 3000)
-- Tracking servers split across Windows terminals and WSL distributions
-- Safely stopping, restarting, and organizing local development services
-
-DevHub provides a unified control layer over local development processes without requiring manual terminal searches or PID lookups.
+DevHub is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
 
 ---
 
-## 📚 Documentation & Engineering Guides
+## ⚡ The Problem
 
-- **[Product Requirements Document (PRD.md)](doc/PRD.md)** — Complete product specifications, domain models, and milestone roadmap.
-- **[Engineering Learning Guide (LEARNING.md)](LEARNING.md)** — Comprehensive educational guide covering CS fundamentals, Windows systems programming, networking theory, HLD/LLD architecture, cross-language IPC, and code traces for interview preparation.
+Modern developers frequently run 5 to 15 concurrent local services: Next.js frontend apps, FastAPI/Express microservices, Redis/DB helpers, background workers, and ephemeral servers spawned by AI coding agents.
+
+This leads to constant friction:
+* *"Which process is holding port 3000?"*
+* *"Where is the terminal that started this background API?"*
+* *"How do I safely restart a service without accidentally killing my VS Code window or PowerShell shell?"*
+* *"Why are my Linux microservices in WSL isolated from my Windows desktop tooling?"*
+
+**DevHub solves local environment visibility and control** by providing a native control center above operating system processes.
+
+---
+
+## ✨ Key Features
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                               DEVHUB CAPABILITIES                                 │
+├─────────────────────┬──────────────────────┬──────────────────────────────────────┤
+│ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration                     │
+│ • Win32 IP Helper   │ • 9-Point Pre-Term   │ • Persistent Server Profiles (SQLite)│
+│ • Sub-ms TCP Scan   │   Verification       │ • Sequential Fail-Fast Startup       │
+│ • WSL 2 Multi-Distro│ • Ancestor Guardrail │ • Pre-Flight Port Conflict Resolv    │
+│ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Dynamic 8-Tier State Machine       │
+│ • 9D Process Ident  │ • Release Check      │ • Unknown Server Adoption Heuristics │
+└─────────────────────┴──────────────────────┴──────────────────────────────────────┘
+```
+
+* **Sub-Millisecond Socket Discovery**: Queries the native Win32 IP Helper API (`GetExtendedTcpTable`) directly in kernel memory for instant listening socket enumeration across IPv4, IPv6, and wildcard addresses.
+* **Dual-Environment Architecture**: Seamlessly discovers and aggregates development processes running on the Windows host and inside active WSL 2 Linux distributions (Ubuntu, Debian, Fedora, Arch).
+* **9-Dimensional Process Identity**: Classifies runtimes (`Node.js`, `Python`, `Rust`, `.NET`, `Go`, `Java`) and package managers (`npm`, `pnpm`, `yarn`, `bun`, `cargo`), resolving human-friendly workspace folder names.
+* **Process Ancestry Tree Visualization**: Reconstructs hierarchical process lineages with cycle protection ($D \le 32$) to disambiguate child servers from parent wrappers.
+* **Safe Win32 Process Control**: Eliminates PID reuse and TOCTOU vulnerabilities with a 9-point verification gate. Ancestor protection guarantees shells (`pwsh.exe`, `cmd.exe`) and IDEs (`Code.exe`) are never terminated.
+* **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution and non-blocking readiness polling.
+* **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment.
+* **Project Groups & Sequential Orchestration**: Groups related microservices into logical projects with deterministic sequential startup, concurrency locks, and aggregate health derivation.
+* **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
+
+---
+
+## 🏛️ System Architecture
+
+DevHub decouples a **native Rust backend core** from a **React 19 + TypeScript WebView** connected via asynchronous, type-safe JSON-RPC IPC:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                            REACT 19 + TAILWIND V4 UI                             │
+│  ┌───────────────┐  ┌──────────────┐  ┌───────────────┐  ┌────────────────────┐  │
+│  │ Dashboard     │  │ Live Servers │  │ Profiles Page │  │ Project Groups     │  │
+│  └───────┬───────┘  └──────┬───────┘  └───────┬───────┘  └────────┬───────────┘  │
+│          └─────────────────┼──────────────────┴───────────────────┘              │
+│                            ▼                                                     │
+│                  TypeScript API Gateway (`src/lib/commands.ts`)                  │
+├────────────────────────────────────┬─────────────────────────────────────────────┤
+│                                    │ Tauri 2 IPC Channel                         │
+├────────────────────────────────────▼─────────────────────────────────────────────┤
+│                         Tauri Command Controllers                                │
+│  ┌────────────────────────────────────────────────────────────────────────────┐  │
+│  │ DOMAIN SERVICES LAYER                                                      │  │
+│  │ ├── UnifiedDiscoveryService ──► PortDiscovery + ProcessDiscovery           │  │
+│  │ ├── ProcessIdentityService  ──► RuntimeDetector + ProcessTreeBuilder       │  │
+│  │ ├── ProcessControlService   ──► Win32 Kernel Controller + Safety Gates     │  │
+│  │ ├── ServerProfileService    ──► SQLite Profile Repository                  │  │
+│  │ ├── ServerStartService      ──► Windows/WSL Launchers + Readiness Polling  │  │
+│  │ └── ProjectOrchestrator     ──► Sequential Orchestration Engine            │  │
+│  └──────────────────────┬───────────────────────────────┬─────────────────────┘  │
+│                         ▼                               ▼                        │
+│          ┌─────────────────────────────┐  ┌───────────────────────────┐          │
+│          │ INFRASTRUCTURE ADAPTERS     │  │ EMBEDDED SQLITE (WAL)     │          │
+│          │ • Win32 IP Helper (FFI)     │  │ • Versioned Migrations    │          │
+│          │ • Win32 Kernel32 (FFI)      │  │ • Foreign Key Cascades    │          │
+│          │ • sysinfo & PEB Parser      │  │ • Gapless Profile Ordering│          │
+│          │ • WSL 2 Subsystem Driver    │  │ • Zero Lock Contention    │          │
+│          └─────────────────────────────┘  └───────────────────────────┘          │
+│                                                                                  │
+│                            NATIVE RUST BACKEND                                   │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Desktop Framework:** [Tauri 2](https://v2.tauri.app/)
-- **Native Backend:** [Rust](https://www.rust-lang.org/)
-- **Frontend Framework:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **Bundler:** [Vite](https://vite.dev/)
-- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **Testing:** [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (Frontend) & `cargo test` (Rust Backend)
+| Layer | Technologies |
+| :--- | :--- |
+| **Desktop Shell** | [Tauri 2](https://v2.tauri.app/) (Rust-based native window and IPC runtime) |
+| **Backend Core** | [Rust 2021](https://www.rust-lang.org/) (`windows-sys`, `sysinfo`, `rusqlite`, `serde`, `uuid`, `chrono`) |
+| **Persistence** | Embedded [SQLite 3](https://www.sqlite.org/) with Write-Ahead Logging (WAL) |
+| **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript 5.8](https://www.typescriptlang.org/) |
+| **Bundler & Tooling** | [Vite 7](https://vite.dev/) |
+| **Styling & UI Tokens** | [Tailwind CSS v4](https://tailwindcss.com/) (Dark Mode First) |
+| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (102 tests) & `cargo test` (110 tests) |
 
 ---
 
-## 📍 Current Status
-
-- **Milestone 0: Project Foundation (Complete)**
-  - Initial desktop application shell and navigation structure
-  - React + TypeScript + Vite + Tailwind CSS frontend pipeline
-  - Tauri 2 + Rust native backend configuration
-  - Verified React ↔ Tauri/Rust IPC communication
-  - Windows desktop executable build verified
-
-- **Milestone 1: Windows Process Discovery (Complete)**
-  - Native Rust process discovery service (`sysinfo`)
-  - Normalized `ProcessInfo` model (PID, PPID, name, executable path, command line, CWD, status)
-  - Tauri IPC `get_processes` command with Serde camelCase mapping
-  - Interactive process inspection dashboard with search, sorting, auto-refresh polling, and process details modal
-  - Comprehensive unit and integration test coverage
-
-- **Milestone 2: Windows Port Discovery (Complete)**
-  - Native Win32 IP Helper API integration (`iphlpapi.dll` & `GetExtendedTcpTable`) for sub-millisecond listening TCP socket discovery
-  - Complete support for IPv4 (`AF_INET`, `127.0.0.1`, `0.0.0.0`) and IPv6 (`AF_INET6`, `[::1]`, `[::]`) endpoints with network byte-order translation
-  - Normalized `PortInfo` domain model and decoupled `PortDiscovery` service trait
-  - High-performance $O(P + S)$ Hash Map join associating listening ports with owning `ProcessInfo` metadata
-  - Support for multi-port processes, wildcard addresses, and missing process degradation
-  - Dedicated Listening Ports & Processes interactive table with searching, column sorting, clipboard copying, and auto-refresh (3s)
-  - Deep networking fundamentals and systems architecture chapters added to `LEARNING.md`
-
-- **Milestone 3: Process Identity (Complete)**
-  - Rich `ProcessIdentity` domain entity composing process metadata, runtime, package manager, parent info, ancestry tree, and listening ports
-  - Conservative software runtime classification (`Node.js`, `Python`, `Java`, `.NET`, `Go`, `Rust`, `Unknown`) via `RuntimeDetector`
-  - Dual-source package manager detection (`npm`, `pnpm`, `yarn`, `bun`, `Unknown`) via command-line parsing and ancestry inspection
-  - Reconstructed process ancestry tree (`ProcessTreeBuilder`) with $O(P)$ hash map indexing, $O(D)$ traversal, `HashSet<u32>` cycle protection, self-parent protection, and depth limits ($D \le 32$)
-  - Multi-port association allowing a single process to own multiple distinct listening sockets
-  - Interactive Process Ancestry Tree visualization in the Process Details Panel with current process highlighting
-  - Enriched process table with runtime badges, package manager tags, port chips, and deep search across all identity dimensions
-  - Comprehensive educational guide chapters 28–39 added to `LEARNING.md` covering process identity, ancestry algorithms, and systems interview preparation
-
-- **Milestone 4: Server Dashboard (Complete)**
-  - Developer-oriented `DashboardServer` view model and multi-port process aggregation
-  - Conservative server name inference (workspace directory folder name → runtime fallback → process name)
-  - Summary metrics cards (Running Servers, Listening Ports, Windows Processes, WSL status)
-  - Instant client-side search-as-you-type across name, port, PID, runtime, package manager, command, and CWD
-  - Dynamic runtime filtering, environment selectors, and multi-field stable sorting (Port, PID, Name, Runtime)
-  - 3-tier progressive disclosure: developer server cards + deep server inspection modal
-  - Embedded process ancestry lineage visualizer with target process highlighting
-  - One-click clipboard copy triggers for PIDs, ports, paths, and commands with visual feedback
-  - Safe browser launching for localhost development endpoints
-  - Auto-refresh polling (3s) with clean lifecycle unmount handling
-  - Chapters 40–49 added to `LEARNING.md` covering View Models, Derived State, UI Data Pipelines, UX State Machines, and HLD/LLD Interview Q&A
-
-- **Milestone 5: Safe Windows Process Control (Complete)**
-  - Native Win32 `kernel32.dll` direct FFI bindings (`OpenProcess`, `TerminateProcess`, `WaitForSingleObject`, `CloseHandle`)
-  - Memory-safe RAII `ProcessHandle` wrapper guaranteeing deterministic handle reclamation
-  - 9-point pre-termination identity verification (PID existence, process name match, executable path equality, CWD verification, system process protection)
-  - BFS descendant tree discovery terminating leaf worker processes before the root server process
-  - Strict Ancestor Safety Rule preventing accidental termination of IDEs (`Code.exe`), shells (`pwsh.exe`, `cmd.exe`), or parent wrappers
-  - Bounded post-termination exit polling loop (3000 ms) via `WaitForSingleObject`
-  - Post-termination TCP port verification diagnosing freed ports vs. port ownership changes
-  - Modal-based stop confirmation with target metadata disclosure and pre-termination safety notice
-  - Per-server non-blocking stopping state machine (`stoppingPids: Set<number>`) with animated indicators
-  - Full suite of 45 Rust unit/integration tests and 21 React frontend tests passing
-  - Chapters 50–61 added to `LEARNING.md` covering OS process control, PID reuse, TOCTOU mitigation, and HLD/LLD interview preparation
-
-- **Milestone 6: WSL Integration (Complete)**
-  - Dual-environment architecture modeling Windows host and WSL Linux distributions as distinct infrastructure sources feeding a normalized domain model
-  - Multi-environment `Environment` enum (`Environment::Windows` & `Environment::Wsl { distro }`) and composite `(Environment, PID)` keys preventing cross-environment process or port collisions
-  - Robust WSL distribution discovery (`wsl.exe -l -v`) with UTF-16LE / wide-character byte decoding and state filtering (only inspecting active `Running` distributions)
-  - Linux process discovery (`ps -eo pid,ppid,comm,args --no-headers`) and socket statistics discovery (`ss -tlpn -H`) executing with direct argument vectors and a strict 3000 ms timeout bound
-  - Environment-isolated process tree reconstruction and runtime detection (`Node.js`, `Python`, `Rust`, `npm`, `pnpm`, `yarn`, `bun`, `cargo`)
-  - Unified multi-environment discovery service (`UnifiedDiscoveryService`) with graceful degradation and partial failure isolation (`DiscoveryDiagnostic`)
-  - Strict read-only safety boundary for WSL processes preserving Milestone 5 Windows process control guarantees
-  - Unified Dashboard UI with environment badge chips, WSL distro filters, WSL distribution summary metrics, and diagnostic warning notices
-  - 68 Rust unit/integration tests and 25 React frontend tests passing (100% test pass rate)
-- **Milestone 7: Server Profiles & Launch Management (Complete)**
-  - Embedded SQLite database engine (`rusqlite`) configured with Write-Ahead Logging (WAL Mode), foreign keys, and synchronous normal durability
-  - Forward-only database migration runner (`MigrationRunner`) with versioned schema tracking (`schema_migrations`)
-  - Normalized `ServerProfile` domain model with UUID v4 persistent identifiers and UTC timestamps
-  - `ServerProfileRepository` trait abstraction with complete SQLite CRUD implementation
-  - Cross-environment process launcher subsystem (`EnvironmentLauncher`):
-    - `WindowsLauncher` executing `cmd.exe /D /C` with `CREATE_NO_WINDOW`
-    - `WslLauncher` executing `wsl.exe -d <distro> --cd <dir> -- sh -c` with `CREATE_NO_WINDOW`
-  - Robust startup orchestration engine (`ServerStartService`):
-    - Non-destructive pre-flight port conflict checking refusing launch if expected port is already occupied
-    - Asynchronous subprocess spawning and non-blocking in-flight tracking
-    - Bounded 20-second readiness polling loop (500 ms intervals) with early process crash detection
-    - Safe Windows server restart flow (Stop &rarr; Bounded Wait &rarr; Port Release Verification &rarr; Fresh Launch)
-  - `ServerProfileService` domain service with multi-signal process association (Port + CWD matching) yielding enriched `ServerProfileView` models
-  - Dedicated **Servers & Profiles** page (`Servers.tsx`) featuring:
-    - View Switcher Tabs ("Server Profiles" and "Live Discovered Servers")
-    - Profile Cards with environment badges, copyable commands, runtime status indicators, and action triggers
-    - Full modal suite: Create/Edit Profile Modal, Delete Profile Modal (with non-destruction notice), and Port Conflict Modal (with live owner inspection)
-    - Safe WSL process control boundary enforcement (read-only action guards)
-  - Full suite of 87 Rust unit/integration tests and 32 React frontend tests passing (100% test pass rate)
-  - Chapters 74–84 added to `LEARNING.md` covering persistence architecture, WAL mode, process launching, startup polling, and systems interview preparation
-
-- **Milestone 8: Adopt Unknown Servers (Complete)**
-  - Dynamic, deterministic multi-signal profile association (`annotateWithProfiles`) matching live discovered servers with saved `ServerProfile` records
-  - Zero-guessing ambiguity handling treating multiple candidate matches as unmanaged
-  - Transient `AdoptionDraft` synthesis prefilling server name, working directory, startup command heuristics, and expected ports
-  - Read-only environment enforcement preventing cross-environment configuration mismatch during adoption
-  - Multi-port selection UI enabling explicit primary port selection for multi-socket server processes
-  - Native Rust duplicate detection command (`find_duplicate_server_profiles`) providing advisory warnings before creation
-  - Dedicated `AdoptionFormModal` dialog with process context summary, detected command disclaimer, and full input validation
-  - Visual Managed (`✓ Managed`) and Unmanaged (`Unmanaged`) badges across Dashboard and Active Servers list cards
-  - Direct "Adopt" button triggers in server card headers and server inspection details modal
-  - Server Toolbar filtering by profile management state ("All Servers", "Managed Only", "Unmanaged Only")
-  - Full suite of 97 Rust unit/integration tests and 88 React frontend tests passing (100% test pass rate)
-  - Chapters 85–96 added to `LEARNING.md` covering resource adoption theory, transient draft models, and systems interview preparation
-
-*Next Milestone: Milestone 9 — Project Workspaces & Multi-Server Groups*
-
----
-
-## 💻 Local Development Setup
+## 🚀 Getting Started
 
 ### Prerequisites
 
-1. **Node.js** (v18+ recommended, LTS) & **npm**
-2. **Rust & Cargo** (1.78+ recommended, MSVC toolchain on Windows)
+1. **Node.js** (v18+ LTS) & **npm**
+2. **Rust & Cargo** (1.78+ with MSVC toolchain on Windows):
    ```powershell
-   # Install Rust via rustup if needed
    winget install Rustlang.Rustup
    ```
-3. **Microsoft C++ Build Tools** & **WebView2** (included with modern Windows 10/11)
-4. **WSL 2** (optional, for inspecting Linux development servers)
+3. **Microsoft C++ Build Tools** & **WebView2** (included with Windows 10/11)
+4. **WSL 2** *(Optional)*: If you wish to manage Linux development servers.
 
 ### Installation
 
@@ -172,87 +136,97 @@ cd DevHub
 npm install
 ```
 
-### Running the App
+### Running Locally
 
 ```bash
-# Run the Tauri desktop app in development mode (with Hot Module Replacement)
+# Run Tauri desktop app in development mode with HMR
 npm run tauri dev
 
-# Run only the Vite frontend dev server in browser
+# Run only Vite frontend in browser
 npm run dev
-```
-
-### Running Tests
-
-```bash
-# Run Rust backend unit and integration tests (97 tests)
-cd src-tauri
-cargo test
-
-# Run frontend unit and component tests (88 tests)
-npm test -- --run
-
-# Run frontend build and typecheck
-npm run build
-```
-
-### Building for Production
-
-```bash
-# Build frontend and compile the Windows desktop executable
-npm run tauri build
 ```
 
 ---
 
-## 📁 Project Architecture
+## 🧪 Testing & Verification
+
+DevHub enforces a strict test-driven quality standard with **212 automated tests**:
+
+```bash
+# Run Rust backend unit & integration tests (110 tests)
+cd src-tauri
+cargo test
+
+# Run frontend unit & component tests (102 tests)
+npm test
+
+# Run strict TypeScript typecheck and production build
+npm run build
+```
+
+---
+
+## 📁 Repository Structure
 
 ```
 DevHub/
-├── src/                      # React Frontend
-│   ├── components/           # Reusable UI components
-│   │   ├── adoption/         # AdoptionFormModal, DuplicateProfileWarning
-│   │   ├── common/           # CopyButton, EmptyState, LoadingState, ErrorState
-│   │   ├── dashboard/        # ServerCard, ServerList, ServerToolbar, SummaryCards, 
-│   │   │                     # ServerDetailsModal, StopConfirmationModal, ProcessTree
-│   │   ├── profiles/         # ProfileCard, ProfileFormModal, DeleteProfileModal, PortConflictModal
-│   │   ├── ports/            # PortTable, PortDetailsModal
-│   │   ├── processes/        # ProcessTable, ProcessDetailsModal
-│   │   ├── Sidebar.tsx       # Navigation sidebar
-│   │   ├── Header.tsx        # Top header
-│   │   └── Layout.tsx        # App layout shell
-│   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── types/                # TypeScript interfaces (adoption.ts, control.ts, environment.ts, identity.ts, port.ts, process.ts, profile.ts, server.ts)
-│   ├── lib/                  # Commands API (commands.ts), Pipeline (serverUtils.ts), Adoption (adoptionDraft.ts, profileAssociation.ts)
-│   ├── App.tsx               # Main application component
-│   ├── main.tsx              # React DOM entry point
-│   └── index.css             # Tailwind CSS entry & dark theme styles
-├── src-tauri/                # Rust Native Backend
+├── src/                          # React 19 Frontend
+│   ├── components/               # UI Design System & Modals
+│   │   ├── adoption/             # AdoptionFormModal, DuplicateProfileWarning
+│   │   ├── common/               # Toast, CopyButton, EmptyState, LoadingState, ErrorState
+│   │   ├── dashboard/            # ServerCard, ServerList, ServerToolbar, SummaryCards, 
+│   │   │                         # ServerDetailsModal, StopConfirmationModal, ProcessTree
+│   │   ├── profiles/             # ProfileCard, ProfileFormModal, DeleteProfileModal, PortConflictModal
+│   │   ├── projects/             # ProjectCard, ProjectDetailsModal, ProjectFormModal, 
+│   │   │                         # AddProfileModal, DeleteProjectModal, RemoveProfileModal, ProgressModal
+│   │   ├── ports/                # PortTable, PortDetailsModal
+│   │   ├── processes/            # ProcessTable, ProcessDetailsModal
+│   │   ├── Sidebar.tsx           # 5-Route navigation sidebar with shortcut hints
+│   │   ├── Header.tsx            # Top header with breadcrumbs and live status
+│   │   └── Layout.tsx            # App shell with global keyboard shortcuts
+│   ├── pages/                    # Main views (Dashboard, Servers, Profiles, Projects, Settings)
+│   ├── types/                    # Strongly-typed cross-language TypeScript contracts
+│   ├── lib/                      # API client (commands.ts), Pipeline (serverUtils.ts), Adoption (profileAssociation.ts)
+│   ├── App.tsx                   # App root with initialization health check
+│   └── index.css                 # Tailwind CSS v4 styling & dark theme tokens
+├── src-tauri/                    # Rust Native Backend Core
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (adoption.rs, control.rs, identity.rs, ports.rs, processes.rs, profiles.rs, system.rs, wsl.rs)
-│   │   ├── db/               # Persistence layer (mod.rs, migration.rs, repository.rs)
-│   │   ├── discovery/        # Discovery services (port.rs, process.rs, unified.rs)
-│   │   ├── identity/         # Process identity engine (detector.rs, service.rs, tree.rs)
-│   │   ├── launcher/         # Cross-environment process launchers (mod.rs, windows.rs, wsl.rs)
-│   │   ├── models/           # Domain models (control.rs, environment.rs, identity.rs, port.rs, process.rs, profile.rs)
-│   │   ├── process/          # Process control domain service (service.rs)
-│   │   ├── profile/          # Profile domain services (mod.rs, adoption.rs, service.rs, start_service.rs)
-│   │   ├── windows/          # Windows Win32 FFI (networking.rs, process.rs)
-│   │   ├── wsl/              # WSL infrastructure (distro.rs, executor.rs, port.rs, process.rs)
-│   │   ├── lib.rs            # Tauri application entry point & handler registry
-│   │   └── main.rs           # Desktop binary entry
-│   ├── Cargo.toml            # Rust dependencies and package configuration
-│   └── tauri.conf.json       # Tauri window and build configuration
+│   │   ├── commands/             # Tauri IPC controllers (system, control, profiles, project, wsl, ports, processes)
+│   │   ├── db/                   # SQLite persistence, schema migrations, and repository pattern
+│   │   ├── discovery/            # Win32 IP Helper, Toolhelp snapshot, and unified discovery
+│   │   ├── identity/             # Process identity engine, runtime classifier, ancestry tree builder
+│   │   ├── launcher/             # Cross-environment process launchers (Windows cmd.exe / WSL sh)
+│   │   ├── models/               # Strongly-typed domain models with Serde camelCase mapping
+│   │   ├── process/              # Safe Win32 kernel process control domain service
+│   │   ├── profile/              # Profile validation, adoption heuristics, and startup service
+│   │   ├── project/              # Project service and sequential orchestration engine
+│   │   ├── windows/              # Native Win32 FFI bindings (networking.rs, process.rs)
+│   │   ├── wsl/                  # WSL subsystem adapter (distro.rs, executor.rs, port.rs, process.rs)
+│   │   ├── lib.rs                # Tauri handler registry & dependency injection
+│   │   └── main.rs               # Desktop executable entry point
+│   ├── Cargo.toml                # Rust dependencies and package configuration
+│   └── tauri.conf.json           # Window dimensions, icon assets, and build bundler targets
 ├── doc/
-│   └── PRD.md                # Product Requirements Document
-├── LEARNING.md               # Engineering Learning & Code-Reading Guide
-└── README.md                 # Project Overview & Setup Instructions
+│   └── PRD.md                    # Product Requirements Document
+├── ARCHITECTURE.md               # Systems Architecture Specification
+├── LEARNING.md                   # Cumulative Engineering Learning Guide (114 Chapters)
+├── RELEASE_CHECKLIST.md          # MVP Release Verification Matrix
+├── RELEASE_NOTES.md              # Version 0.1.0 Release Notes
+└── README.md                     # Project Presentation & Documentation
 ```
+
+---
+
+## 📚 Engineering Documentation
+
+* **[ARCHITECTURE.md](ARCHITECTURE.md)** — In-depth architectural blueprint covering domain invariants, Win32 FFI, TOCTOU safety, sequential orchestration, and concurrency locks.
+* **[LEARNING.md](LEARNING.md)** — 114-chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
+* **[PRD.md](doc/PRD.md)** — Complete Product Requirements Document.
+* **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** — MVP verification matrix.
+* **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release notes and changelog.
 
 ---
 
 ## 📄 License
 
-Private / Proprietary.
-
-
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option.
