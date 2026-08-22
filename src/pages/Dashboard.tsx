@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { identityApi, portApi, systemApi } from '../lib/commands';
+import { controlApi, identityApi, portApi, systemApi } from '../lib/commands';
 import type {
   ProcessIdentity,
   PortInfo,
@@ -10,12 +10,15 @@ import type {
   ServerSortDirection,
   ServerFilterOptions,
   Runtime,
+  ProcessTarget,
+  ProcessControlError,
 } from '../types';
 import { deriveDashboardServers, filterServers, sortServers } from '../lib/serverUtils';
 import { SummaryCards } from '../components/dashboard/SummaryCards';
 import { ServerToolbar } from '../components/dashboard/ServerToolbar';
 import { ServerList } from '../components/dashboard/ServerList';
 import { ServerDetailsModal } from '../components/dashboard/ServerDetailsModal';
+import { StopConfirmationModal } from '../components/dashboard/StopConfirmationModal';
 import { PortTable, type PortSortField, type SortDirection as PortSortDirection } from '../components/ports/PortTable';
 import { PortDetailsModal } from '../components/ports/PortDetailsModal';
 import { ProcessTable, type ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
@@ -70,6 +73,25 @@ export const Dashboard: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Process Control State (Milestone 5)
+  const [stoppingPids, setStoppingPids] = useState<Set<number>>(new Set());
+  const [serverToStop, setServerToStop] = useState<DashboardServer | null>(null);
+  const [stopError, setStopError] = useState<ProcessControlError | string | null>(null);
+  const [isExecutingStop, setIsExecutingStop] = useState<boolean>(false);
+  const [feedbackToast, setFeedbackToast] = useState<{
+    type: 'success' | 'warning' | 'info';
+    message: string;
+  } | null>(null);
+
+  // Auto-dismiss toast after 6 seconds
+  useEffect(() => {
+    if (!feedbackToast) return;
+    const timer = setTimeout(() => {
+      setFeedbackToast(null);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [feedbackToast]);
+
   // Fetch listening ports and enriched process identities concurrently
   const refreshAll = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) {
@@ -97,6 +119,86 @@ export const Dashboard: React.FC = () => {
       setRefreshing(false);
     }
   }, []);
+
+  // Request Stop Confirmation
+  const handleRequestStop = useCallback((server: DashboardServer) => {
+    setServerToStop(server);
+    setStopError(null);
+  }, []);
+
+  // Execute Stop Server Flow
+  const handleConfirmStop = useCallback(
+    async (force = false) => {
+      if (!serverToStop) return;
+
+      const target: ProcessTarget = {
+        pid: serverToStop.pid,
+        processName: serverToStop.processName,
+        executablePath: serverToStop.executablePath,
+        workingDirectory: serverToStop.workingDirectory,
+        expectedPorts: serverToStop.allPorts,
+        force,
+      };
+
+      setIsExecutingStop(true);
+      setStoppingPids((prev) => new Set(prev).add(target.pid));
+
+      try {
+        const result = force
+          ? await controlApi.forceStopServer(target)
+          : await controlApi.stopServer(target);
+
+        if (result.status === 'stopped') {
+          setFeedbackToast({
+            type: 'success',
+            message: `Server "${serverToStop.name}" (PID ${target.pid}) stopped. Port ${result.releasedPorts.join(', ')} freed.`,
+          });
+          setServerToStop(null);
+          setStopError(null);
+          if (selectedServer?.pid === target.pid) {
+            setSelectedServer(null);
+          }
+        } else if (result.status === 'port_owner_changed') {
+          setFeedbackToast({
+            type: 'warning',
+            message: result.message,
+          });
+          setServerToStop(null);
+          setStopError(null);
+          if (selectedServer?.pid === target.pid) {
+            setSelectedServer(null);
+          }
+        } else if (result.status === 'port_still_in_use') {
+          setFeedbackToast({
+            type: 'warning',
+            message: result.message,
+          });
+          setServerToStop(null);
+          setStopError(null);
+        } else {
+          setFeedbackToast({
+            type: 'info',
+            message: result.message,
+          });
+          setServerToStop(null);
+        }
+
+        // Trigger immediate background discovery refresh
+        await refreshAll();
+      } catch (err: unknown) {
+        console.error('Stop operation failed:', err);
+        setStopError(err as ProcessControlError | string);
+      } finally {
+        setIsExecutingStop(false);
+        setStoppingPids((prev) => {
+          const next = new Set(prev);
+          next.delete(target.pid);
+          return next;
+        });
+      }
+    },
+    [serverToStop, selectedServer, refreshAll]
+  );
 
   // Initial load
   useEffect(() => {
@@ -300,6 +402,77 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Feedback Toast / Notification Banner */}
+      {feedbackToast && (
+        <div
+          className={`flex items-center justify-between p-4 rounded-xl border text-xs animate-in fade-in slide-in-from-top-2 duration-200 ${
+            feedbackToast.type === 'success'
+              ? 'bg-emerald-950/70 border-emerald-700/50 text-emerald-200'
+              : feedbackToast.type === 'warning'
+              ? 'bg-amber-950/70 border-amber-700/50 text-amber-200'
+              : 'bg-blue-950/70 border-blue-700/50 text-blue-200'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {feedbackToast.type === 'success' ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-emerald-400 shrink-0"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-amber-400 shrink-0"
+              >
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            )}
+            <span className="font-medium leading-relaxed">{feedbackToast.message}</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFeedbackToast(null)}
+            className="text-zinc-400 hover:text-zinc-100 p-1 rounded-md transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Dashboard Hero Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -454,9 +627,11 @@ export const Dashboard: React.FC = () => {
               error={error}
               onRetry={() => refreshAll(true)}
               onInspect={setSelectedServer}
+              onStop={handleRequestStop}
               onOpenBrowser={handleOpenBrowser}
               onClearFilters={handleClearFilters}
               isFiltered={isFiltered}
+              stoppingServerPids={stoppingPids}
             />
           </div>
         )}
@@ -526,6 +701,27 @@ export const Dashboard: React.FC = () => {
           server={selectedServer}
           onClose={() => setSelectedServer(null)}
           onOpenBrowser={handleOpenBrowser}
+          onStopServer={handleRequestStop}
+          isStopping={stoppingPids.has(selectedServer.pid)}
+        />
+      )}
+
+      {/* Stop Server Confirmation Modal (Milestone 5) */}
+      {serverToStop && (
+        <StopConfirmationModal
+          server={serverToStop}
+          isStopping={isExecutingStop}
+          error={stopError}
+          onConfirm={handleConfirmStop}
+          onCancel={() => {
+            setServerToStop(null);
+            setStopError(null);
+          }}
+          onRefresh={async () => {
+            setServerToStop(null);
+            setStopError(null);
+            await refreshAll(true);
+          }}
         />
       )}
 

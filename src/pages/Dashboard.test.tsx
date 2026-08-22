@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Dashboard from './Dashboard';
-import { identityApi, portApi, systemApi } from '../lib/commands';
-import type { ProcessIdentity, PortInfo, SystemInfo } from '../types';
+import { controlApi, identityApi, portApi, systemApi } from '../lib/commands';
+import type { ProcessIdentity, PortInfo, SystemInfo, ControlResult } from '../types';
 
 // Mock the API commands module
 vi.mock('../lib/commands', () => ({
@@ -15,6 +15,10 @@ vi.mock('../lib/commands', () => ({
   },
   systemApi: {
     getSystemInfo: vi.fn(),
+  },
+  controlApi: {
+    stopServer: vi.fn(),
+    forceStopServer: vi.fn(),
   },
 }));
 
@@ -106,7 +110,7 @@ const mockIdentities: ProcessIdentity[] = [
   },
 ];
 
-describe('Dashboard Component (Milestone 4)', () => {
+describe('Dashboard Component (Milestones 4 & 5)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(systemApi.getSystemInfo).mockResolvedValue(mockSystemInfo);
@@ -117,24 +121,17 @@ describe('Dashboard Component (Milestone 4)', () => {
   it('renders Dashboard with hero header, metrics cards, and discovered server cards', async () => {
     render(<Dashboard />);
 
-    // Check loading or header
     expect(screen.getByText(/Local Development Control Center/i)).toBeInTheDocument();
 
-    // Wait for data load
     await waitFor(() => {
       expect(screen.getByText('company-frontend')).toBeInTheDocument();
       expect(screen.getByText('api-service')).toBeInTheDocument();
     });
 
-    // Check ports rendered
     expect(screen.getByText(/localhost:3000/i)).toBeInTheDocument();
     expect(screen.getByText(/localhost:8000/i)).toBeInTheDocument();
-
-    // Check runtimes
     expect(screen.getAllByText('Node.js').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Python').length).toBeGreaterThan(0);
-
-    // Check PIDs
     expect(screen.getByText(/PID 18240/i)).toBeInTheDocument();
     expect(screen.getByText(/PID 22096/i)).toBeInTheDocument();
   });
@@ -149,11 +146,9 @@ describe('Dashboard Component (Milestone 4)', () => {
     const searchInput = screen.getByPlaceholderText(/Search servers by name/i);
     fireEvent.change(searchInput, { target: { value: '8000' } });
 
-    // "api-service" (port 8000) should remain, "company-frontend" (port 3000) should be filtered out
     expect(screen.getByText('api-service')).toBeInTheDocument();
     expect(screen.queryByText('company-frontend')).not.toBeInTheDocument();
 
-    // Clear search
     fireEvent.change(searchInput, { target: { value: '' } });
     expect(screen.getByText('company-frontend')).toBeInTheDocument();
   });
@@ -165,22 +160,103 @@ describe('Dashboard Component (Milestone 4)', () => {
       expect(screen.getByText('company-frontend')).toBeInTheDocument();
     });
 
-    // Click "Inspect" on the first server card
     const inspectButtons = screen.getAllByRole('button', { name: /Inspect/i });
     fireEvent.click(inspectButtons[0]);
 
-    // Modal should be open with details
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByText(/Process Lineage Ancestry/i)).toBeInTheDocument();
     expect(screen.getByText('Code.exe')).toBeInTheDocument();
     expect(screen.getAllByText('npm.cmd').length).toBeGreaterThan(0);
     expect(screen.getByText(/Target Server Process/i)).toBeInTheDocument();
 
-    // Close modal via close button
     const closeBtn = screen.getByRole('button', { name: /Close modal/i });
     fireEvent.click(closeBtn);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens stop confirmation modal with target details when Stop is clicked', async () => {
+    render(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('company-frontend')).toBeInTheDocument();
+    });
+
+    const stopButtons = screen.getAllByRole('button', { name: /Stop/i });
+    fireEvent.click(stopButtons[0]);
+
+    // Modal should be open
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText(/Stop Development Server\?/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pre-Termination Safety Guard/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/C:\\Projects\\company-frontend/i).length).toBeGreaterThan(0);
+
+    // Cancel closes dialog
+    const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelBtn);
+
+    expect(screen.queryByText(/Stop Development Server\?/i)).not.toBeInTheDocument();
+  });
+
+  it('executes stop server flow and displays success notification banner', async () => {
+    const mockResult: ControlResult = {
+      status: 'stopped',
+      pid: 18240,
+      releasedPorts: [3000, 3001],
+      remainingChildren: [],
+      remainingOwner: null,
+      message: 'Server was safely stopped.',
+    };
+    vi.mocked(controlApi.stopServer).mockResolvedValue(mockResult);
+
+    render(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('company-frontend')).toBeInTheDocument();
+    });
+
+    const stopButtons = screen.getAllByRole('button', { name: /Stop/i });
+    fireEvent.click(stopButtons[0]);
+
+    const confirmStopBtn = screen.getByRole('button', { name: /^Stop Server$/i });
+    fireEvent.click(confirmStopBtn);
+
+    await waitFor(() => {
+      expect(controlApi.stopServer).toHaveBeenCalledWith({
+        pid: 18240,
+        processName: 'node.exe',
+        executablePath: 'C:\\Program Files\\nodejs\\node.exe',
+        workingDirectory: 'C:\\Projects\\company-frontend',
+        expectedPorts: [3000, 3001],
+        force: false,
+      });
+      expect(screen.getByText(/Server "company-frontend" \(PID 18240\) stopped/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays structured error when process identity changes prior to termination', async () => {
+    vi.mocked(controlApi.stopServer).mockRejectedValue({
+      code: 'PROCESS_IDENTITY_CHANGED',
+      message: 'Process identity changed for PID 18240. Expected node.exe, found python.exe.',
+      pid: 18240,
+    });
+
+    render(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('company-frontend')).toBeInTheDocument();
+    });
+
+    const stopButtons = screen.getAllByRole('button', { name: /Stop/i });
+    fireEvent.click(stopButtons[0]);
+
+    const confirmStopBtn = screen.getByRole('button', { name: /^Stop Server$/i });
+    fireEvent.click(confirmStopBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Process identity changed for PID 18240/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Refresh Server List/i })).toBeInTheDocument();
+    });
   });
 
   it('switches between Development Servers, Listening Ports, and Process Identities tabs', async () => {
@@ -190,16 +266,12 @@ describe('Dashboard Component (Milestone 4)', () => {
       expect(screen.getByText('company-frontend')).toBeInTheDocument();
     });
 
-    // Switch to Listening Ports tab
     const portsTab = screen.getByRole('button', { name: /Listening Ports/i });
     fireEvent.click(portsTab);
-
     expect(screen.getByPlaceholderText(/Search listening ports by port/i)).toBeInTheDocument();
 
-    // Switch to Process Identities tab
     const processesTab = screen.getByRole('button', { name: /Process Identities/i });
     fireEvent.click(processesTab);
-
     expect(screen.getByPlaceholderText(/Search processes by name/i)).toBeInTheDocument();
   });
 
@@ -226,3 +298,4 @@ describe('Dashboard Component (Milestone 4)', () => {
     });
   });
 });
+

@@ -12,9 +12,11 @@ interface ServerListProps {
   error: string | null;
   onRetry: () => void;
   onInspect: (server: DashboardServer) => void;
+  onStop?: (server: DashboardServer) => void;
   onOpenBrowser?: (url: string) => void;
   onClearFilters: () => void;
   isFiltered: boolean;
+  stoppingServerPids?: Set<number>;
 }
 
 export const ServerList: React.FC<ServerListProps> = ({
@@ -24,9 +26,11 @@ export const ServerList: React.FC<ServerListProps> = ({
   error,
   onRetry,
   onInspect,
+  onStop,
   onOpenBrowser,
   onClearFilters,
   isFiltered,
+  stoppingServerPids,
 }) => {
   if (loading && totalServersCount === 0) {
     return <LoadingState />;
@@ -61,7 +65,9 @@ export const ServerList: React.FC<ServerListProps> = ({
             key={server.id}
             server={server}
             onInspect={onInspect}
+            onStop={onStop}
             onOpenBrowser={onOpenBrowser}
+            isStopping={stoppingServerPids?.has(server.pid)}
           />
         ))}
       </div>

@@ -6,13 +6,17 @@ import { getBrowserUrl } from '../../lib/serverUtils';
 interface ServerCardProps {
   server: DashboardServer;
   onInspect: (server: DashboardServer) => void;
+  onStop?: (server: DashboardServer) => void;
   onOpenBrowser?: (url: string) => void;
+  isStopping?: boolean;
 }
 
 export const ServerCard: React.FC<ServerCardProps> = ({
   server,
   onInspect,
+  onStop,
   onOpenBrowser,
+  isStopping = false,
 }) => {
   const browserUrl = getBrowserUrl(server.address, server.primaryPort);
   const extraPortsCount = server.allPorts.length - 1;
@@ -23,6 +27,13 @@ export const ServerCard: React.FC<ServerCardProps> = ({
       onOpenBrowser(browserUrl);
     } else {
       window.open(browserUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleStop = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onStop && !isStopping) {
+      onStop(server);
     }
   };
 
@@ -85,10 +96,17 @@ export const ServerCard: React.FC<ServerCardProps> = ({
 
           {/* Status Badge */}
           <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>RUNNING</span>
-            </span>
+            {isStopping ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/70 text-amber-300 border border-amber-700/50 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span>STOPPING...</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>RUNNING</span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -207,25 +225,46 @@ export const ServerCard: React.FC<ServerCardProps> = ({
         </div>
       </div>
 
-      {/* Footer: PID + Inspect Button */}
-      <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2 text-zinc-400">
-          <span className="font-mono font-medium text-zinc-300">
+      {/* Footer: PID + Inspect & Stop Buttons */}
+      <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs gap-2">
+        <div className="flex items-center gap-2 text-zinc-400 min-w-0">
+          <span className="font-mono font-medium text-zinc-300 shrink-0">
             PID {server.pid}
           </span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-zinc-400 truncate max-w-[120px]" title={server.processName}>
+          <span className="text-zinc-600 shrink-0">•</span>
+          <span className="text-zinc-400 truncate" title={server.processName}>
             {server.processName}
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onInspect(server)}
-          className="px-3 py-1.5 bg-zinc-800 hover:bg-blue-600 hover:text-white text-zinc-200 text-xs font-semibold rounded-lg border border-zinc-700/60 hover:border-blue-500 transition-all cursor-pointer shadow-xs"
-        >
-          Inspect
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => onInspect(server)}
+            className="px-2.5 py-1.5 bg-zinc-800 hover:bg-blue-600 hover:text-white text-zinc-200 text-xs font-semibold rounded-lg border border-zinc-700/60 hover:border-blue-500 transition-all cursor-pointer shadow-xs"
+          >
+            Inspect
+          </button>
+
+          {onStop && (
+            <button
+              type="button"
+              disabled={isStopping}
+              onClick={handleStop}
+              title={isStopping ? 'Server is stopping...' : `Stop ${server.name} (PID ${server.pid})`}
+              className="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed text-red-300 hover:text-red-100 text-xs font-semibold rounded-lg border border-red-800/50 hover:border-red-700 transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+            >
+              {isStopping ? (
+                <>
+                  <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
+                  <span>Stopping</span>
+                </>
+              ) : (
+                <span>Stop</span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

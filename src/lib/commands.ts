@@ -1,5 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { SystemInfo, ProcessInfo, PortInfo, ProcessIdentity } from '../types';
+import type {
+  SystemInfo,
+  ProcessInfo,
+  PortInfo,
+  ProcessIdentity,
+  ProcessTarget,
+  ControlResult,
+} from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
   return invoke<SystemInfo>('get_system_info');
@@ -21,6 +28,14 @@ export async function getProcessIdentity(pid: number): Promise<ProcessIdentity |
   return invoke<ProcessIdentity | null>('get_process_identity', { pid });
 }
 
+export async function stopServer(target: ProcessTarget): Promise<ControlResult> {
+  return invoke<ControlResult>('stop_server', { target });
+}
+
+export async function forceStopServer(target: ProcessTarget): Promise<ControlResult> {
+  return invoke<ControlResult>('force_stop_server', { target });
+}
+
 export const processApi = {
   getProcesses,
 };
@@ -34,6 +49,12 @@ export const identityApi = {
   getProcessIdentity,
 };
 
+export const controlApi = {
+  stopServer,
+  forceStopServer,
+};
+
 export const systemApi = {
   getSystemInfo,
 };
+

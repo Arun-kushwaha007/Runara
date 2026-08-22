@@ -12,3 +12,5 @@ export * from './process';
 export * from './port';
 export * from './identity';
 export * from './server';
+export * from './control';
+

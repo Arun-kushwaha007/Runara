@@ -8,12 +8,16 @@ interface ServerDetailsModalProps {
   server: DashboardServer;
   onClose: () => void;
   onOpenBrowser?: (url: string) => void;
+  onStopServer?: (server: DashboardServer) => void;
+  isStopping?: boolean;
 }
 
 export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
   server,
   onClose,
   onOpenBrowser,
+  onStopServer,
+  isStopping = false,
 }) => {
   const browserUrl = getBrowserUrl(server.address, server.primaryPort);
 
@@ -59,10 +63,17 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
               >
                 {server.name}
               </h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>RUNNING</span>
-              </span>
+              {isStopping ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-700/50">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                  <span>STOPPING...</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>RUNNING</span>
+                </span>
+              )}
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
                 <span>Windows</span>
               </span>
@@ -105,9 +116,9 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Quick Actions Bar */}
-          <div className="flex items-center justify-between bg-blue-950/30 border border-blue-800/40 rounded-xl p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-950/30 border border-blue-800/40 rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+              <div className="w-9 h-9 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -124,34 +135,70 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-xs font-semibold text-zinc-200">Browser Endpoint</div>
-                <div className="text-xs font-mono text-blue-300">{browserUrl}</div>
+                <div className="text-xs font-mono text-blue-300 truncate">{browserUrl}</div>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleOpenBrowser}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
-            >
-              <span>Open in Browser</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleOpenBrowser}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
               >
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" x2="21" y1="14" y2="3" />
-              </svg>
-            </button>
+                <span>Open in Browser</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" x2="21" y1="14" y2="3" />
+                </svg>
+              </button>
+
+              {onStopServer && (
+                <button
+                  type="button"
+                  disabled={isStopping}
+                  onClick={() => onStopServer(server)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-950/70 hover:bg-red-900 text-red-300 hover:text-white disabled:opacity-50 text-xs font-semibold rounded-lg border border-red-800/60 transition-colors cursor-pointer shadow-xs"
+                >
+                  {isStopping ? (
+                    <>
+                      <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
+                      <span>Stopping...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <rect width="6" height="6" x="9" y="9" rx="1" />
+                      </svg>
+                      <span>Stop Server</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Grid of Key Metadata */}
