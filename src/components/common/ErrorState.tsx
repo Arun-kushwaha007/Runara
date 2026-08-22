@@ -44,7 +44,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
       </div>
 
       <div className="text-[11px] text-zinc-500 max-w-md mt-2">
-        Ensure DevHub has standard user permissions to query the Windows process and socket table.
+        Ensure DevHub has standard permissions to query the Windows and WSL process and socket tables.
       </div>
     </div>
   );

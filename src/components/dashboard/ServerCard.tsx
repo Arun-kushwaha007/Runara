@@ -339,7 +339,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               onClick={handleStop}
               title={
                 isWsl
-                  ? 'WSL process control is read-only in Milestone 6'
+                  ? 'WSL process control is read-only in MVP'
                   : isStopping
                   ? 'Server is stopping...'
                   : `Stop ${server.name} (PID ${server.pid})`

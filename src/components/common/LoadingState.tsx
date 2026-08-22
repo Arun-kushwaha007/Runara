@@ -23,7 +23,7 @@ export const LoadingState: React.FC = () => {
         <div>
           <p className="text-sm text-zinc-200 font-semibold">Discovering local development servers...</p>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Querying Windows listening TCP endpoints, process PEBs, ancestry trees & runtimes
+            Querying Windows & WSL listening TCP endpoints, process PEBs, ancestry trees & runtimes
           </p>
         </div>
       </div>

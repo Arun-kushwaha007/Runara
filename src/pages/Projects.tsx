@@ -15,6 +15,7 @@ import { AddProfileModal } from '../components/projects/AddProfileModal';
 import { DeleteProjectModal } from '../components/projects/DeleteProjectModal';
 import { RemoveProfileModal } from '../components/projects/RemoveProfileModal';
 import { ProjectOperationProgressModal } from '../components/projects/ProjectOperationProgressModal';
+import { Toast, type ToastMessage } from '../components/common/Toast';
 
 const Projects: React.FC = () => {
   const [projectViews, setProjectViews] = useState<ProjectView[]>([]);
@@ -44,6 +45,17 @@ const Projects: React.FC = () => {
   const [operationResult, setOperationResult] = useState<ProjectOperationResult | null>(null);
   const [operationProjectName, setOperationProjectName] = useState('');
   const [operationType, setOperationType] = useState<'start' | 'stop' | 'restart'>('start');
+
+  // Toast Notification
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -125,16 +137,24 @@ const Projects: React.FC = () => {
 
   // Handlers
   const handleCreateOrUpdateProject = async (data: CreateProjectRequest | UpdateProjectRequest) => {
-    if ('id' in data) {
-      await projectApi.updateProject(data);
-    } else {
-      await projectApi.createProject(data);
+    try {
+      if ('id' in data) {
+        await projectApi.updateProject(data);
+        setToast({ type: 'success', message: `Project '${data.name}' updated.` });
+      } else {
+        await projectApi.createProject(data);
+        setToast({ type: 'success', message: `Project '${data.name}' created.` });
+      }
+      await fetchAll();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToast({ type: 'error', message: `Project error: ${msg}` });
     }
-    await fetchAll();
   };
 
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
+    const name = projectToDelete.project.name;
     try {
       await projectApi.deleteProject(projectToDelete.project.id);
       setIsDeleteOpen(false);
@@ -142,25 +162,33 @@ const Projects: React.FC = () => {
       if (detailsProject?.project.id === projectToDelete.project.id) {
         setDetailsProject(null);
       }
+      setToast({ type: 'success', message: `Project '${name}' deleted.` });
       await fetchAll();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || 'Failed to delete project.');
+      setToast({ type: 'error', message: `Failed to delete project: ${msg}` });
     }
   };
 
   const handleAddProfile = async (profileId: string) => {
     if (!targetProjectForAdd) return;
-    await projectApi.addProfileToProject({
-      projectId: targetProjectForAdd.project.id,
-      profileId,
-      orderIndex: null,
-    });
-    await fetchAll();
+    try {
+      await projectApi.addProfileToProject({
+        projectId: targetProjectForAdd.project.id,
+        profileId,
+        orderIndex: null,
+      });
+      setToast({ type: 'success', message: 'Profile added to project.' });
+      await fetchAll();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToast({ type: 'error', message: `Failed to add profile: ${msg}` });
+    }
   };
 
   const handleRemoveProfile = async () => {
     if (!profileToRemove) return;
+    const name = profileToRemove.profileView.profile.name;
     try {
       await projectApi.removeProfileFromProject(
         profileToRemove.project.project.id,
@@ -168,10 +196,11 @@ const Projects: React.FC = () => {
       );
       setIsRemoveProfileOpen(false);
       setProfileToRemove(null);
+      setToast({ type: 'success', message: `Profile '${name}' removed from project.` });
       await fetchAll();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || 'Failed to remove profile.');
+      setToast({ type: 'error', message: `Failed to remove profile: ${msg}` });
     }
   };
 
@@ -520,6 +549,9 @@ const Projects: React.FC = () => {
         projectName={operationProjectName}
         operationType={operationType}
       />
+
+      {/* Toast Notification */}
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 };

@@ -28,6 +28,7 @@ import { PortTable, type PortSortField, type SortDirection as PortSortDirection 
 import { PortDetailsModal } from '../components/ports/PortDetailsModal';
 import { ProcessTable, type ProcessSortField, type SortDirection as ProcessSortDirection } from '../components/processes/ProcessTable';
 import { ProcessDetailsModal } from '../components/processes/ProcessDetailsModal';
+import { Toast } from '../components/common/Toast';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
 type DashboardTab = 'servers' | 'ports' | 'processes';
@@ -161,7 +162,7 @@ export const Dashboard: React.FC = () => {
     if (server.environment?.type === 'wsl') {
       setFeedbackToast({
         type: 'info',
-        message: 'WSL process control is read-only in Milestone 6. Direct termination of Linux processes is restricted.',
+        message: 'WSL process control is read-only. Direct termination of Linux processes is restricted in MVP.',
       });
       return;
     }
@@ -477,76 +478,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Feedback Toast / Notification Banner */}
-      {feedbackToast && (
-        <div
-          className={`flex items-center justify-between p-4 rounded-xl border text-xs animate-in fade-in slide-in-from-top-2 duration-200 ${
-            feedbackToast.type === 'success'
-              ? 'bg-emerald-950/70 border-emerald-700/50 text-emerald-200'
-              : feedbackToast.type === 'warning'
-              ? 'bg-amber-950/70 border-amber-700/50 text-amber-200'
-              : 'bg-blue-950/70 border-blue-700/50 text-blue-200'
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            {feedbackToast.type === 'success' ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-emerald-400 shrink-0"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-amber-400 shrink-0"
-              >
-                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            )}
-            <span className="font-medium leading-relaxed">{feedbackToast.message}</span>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => setFeedbackToast(null)}
-            className="text-zinc-400 hover:text-zinc-100 p-1 rounded-md transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       {/* WSL Diagnostics Alert Banner (Graceful Degradation) */}
       {diagnostics.length > 0 && !dismissedDiagnostics && (
@@ -866,6 +798,9 @@ export const Dashboard: React.FC = () => {
           onClose={() => setSelectedIdentity(null)}
         />
       )}
+
+      {/* Toast Notification */}
+      <Toast toast={feedbackToast} onDismiss={() => setFeedbackToast(null)} />
     </div>
   );
 };

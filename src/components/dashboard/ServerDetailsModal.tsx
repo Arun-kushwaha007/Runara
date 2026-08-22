@@ -247,7 +247,7 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
                   onClick={() => onStopServer(server)}
                   title={
                     isWsl
-                      ? 'WSL process control is read-only in Milestone 6'
+                      ? 'WSL process control is read-only in MVP'
                       : isStopping
                       ? 'Stopping...'
                       : `Stop ${server.name}`
