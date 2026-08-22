@@ -350,14 +350,18 @@ describe('Servers & Profiles Management (Milestone 7)', () => {
 
 
 
-  it('restricts WSL stop & restart controls according to Milestone 6/7 boundaries', async () => {
+  it('supports WSL stop & restart controls in Milestone 11', async () => {
     render(<Servers />);
 
     await waitFor(() => {
       expect(screen.getByText('WSL Microservice')).toBeInTheDocument();
     });
 
-    // WSL Running profile should show "WSL Control Read-Only" instead of stop/restart buttons
-    expect(screen.getByText(/WSL Control Read-Only/i)).toBeInTheDocument();
+    // WSL Running profile should show enabled Stop and Restart action buttons
+    const stopButtons = screen.getAllByRole('button', { name: /^Stop$/i });
+    expect(stopButtons.length).toBeGreaterThan(0);
+
+    const restartButtons = screen.getAllByRole('button', { name: /^Restart$/i });
+    expect(restartButtons.length).toBeGreaterThan(0);
   });
 });

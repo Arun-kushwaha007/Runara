@@ -407,4 +407,45 @@ describe('Dashboard Component (Milestones 4, 5, & 6)', () => {
       expect(screen.getByDisplayValue('npm run dev')).toBeInTheDocument();
     });
   });
+
+  it('supports stopping WSL servers from Dashboard in Milestone 11', async () => {
+    vi.mocked(controlApi.stopServer).mockResolvedValue({
+      status: 'stopped',
+      pid: 421,
+      releasedPorts: [5000],
+      remainingChildren: [],
+      remainingOwner: null,
+      message: "Server 'wsl-microservice' (PID 421) in WSL / Ubuntu was safely stopped.",
+    });
+
+    render(<Dashboard />);
+
+    await waitFor(() => {
+      expect(screen.getByText('wsl-express')).toBeInTheDocument();
+    });
+
+    // Find all Stop buttons and click the WSL one (port 5000 is index 1)
+    const stopButtons = screen.getAllByRole('button', { name: /^Stop$/i });
+    expect(stopButtons.length).toBeGreaterThan(1);
+
+    fireEvent.click(stopButtons[1]);
+
+    // Confirmation modal should open
+    await waitFor(() => {
+      expect(screen.getByText(/Stop Development Server\?/i)).toBeInTheDocument();
+    });
+
+    // Confirm Stop
+    const confirmButton = screen.getByRole('button', { name: /^Stop Server$/i });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(controlApi.stopServer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pid: 421,
+          environment: { type: 'wsl', distro: 'Ubuntu' },
+        })
+      );
+    });
+  });
 });

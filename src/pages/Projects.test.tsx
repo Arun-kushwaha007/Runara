@@ -327,4 +327,36 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       expect(projectApi.deleteProject).toHaveBeenCalledWith('proj-1');
     });
   });
+
+  it('supports restarting projects with WSL services in Milestone 11', async () => {
+    const restartResult: ProjectOperationResult = {
+      projectId: 'proj-2',
+      operationType: 'restart',
+      status: 'running',
+      startedProfiles: ['Frontend App', 'WSL Worker'],
+      stoppedProfiles: ['Frontend App'],
+      failedProfile: null,
+      pendingProfiles: [],
+      unsupportedProfiles: [],
+      message: "Project 'Mixed Project' restarted successfully.",
+    };
+    vi.mocked(projectApi.restartProject).mockResolvedValue(restartResult);
+
+    render(<Projects />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Mixed Project')).toBeInTheDocument();
+    });
+
+    // In Milestone 11, the Restart button for Mixed Project should be enabled
+    const restartButtons = screen.getAllByRole('button', { name: /^Restart$/i });
+    expect(restartButtons.length).toBeGreaterThan(0);
+
+    // Click restart button
+    fireEvent.click(restartButtons[restartButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(projectApi.restartProject).toHaveBeenCalledWith('proj-2');
+    });
+  });
 });
