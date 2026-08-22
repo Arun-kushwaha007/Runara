@@ -2,9 +2,9 @@
 
 ```
 Project:           DevHub — Local Development Control Center
-Current Milestone: Milestone 5 (Safe Windows Process Control)
+Current Milestone: Milestone 6 (WSL Integration & Multi-Environment Discovery)
 Document Purpose:  Comprehensive Engineering Learning and Code-Reading Guide for CS Students & HLD/LLD Interview Preparation
-Document Version:  5.0.0
+Document Version:  6.0.0
 ```
 
 ---
@@ -124,11 +124,11 @@ Document Version:  5.0.0
     - [34.4 Architectural Portability for Future Linux and WSL Milestones](#344-architectural-portability-for-future-linux-and-wsl-milestones)
 35. [Milestone 3: Operating System Snapshots, Non-Atomicity & PID Reuse](#35-milestone-3-operating-system-snapshots-non-atomicity--pid-reuse)
     - [35.1 The Ephemeral Nature of OS Snapshots](#351-the-ephemeral-nature-of-os-snapshots)
-    - [35.2 TOCTOU (Time-of-Check to Time-of-Use) in Process Inspection](#352-toctou-time-of-check-to-time-of-use-in-process-inspection)
+    - [35.2 TOCTOU (Time-of-Check to Time-of-Use) in Process Inspection](#352-toctou-in-process-inspection)
     - [35.3 Why PID Can Never Be a Permanent Server Identifier](#353-why-pid-can-never-be-a-permanent-server-identifier)
     - [35.4 Resilient Degradation: Handling Disappeared Processes and Missing Parents](#354-resilient-degradation-handling-disappeared-processes-and-missing-parents)
 36. [Milestone 3: Updated High-Level Design (HLD) & Low-Level Design (LLD)](#36-milestone-3-updated-high-level-design-hld--low-level-design-lld)
-    - [36.1 Updated HLD Architecture Diagram (Milestone 3 Topology)](#361-updated-hld-architecture-diagram-milestone-3-topology)
+    - [36.1 Updated HLD Architecture Diagram (Milestone 3 Topology)](#361-updated-high-level-design-hld--low-level-design-lld)
     - [36.2 Low-Level Design: Component Contracts, Types, and Signatures](#362-low-level-design-component-contracts-types-and-signatures)
     - [36.3 Layered Responsibility Matrix](#363-layered-responsibility-matrix)
 37. [Milestone 3: End-to-End Process Identity Code Trace](#37-milestone-3-end-to-end-process-identity-code-trace)
@@ -204,6 +204,45 @@ Document Version:  5.0.0
 59. [Milestone 5: End-to-End Stop Server Code Trace](#59-milestone-5-end-to-end-stop-server-code-trace)
 60. [Milestone 5: Deep Systems Engineering & HLD/LLD Interview Q&A](#60-milestone-5-deep-systems-engineering--hldlld-interview-qa)
 61. [Milestone 5: Complete Repository File Inventory & Architecture Matrix](#61-milestone-5-complete-repository-file-inventory--architecture-matrix)
+62. [Milestone 6: WSL Integration — Engineering Overview & System Boundaries](#62-milestone-6-wsl-integration--engineering-overview--system-boundaries)
+    - [62.1 Why WSL is Critical for Modern Windows Developers](#621-why-wsl-is-critical-for-modern-windows-developers)
+    - [62.2 WSL1 vs WSL2: Translation Layer vs Hyper-V Utility VM](#622-wsl1-vs-wsl2-translation-layer-vs-hyper-v-utility-vm)
+    - [62.3 Bridging the Windows-Linux Boundary: Host-to-Guest Communication](#623-bridging-the-windows-linux-boundary-host-to-guest-communication)
+63. [Milestone 6: Multi-Environment Architecture & Domain Normalization](#63-milestone-6-multi-environment-architecture--domain-normalization)
+    - [63.1 The Multi-Environment Abstraction: `Environment::Windows` vs `Environment::Wsl { distro }`](#631-the-multi-environment-abstraction-environmentwindows-vs-environmentwsl--distro-)
+    - [63.2 Why Windows & WSL Are Different Infrastructure Sources Feeding One Normalized Model](#632-why-windows--wsl-are-different-infrastructure-sources-feeding-one-normalized-model)
+    - [63.3 Preventing Environment Conflation: Composite Keys `(Environment, PID)`](#633-preventing-environment-conflation-composite-keys-environment-pid)
+64. [Milestone 6: WSL Distribution Discovery & Wide-Character (UTF-16LE) Decoding](#64-milestone-6-wsl-distribution-discovery--wide-character-utf-16le-decoding)
+    - [64.1 Enumerating Installed Distributions via `wsl.exe -l -v`](#641-enumerating-installed-distributions-via-wslexe--l--v)
+    - [64.2 The Windows Wide Character (UTF-16LE) CLI Output Challenge & Solution](#642-the-windows-wide-character-utf-16le-cli-output-challenge--solution)
+    - [64.3 State Filtering: Why Only `Running` Distributions Are Queried](#643-state-filtering-why-only-running-distributions-are-queried)
+65. [Milestone 6: Linux Process & Port Discovery Inside WSL (`ps` & `ss` Telemetry)](#65-milestone-6-linux-process--port-discovery-inside-wsl-ps--ss-telemetry)
+    - [65.1 Linux Process Enumeration via `ps -eo pid,ppid,comm,args --no-headers`](#651-linux-process-enumeration-via-ps--eo-pidppidcommargs---no-headers)
+    - [65.2 Linux Listening TCP Port Discovery via Socket Statistics (`ss -tlpn -H`)](#652-linux-listening-tcp-port-discovery-via-socket-statistics-ss--tlpn--h)
+    - [65.3 Parsing Linux Sockets, IPv4/IPv6 Addresses, and Process Ownership](#653-parsing-linux-sockets-ipv4ipv6-addresses-and-process-ownership)
+66. [Milestone 6: Subprocess Execution, Timeout Bounds & Partial Failure Isolation](#66-milestone-6-subprocess-execution-timeout-bounds--partial-failure-isolation)
+    - [66.1 Executing WSL Commands via Direct Argument Vectors (No Shell Injection)](#661-executing-wsl-commands-via-direct-argument-vectors-no-shell-injection)
+    - [66.2 Timeout Protection & Hung Subprocess Prevention](#662-timeout-protection--hung-subprocess-prevention)
+    - [66.3 Graceful Degradation & Partial Failure Isolation (`DiscoveryDiagnostic`)](#663-graceful-degradation--partial-failure-isolation-discoverydiagnostic)
+67. [Milestone 6: Cross-Environment Process Trees & Identity Enrichment](#67-milestone-6-cross-environment-process-trees--identity-enrichment)
+    - [67.1 Per-Distribution Process Tree Isolation (Linux PIDs Scoped to Distro)](#671-per-distribution-process-tree-isolation-linux-pids-scoped-to-distro)
+    - [67.2 Linux Runtime & Package Manager Detection (Node.js, Python, Cargo, Vite)](#672-linux-runtime--package-manager-detection-nodejs-python-cargo-vite)
+    - [67.3 Path Normalization: Linux POSIX Paths (`/home/user/...`) vs Windows (`C:\...`)](#673-path-normalization-linux-posix-paths-homeuser-vs-windows-c)
+68. [Milestone 6: Safe Process Control Boundary (Milestone 5 Guardrails Preserved)](#68-milestone-6-safe-process-control-boundary-milestone-5-guardrails-preserved)
+    - [68.1 Why Windows Win32 `TerminateProcess` Must Never Be Called on WSL PIDs](#681-why-windows-win32-terminateprocess-must-never-be-called-on-wsl-pids)
+    - [68.2 Backend Enforcement: Rejecting Non-Windows Targets with `UNSAFE_TARGET`](#682-backend-enforcement-rejecting-non-windows-targets-with-unsafe_target)
+    - [68.3 Frontend UI Enforcement: Read-Only WSL State and Disabled Action Triggers](#683-frontend-ui-enforcement-read-only-wsl-state-and-disabled-action-triggers)
+69. [Milestone 6: Updated High-Level Design (HLD) & Architecture Topology](#69-milestone-6-updated-high-level-design-hld--architecture-topology)
+    - [69.1 Milestone 6 Unified Architecture Topology Diagram](#691-milestone-6-unified-architecture-topology-diagram)
+    - [69.2 Multi-Environment Layer Responsibility Matrix](#692-multi-environment-layer-responsibility-matrix)
+70. [Milestone 6: Updated Low-Level Design (LLD) & Service Trait Contracts](#70-milestone-6-updated-low-level-design-lld--service-trait-contracts)
+    - [70.1 WSL Infrastructure Interfaces (`WslExecutor`, `WslDistroDiscovery`, `WslProcessDiscovery`, `WslPortDiscovery`)](#701-wsl-infrastructure-interfaces-wslexecutor-wsldistrodiscovery-wslprocessdiscovery-wslportdiscovery)
+    - [70.2 `UnifiedDiscoveryService` Composition & Orchestration](#702-unifieddiscoveryservice-composition--orchestration)
+    - [70.3 Cross-Language Type Contracts (`Environment`, `WslDistribution`, `UnifiedSnapshot`)](#703-cross-language-type-contracts-environment-wsldistribution-unifiedsnapshot)
+71. [Milestone 6: End-to-End Multi-Environment Code Trace](#71-milestone-6-end-to-end-multi-environment-code-trace)
+    - [71.1 Complete Trace: From Frontend Refresh to Windows + WSL Discovery to Unified Dashboard](#711-complete-trace-from-frontend-refresh-to-windows--wsl-discovery-to-unified-dashboard)
+72. [Milestone 6: Deep Systems Engineering & HLD/LLD Interview Q&A](#72-milestone-6-deep-systems-engineering--hldlld-interview-qa)
+73. [Milestone 6: Complete Repository File Inventory & Architecture Matrix](#73-milestone-6-complete-repository-file-inventory--architecture-matrix)
 
 ---
 
@@ -3041,5 +3080,517 @@ In Win32 C/C++, forgetting to call `CloseHandle` leaks kernel executive objects,
 | [`src/components/Sidebar.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Sidebar.tsx) | Presentation View | Navigation sidebar (Dashboard, Servers, Projects, Settings) | Global Navigation | `Layout.tsx` | - |
 | [`src/components/Layout.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Layout.tsx) | Presentation View | Application layout wrapper uniting sidebar, header, and content | Layout Frame | `App.tsx` | `Sidebar`, `Header` |
 | [`src/App.tsx`](file:///d:/ak/project/devhub/DevHub/src/App.tsx) | Root Component | Navigational routing and root page rendering | Application Root | `main.tsx` | `Layout`, Pages |
+
+---
+
+## 62. Milestone 6: WSL Integration — Engineering Overview & System Boundaries
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                       DEVHUB MILESTONE 6 ARCHITECTURE                                       │
+│                                                                                                             │
+│  ┌───────────────────────────────────────────────┐     ┌─────────────────────────────────────────────────┐  │
+│  │           WINDOWS HOST ENVIRONMENT            │     │            WSL GUEST ENVIRONMENT(S)             │  │
+│  │                                               │     │                                                 │  │
+│  │  • Win32 Toolhelp32 Snapshot Enumeration      │     │  • wsl.exe Subprocess Bridge                    │  │
+│  │  • Win32 IP Helper TCP Table API              │     │  • Linux Process Discovery (ps -eo ...)         │  │
+│  │  • Direct Memory / PEB CWD & CommandLine      │     │  • Linux Socket Statistics (ss -tlpn -H)        │  │
+│  │  • Win32 Kernel Process Control (M5)          │     │  • Read-Only Safety Boundary (M6)               │  │
+│  └──────────────────────┬────────────────────────┘     └────────────────────────┬────────────────────────┘  │
+│                         │                                                       │                           │
+│                         ▼                                                       ▼                           │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                 UNIFIED MULTI-ENVIRONMENT DISCOVERY                                   │  │
+│  │                     (WindowsProcessDiscovery + WindowsPortDiscovery + WslDiscovery)                   │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────────┘  │
+│                                                     │                                                       │
+│                                                     ▼                                                       │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                   NORMALIZED DOMAIN IDENTITY MODELS                                   │  │
+│  │                   (ProcessIdentity + PortInfo with Environment::Windows / Environment::Wsl)           │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────────┘  │
+│                                                     │                                                       │
+│                                                     ▼                                                       │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                   UNIFIED SERVER DASHBOARD & METRICS                                  │  │
+│  │                   (Multi-Environment Badges, Filtering, Full Ancestry, Read-Only Guard)              │  │
+│  └───────────────────────────────────────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 62.1 Why WSL is Critical for Modern Windows Developers
+Modern web, backend, cloud, and data engineering on Windows predominantly occurs across two distinct execution contexts:
+1. **Native Windows**: Desktop tools, Visual Studio, PowerShell, .NET applications, Docker Desktop UI, and native developer CLIs.
+2. **Windows Subsystem for Linux (WSL)**: Ubuntu, Debian, Fedora, Arch, and Alpine environments where developers run Node.js/Vite, Python/FastAPI, Go microservices, Rust web servers, Ruby on Rails, and Docker daemons under genuine Linux semantics.
+
+Historically, Windows developers had to keep separate terminal windows open, struggle with port forwarding confusion between `localhost` and the WSL Hyper-V virtual switch, and mentally juggle conflicting process identifiers. **Milestone 6 transforms DevHub into a unified multi-environment developer control center**, giving engineers complete visibility into active developer servers running both on Windows and inside WSL distributions.
+
+### 62.2 WSL1 vs WSL2: Translation Layer vs Hyper-V Utility VM
+To engineer reliable cross-environment telemetry, systems engineers must understand the architectural difference between WSL1 and WSL2:
+
+| Dimension | WSL 1 | WSL 2 |
+| :--- | :--- | :--- |
+| **Kernel Architecture** | Microsoft Pico Provider translation layer | Genuine Linux Kernel inside lightweight Hyper-V VM |
+| **System Calls** | Win32 kernel translates Linux syscalls &rarr; NT syscalls | Direct Linux syscall execution on genuine Linux kernel |
+| **File System Performance** | Fast on `/mnt/c/`, slow on Linux root | Ultra-fast ext4 Virtual Hard Disk (`.vhdx`), slower across `/mnt/c/` 9P bridge |
+| **Networking Architecture** | Shared Windows NT socket stack (`localhost`) | Virtualized Hyper-V network adapter (mirrored or NAT mode) |
+| **Process Model** | Linux processes visible in Windows Task Manager | Linux processes isolated inside Linux kernel PID namespace |
+| **Dominance Today** | Deprecated / Legacy | Universal standard across modern Windows 10/11 installations |
+
+Because WSL2 runs a genuine Linux kernel within an isolated PID namespace, **native Win32 process APIs (`CreateToolhelp32Snapshot`, `OpenProcess`) cannot see or touch Linux processes running inside WSL2**. DevHub bridges this boundary through structured, out-of-process subprocess telemetry.
+
+### 62.3 Bridging the Windows-Linux Boundary: Host-to-Guest Communication
+DevHub communicates across the host-guest boundary using Windows `wsl.exe` as an execution bridge. The Tauri/Rust core process spawns `wsl.exe` with explicit argument vectors, executing standard Linux diagnostic utilities (`ps` and `ss`) inside each target distribution, and decodes the structured output into normalized domain models.
+
+---
+
+## 63. Milestone 6: Multi-Environment Architecture & Domain Normalization
+
+### 63.1 The Multi-Environment Abstraction: `Environment::Windows` vs `Environment::Wsl { distro }`
+DevHub models process environment context directly in its domain layer as an algebraic data type (enum):
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Environment {
+    /// Native Windows host operating system.
+    Windows,
+    /// Windows Subsystem for Linux (WSL) running inside a specific Linux distribution.
+    Wsl { distro: String },
+}
+```
+
+This model is serialized to JSON using Serde tagged enum format:
+- Windows: `{"type": "windows"}`
+- WSL: `{"type": "wsl", "distro": "Ubuntu"}`
+
+### 63.2 Why Windows & WSL Are Different Infrastructure Sources Feeding One Normalized Model
+A common anti-pattern in desktop tooling is building separate, disjoint UI dashboards or bespoke data structures for each operating system (e.g. `WindowsServerCard` vs `WslServerCard`).
+
+DevHub adheres to clean domain-driven architecture: **Windows and WSL are simply different infrastructure sources feeding the same unified domain model**.
+- A listening TCP socket on port `3000` is a `PortInfo`, whether it was discovered via Win32 `GetExtendedTcpTable` or Linux `ss -tlpn -H`.
+- A process running Node.js is a `ProcessInfo`, whether its executable is `C:\nodejs\node.exe` or `/usr/bin/node`.
+- The presentation layer renders a single unified `DashboardServer` card with an environment badge (`Windows` or `WSL / Ubuntu`).
+
+### 63.3 Preventing Environment Conflation: Composite Keys `(Environment, PID)`
+In an operating system, Process Identifiers (PIDs) are unique **only within a single kernel instance**.
+- On Windows, PID `421` might be `winlogon.exe` or a background helper.
+- Inside WSL Ubuntu, PID `421` might be a Vite development server.
+- Inside WSL Fedora, PID `421` might be a Python FastAPI backend.
+
+Treating raw PID `421` as a global primary key results in catastrophic cross-environment data corruption (e.g. attaching Fedora's port `8000` to a Windows system process).
+DevHub enforces a strict **Composite Key Rule**: every process, port join, process tree, and identity enrichment is keyed by `(Environment, PID)`:
+
+$$\text{ProcessKey} = (\text{Environment}, \text{PID})$$
+
+```ts
+export function getProcessEnvironmentKey(env?: Environment | null, pid?: number): string {
+  if (env && env.type === 'wsl') {
+    return `wsl:${env.distro}:${pid ?? 0}`;
+  }
+  return `windows:${pid ?? 0}`;
+}
+```
+
+---
+
+## 64. Milestone 6: WSL Distribution Discovery & Wide-Character (UTF-16LE) Decoding
+
+### 64.1 Enumerating Installed Distributions via `wsl.exe -l -v`
+DevHub discovers installed WSL distributions by executing `wsl.exe -l -v` (list verbose). The command produces a tabular report:
+
+```text
+  NAME                   STATE           VERSION
+* Ubuntu                 Running         2
+  docker-desktop         Stopped         2
+  FedoraLinux-44         Running         2
+```
+
+DevHub's `parse_wsl_list_output` parser:
+1. Strips the optional default distribution indicator asterisk (`*`).
+2. Extracts distribution name (`Ubuntu`, `FedoraLinux-44`).
+3. Parses state (`Running` &rarr; `WslDistroState::Running`, `Stopped` &rarr; `WslDistroState::Stopped`).
+4. Extracts WSL version (`2` or `1`).
+
+### 64.2 The Windows Wide Character (UTF-16LE) CLI Output Challenge & Solution
+On Windows NT systems, `wsl.exe` writes output to standard output streams formatted as **UTF-16LE (Little-Endian) wide characters** with 2 bytes per ASCII character (e.g. `N\0A\0M\0E\0`), occasionally prefixed by a 2-byte Byte Order Mark (`0xFF, 0xFE`). Standard UTF-8 decoders (`std::str::from_utf8`) fail or produce corrupted strings filled with null bytes.
+
+DevHub implements a robust dual-format byte decoder:
+
+```rust
+pub fn decode_utf16_or_utf8(bytes: &[u8]) -> String {
+    if bytes.is_empty() {
+        return String::new();
+    }
+
+    // Check for UTF-16LE Byte Order Mark (BOM) [0xFF, 0xFE]
+    if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+        let u16_slice: Vec<u16> = bytes[2..]
+            .chunks_exact(2)
+            .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+            .collect();
+        return String::from_utf16_lossy(&u16_slice);
+    }
+
+    // Heuristic: Check if odd-indexed bytes are zero (UTF-16LE ASCII without BOM)
+    if bytes.len() >= 4 && bytes[1] == 0 && bytes[3] == 0 {
+        let u16_slice: Vec<u16> = bytes
+            .chunks_exact(2)
+            .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+            .collect();
+        return String::from_utf16_lossy(&u16_slice);
+    }
+
+    // Fallback: standard UTF-8 lossy decoding
+    String::from_utf8_lossy(bytes).into_owned()
+}
+```
+
+### 64.3 State Filtering: Why Only `Running` Distributions Are Queried
+WSL distributions consume system memory and CPU when running, but can remain dormant in a `Stopped` state.
+Attempting to execute commands inside a `Stopped` distribution causes Windows to automatically boot the distribution VM, introducing a 3–8 second latency spike, allocating RAM, and violating the user's intent.
+
+DevHub enforces a strict rule: **Only distributions in the `Running` state are queried for processes and ports. Stopped distributions are presented in metrics cards but never queried.**
+
+---
+
+## 65. Milestone 6: Linux Process & Port Discovery Inside WSL (`ps` & `ss` Telemetry)
+
+### 65.1 Linux Process Enumeration via `ps -eo pid,ppid,comm,args --no-headers`
+Inside each running WSL distribution, DevHub executes POSIX standard process status:
+
+```bash
+ps -eo pid,ppid,comm,args --no-headers
+```
+
+- `pid`: Process ID (e.g. `421`)
+- `ppid`: Parent Process ID (e.g. `300`)
+- `comm`: Short process image name (e.g. `node`, `python3`, `bash`)
+- `args`: Full command-line arguments (e.g. `node server.js --port 3000`)
+
+DevHub parses this stream into `ProcessInfo` structs tagged with `Environment::Wsl { distro: distro.to_string() }`.
+
+### 65.2 Linux Listening TCP Port Discovery via Socket Statistics (`ss -tlpn -H`)
+For network discovery, DevHub uses the modern Linux socket statistics utility:
+
+```bash
+ss -tlpn -H
+```
+
+- `-t`: TCP sockets
+- `-l`: Listening state only
+- `-p`: Process ownership (`users:(("node",pid=421,fd=19))`)
+- `-n`: Numeric port numbers (avoids DNS/service resolution delays)
+- `-H`: Headerless output for clean machine parsing
+
+### 65.3 Parsing Linux Sockets, IPv4/IPv6 Addresses, and Process Ownership
+Linux `ss` formats local socket bindings in several standard forms:
+- IPv4 Wildcard: `0.0.0.0:3000` or `*:3000` &rarr; Address: `0.0.0.0`, Port: `3000`
+- IPv4 Loopback: `127.0.0.1:8080` &rarr; Address: `127.0.0.1`, Port: `8080`
+- IPv6 Wildcard: `*:3000` or `[::]:3000` &rarr; Address: `[::]`, Port: `3000`
+- IPv6 Loopback: `[::1]:5000` &rarr; Address: `[::1]`, Port: `5000`
+
+Process ownership strings like `users:(("node",pid=421,fd=19),("npm",pid=300,fd=19))` are parsed via token extraction to associate the port with PID `421`.
+
+---
+
+## 66. Milestone 6: Subprocess Execution, Timeout Bounds & Partial Failure Isolation
+
+### 66.1 Executing WSL Commands via Direct Argument Vectors (No Shell Injection)
+DevHub avoids spawning intermediate Windows shells (`cmd.exe /c` or `powershell.exe -Command`). Instead, commands are executed using direct argument vectors via `std::process::Command`:
+
+```rust
+let mut cmd = Command::new("wsl.exe");
+cmd.args(["-d", distro, "--", "ps", "-eo", "pid,ppid,comm,args", "--no-headers"]);
+```
+
+On Windows, DevHub attaches the `CREATE_NO_WINDOW (0x08000000)` creation flag to prevent console window flicker.
+
+### 66.2 Timeout Protection & Hung Subprocess Prevention
+WSL commands can occasionally hang if a distribution is unresponsive, out of memory, or locked in a kernel syscall.
+DevHub enforces a strict **3000 ms execution timeout** using a background monitor thread and a synchronization channel. If the subprocess does not exit within the timeout window, DevHub aborts execution and logs a diagnostic, preventing UI lockup.
+
+### 66.3 Graceful Degradation & Partial Failure Isolation (`DiscoveryDiagnostic`)
+If WSL is not installed, if a specific distribution fails, or if `wsl.exe` times out, DevHub **never fails the discovery cycle**.
+- Windows native discovery continues unaffected.
+- The failure is isolated into a `DiscoveryDiagnostic` entry:
+  ```rust
+  pub struct DiscoveryDiagnostic {
+      pub source: String,             // "wsl" or "windows"
+      pub distribution: Option<String>,// e.g. Some("Ubuntu")
+      pub operation: String,          // "process_discovery", "port_discovery"
+      pub error: String,              // Human-readable error message
+      pub timestamp_ms: u64,
+  }
+  ```
+- The frontend renders an informative, dismissible banner alerting the developer without disrupting active Windows development servers.
+
+---
+
+## 67. Milestone 6: Cross-Environment Process Trees & Identity Enrichment
+
+### 67.1 Per-Distribution Process Tree Isolation (Linux PIDs Scoped to Distro)
+Process tree reconstruction must operate strictly within the boundary of a single environment:
+- Windows PID `18240` parent PID `1200` only looks up Windows processes.
+- WSL Ubuntu PID `421` parent PID `300` only looks up Ubuntu processes.
+- Cycles or anomalies in WSL process trees are bound by the same cycle-protection logic ($O(P)$ process map, visited set, max depth bound of 32).
+
+### 67.2 Linux Runtime & Package Manager Detection (Node.js, Python, Cargo, Vite)
+Linux command lines and executable paths differ from Windows (e.g. `/usr/bin/python3` instead of `C:\Python311\python.exe`).
+DevHub's runtime and package manager detectors inspect POSIX command lines and binary image names to classify:
+- `node server.js` / `vite` / `next dev` &rarr; `Runtime::NodeJs`
+- `python3 -m uvicorn main:app` &rarr; `Runtime::Python`
+- `cargo run` / `target/debug/...` &rarr; `Runtime::Rust`
+- `npm run dev` / `pnpm dev` / `yarn start` / `bun run dev` &rarr; `PackageManager`
+
+### 67.3 Path Normalization: Linux POSIX Paths (`/home/user/...`) vs Windows (`C:\...`)
+DevHub's UI and name inference handles both Windows paths (`C:\Projects\frontend`) and POSIX paths (`/home/developer/wsl-api`) seamlessly, extracting the last folder segment as the server name.
+
+---
+
+## 68. Milestone 6: Safe Process Control Boundary (Milestone 5 Guardrails Preserved)
+
+### 68.1 Why Windows Win32 `TerminateProcess` Must Never Be Called on WSL PIDs
+Calling Win32 `OpenProcess` with a Linux PID (e.g. `421`) would attempt to open a **native Windows process with PID 421**, potentially terminating a critical Windows host service by mistake!
+
+### 68.2 Backend Enforcement: Rejecting Non-Windows Targets with `UNSAFE_TARGET`
+DevHub enforces a strict backend guard in `ProcessControlService::validate_target`:
+
+```rust
+if let Some(env) = &target.environment {
+    if env.is_wsl() {
+        return Err(ProcessControlError {
+            code: ProcessControlErrorCode::UnsafeTarget,
+            message: format!(
+                "Process control is not supported for WSL environments ({}) in this milestone. WSL processes must not be terminated via Windows process control.",
+                env.display_name()
+            ),
+            pid: Some(target.pid),
+        });
+    }
+}
+```
+
+### 68.3 Frontend UI Enforcement: Read-Only WSL State and Disabled Action Triggers
+In the React UI:
+- Server cards for WSL processes render a disabled `Read-Only` button with tooltip: *"WSL process control is read-only in Milestone 6"*.
+- The Details modal disables the Stop button for WSL servers.
+- Clicking stop on a WSL server is completely prevented at the component layer.
+
+---
+
+## 69. Milestone 6: Updated High-Level Design (HLD) & Architecture Topology
+
+### 69.1 Milestone 6 Unified Architecture Topology Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           REACT 19 FRONTEND LAYER                                       │
+│                                                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                          DASHBOARD PAGE                                           │  │
+│  │                                                                                                   │  │
+│  │   ┌────────────────────┐   ┌───────────────────────────┐   ┌───────────────────────────────────┐  │  │
+│  │   │    SUMMARY CARDS   │   │       SERVER TOOLBAR      │   │            SERVER LIST            │  │  │
+│  │   │  (Servers, Ports,  │   │  (Search, Env / Distro    │   │   (Unified Windows & WSL Cards,   │  │  │
+│  │   │  Procs, Distros)   │   │   Filters, Runtime, Sort) │   │    Env Badges, Read-Only Guard)   │  │  │
+│  │   └────────────────────┘   └───────────────────────────┘   └───────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────┘  │
+│                                                     │                                                   │
+│                                                     ▼ (unifiedApi.getUnifiedSnapshot)                   │
+├─────────────────────────────────────────────────────┼───────────────────────────────────────────────────┤
+│                                        TAURI 2 RUST CORE BACKEND                                        │
+│                                                                                                         │
+│  ┌──────────────────────────────────────────────────▼────────────────────────────────────────────────┐  │
+│  │                                        TAURI COMMAND LAYER                                        │  │
+│  │                  get_unified_snapshot()  •  get_wsl_distributions()  •  stop_server()                 │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────┘  │
+│                                                     │                                                   │
+│                                                     ▼                                                   │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                      UNIFIED DISCOVERY SERVICE                                    │  │
+│  │                           (Orchestrates Windows & WSL with Error Isolation)                       │  │
+│  └──────────────────────┬───────────────────────────────────────────────────┬────────────────────────┘  │
+│                         │                                                   │                           │
+│                         ▼                                                   ▼                           │
+│  ┌──────────────────────────────────────────────┐   ┌────────────────────────────────────────────────┐  │
+│  │          WINDOWS DISCOVERY ADAPTERS          │   │             WSL DISCOVERY ADAPTERS             │  │
+│  │                                              │   │                                                │  │
+│  │  • WindowsProcessDiscovery (Toolhelp32)      │   │  • DefaultWslDistroDiscovery (wsl.exe -l -v)   │  │
+│  │  • WindowsPortDiscovery (iphlpapi.dll)       │   │  • DefaultWslProcessDiscovery (ps -eo ...)     │  │
+│  │                                              │   │  • DefaultWslPortDiscovery (ss -tlpn -H)       │  │
+│  └──────────────────────┬───────────────────────┘   └───────────────────────┬────────────────────────┘  │
+│                         │                                                   │                           │
+│                         └───────────────────────────┬───────────────────────┘                           │
+│                                                     │                                                   │
+│                                                     ▼                                                   │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                   PROCESS IDENTITY ENRICHMENT SERVICE                             │  │
+│  │                     (Environment-Isolated Process Trees, Runtimes, Package Managers)              │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────┘  │
+│                                                     │                                                   │
+│                                                     ▼                                                   │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                     SAFE PROCESS CONTROL SERVICE                                  │  │
+│  │                   (Win32 Process Handle RAII, 9-Point Target Guard, WSL Rejection Guard)          │  │
+│  └───────────────────────────────────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 69.2 Multi-Environment Layer Responsibility Matrix
+
+| Architectural Layer | Core Responsibility in Milestone 6 |
+| :--- | :--- |
+| **Presentation (React 19)** | Renders unified server cards, handles multi-environment filter chips (`All`, `Windows`, `WSL / Ubuntu`, `WSL / Fedora`), displays WSL metric cards, and guards read-only state. |
+| **IPC / Command Layer** | Exposes `get_unified_snapshot` and `get_wsl_distributions` commands to frontend. |
+| **Unified Discovery Service** | Orchestrates Windows native discovery and per-running-distribution WSL discovery, collecting telemetry and diagnostics. |
+| **WSL Infrastructure Layer** | Executes `wsl.exe` subprocesses with timeout protection, UTF-16LE wide-character decoding, and parsing for `ps` and `ss`. |
+| **Windows Infrastructure Layer** | Queries Win32 Toolhelp32 snapshots, PEB command lines, and Win32 IP Helper TCP tables. |
+| **Identity Service** | Builds isolated process trees and enriches process identity scoped strictly per environment. |
+| **Process Control Service** | Executes safe pre-termination validation, strictly rejecting non-Windows targets to preserve host safety. |
+
+---
+
+## 70. Milestone 6: Updated Low-Level Design (LLD) & Service Trait Contracts
+
+### 70.1 WSL Infrastructure Interfaces (`WslExecutor`, `WslDistroDiscovery`, `WslProcessDiscovery`, `WslPortDiscovery`)
+
+```rust
+pub trait WslExecutor: Send + Sync {
+    fn execute_wsl_command(&self, args: &[&str], timeout_ms: u64) -> Result<String, WslExecutionError>;
+}
+
+pub trait WslDistroDiscovery: Send + Sync {
+    fn enumerate(&self) -> Result<Vec<WslDistribution>, WslExecutionError>;
+}
+
+pub trait WslProcessDiscovery: Send + Sync {
+    fn enumerate(&self, distro: &str) -> Result<Vec<ProcessInfo>, WslExecutionError>;
+}
+
+pub trait WslPortDiscovery: Send + Sync {
+    fn enumerate(&self, distro: &str) -> Result<Vec<PortInfo>, WslExecutionError>;
+}
+```
+
+### 70.2 `UnifiedDiscoveryService` Composition & Orchestration
+
+```rust
+pub trait UnifiedDiscovery: Send + Sync {
+    fn discover_all(&self) -> Result<UnifiedSnapshot, String>;
+}
+```
+
+### 70.3 Cross-Language Type Contracts (`Environment`, `WslDistribution`, `UnifiedSnapshot`)
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UnifiedSnapshot {
+    pub processes: Vec<ProcessInfo>,
+    pub ports: Vec<PortInfo>,
+    pub identities: Vec<ProcessIdentity>,
+    pub distributions: Vec<WslDistribution>,
+    pub diagnostics: Vec<DiscoveryDiagnostic>,
+}
+```
+
+---
+
+## 71. Milestone 6: End-to-End Multi-Environment Code Trace
+
+### 71.1 Complete Trace: From Frontend Refresh to Windows + WSL Discovery to Unified Dashboard
+
+```text
+[React Dashboard] ──> unifiedApi.getUnifiedSnapshot()
+       │
+       ▼ (Tauri IPC Invoke)
+[commands::wsl::get_unified_snapshot]
+       │
+       ▼
+[UnifiedDiscoveryService::discover_all]
+       │
+       ├──> WindowsProcessDiscovery::enumerate() ──> Win32 Toolhelp32 Snapshot ──> Vec<ProcessInfo (Windows)>
+       ├──> WindowsPortDiscovery::enumerate()    ──> Win32 GetExtendedTcpTable ──> Vec<PortInfo (Windows)>
+       │
+       ├──> WslDistroDiscovery::enumerate()      ──> wsl.exe -l -v ──> Decode UTF-16LE ──> Vec<WslDistribution>
+       │       │
+       │       └── For each Running Distribution (e.g. "Ubuntu"):
+       │             ├── WslProcessDiscovery::enumerate("Ubuntu") ──> wsl.exe -d Ubuntu -- ps ... ──> Vec<ProcessInfo (WSL)>
+       │             └── WslPortDiscovery::enumerate("Ubuntu")    ──> wsl.exe -d Ubuntu -- ss ... ──> Vec<PortInfo (WSL)>
+       │
+       ├──> ProcessIdentityService::enrich_processes(all_procs, all_ports)
+       │       ├── Partition by Environment (Windows vs Ubuntu vs Fedora)
+       │       ├── Build Isolated O(P) Process Map per Environment
+       │       ├── Build Isolated O(S) Port Map per (Environment, PID)
+       │       └── Detect Runtimes, Package Managers & Ancestry Trees
+       │
+       ▼ (Returns UnifiedSnapshot)
+[React Dashboard] ──> deriveDashboardServers(ports, identities)
+       │
+       ├──> Inferred Server Names (company-frontend, wsl-express)
+       ├──> Environment Badges (Windows [Blue], WSL / Ubuntu [Purple])
+       ├──> Safe Control Guard (Windows Stop enabled, WSL Stop Read-Only)
+       │
+       ▼
+[Rendered UI] ──> 3-Column Responsive Grid with Instant Search & Filtering
+```
+
+---
+
+## 72. Milestone 6: Deep Systems Engineering & HLD/LLD Interview Q&A
+
+### Q1: Why can't DevHub use Win32 `OpenProcess` to inspect or terminate WSL2 processes?
+**Answer**:
+WSL2 processes run inside a lightweight Linux virtual machine running under Hyper-V. They exist within the Linux kernel's memory space and PID namespace. The Windows NT kernel does not manage Linux task structures (`task_struct`); therefore, Win32 `OpenProcess` does not recognize Linux PIDs. Calling Win32 process APIs with a Linux PID either fails with `ERROR_INVALID_PARAMETER` or accidentally targets an unrelated Windows process that shares the same numeric PID.
+
+### Q2: Why is the Composite Key `(Environment, PID)` mandatory in multi-environment systems?
+**Answer**:
+Process IDs are guaranteed to be unique only within a single kernel instance. When multiple execution environments coexist (Windows Host, WSL Ubuntu, WSL Fedora), each environment independently assigns PIDs starting from 1. If PID `421` exists simultaneously in Windows and Ubuntu, using PID alone causes hash map key collisions, associating Windows ports with Linux processes or vice-versa. Keying by `(Environment, PID)` provides complete namespace isolation.
+
+### Q3: Why does DevHub execute `wsl.exe -l -v` instead of reading the Windows Registry directly?
+**Answer**:
+While installed WSL distributions have metadata stored under `HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss`, the registry only indicates configuration state, not **live lifecycle state** (`Running` vs `Stopped`). `wsl.exe -l -v` queries the live Hyper-V WSL subsystem manager, providing authentic real-time status.
+
+### Q4: Why does `wsl.exe` output wide characters (UTF-16LE), and how is this handled?
+**Answer**:
+Many built-in Windows command-line tools write wide-character (UTF-16LE) output by default to support international character sets across different system code pages. If read as raw UTF-8 bytes, every second byte is a null byte (`0x00`). DevHub detects UTF-16LE BOM or null-byte patterns and decodes them into standard Rust `String` objects using `String::from_utf16_lossy`.
+
+### Q5: Why are `Stopped` WSL distributions never queried for processes and ports?
+**Answer**:
+Executing any command inside a stopped distribution (e.g. `wsl.exe -d Debian ps`) triggers an automatic boot of that distribution VM. This incurs a noticeable 3–8 second latency penalty, consumes host memory, and starts background Linux system services against the user's implicit intent. DevHub strictly inspects only currently `Running` distributions.
+
+### Q6: How does DevHub prevent command injection when executing commands inside WSL?
+**Answer**:
+DevHub passes arguments as explicit element vectors using `std::process::Command::args(["-d", distro, "--", "ps", "-eo", ...])` without invoking an intermediate Windows or Linux shell (`sh -c` or `cmd.exe /c`). This guarantees that command arguments are not subject to shell parameter expansion or injection vulnerabilities.
+
+### Q7: What is the purpose of `DiscoveryDiagnostic` in DevHub's discovery pipeline?
+**Answer**:
+It implements the **Graceful Degradation / Failure Isolation Pattern**. If a single WSL distribution times out or errors, the error is captured in `DiscoveryDiagnostic` and returned alongside successful Windows and peer WSL discovery results. The application never crashes, and the UI displays an informative warning banner while presenting all available running servers.
+
+---
+
+## 73. Milestone 6: Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/models/environment.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/environment.rs) | Domain Model | `Environment`, `WslDistribution`, `WslDistroState`, `DiscoveryDiagnostic`, `UnifiedSnapshot` | Multi-Environment Abstraction, Serde Tagged Enums | All Discovery & Identity Services | `serde` |
+| [`src-tauri/src/wsl/executor.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/wsl/executor.rs) | WSL Infrastructure | Subprocess execution bridge with timeout & UTF-16LE decoding | `WslExecutor`, `decode_utf16_or_utf8`, `CREATE_NO_WINDOW` | `wsl::distro`, `wsl::process`, `wsl::port` | `std::process::Command` |
+| [`src-tauri/src/wsl/distro.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/wsl/distro.rs) | WSL Infrastructure | Enumerates installed distributions and states (`wsl.exe -l -v`) | State Filtering, Verbose Table Parsing | `UnifiedDiscoveryService`, `commands::wsl` | `WslExecutor` |
+| [`src-tauri/src/wsl/process.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/wsl/process.rs) | WSL Infrastructure | Discovers Linux processes inside WSL (`ps -eo ...`) | Linux Process Parsing, Tagged `ProcessInfo` | `UnifiedDiscoveryService` | `WslExecutor` |
+| [`src-tauri/src/wsl/port.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/wsl/port.rs) | WSL Infrastructure | Discovers Linux listening TCP ports inside WSL (`ss -tlpn -H`) | Socket Statistics Parsing, Address Extraction | `UnifiedDiscoveryService` | `WslExecutor` |
+| [`src-tauri/src/discovery/unified.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/discovery/unified.rs) | Discovery Service | `UnifiedDiscoveryService` coordinating Windows and WSL | Multi-Source Orchestration, Partial Failure Isolation | `commands::wsl` | `WindowsProcessDiscovery`, `WslDistroDiscovery`, etc. |
+| [`src-tauri/src/identity/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/identity/service.rs) | Domain Service | Environment-aware process identity enrichment and tree building | Environment Isolation, `(Environment, PID)` Grouping | `UnifiedDiscoveryService`, `commands::identity` | `RuntimeDetector`, `ProcessTreeBuilder` |
+| [`src-tauri/src/process/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/process/service.rs) | Domain Service | Process control service with strict WSL target rejection | Non-Windows Target Guard, Win32 Kernel RAII | `commands::control` | `windows::process` |
+| [`src-tauri/src/commands/wsl.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/wsl.rs) | Presentation / IPC | Tauri commands: `get_wsl_distributions`, `get_unified_snapshot` | Thin Controller Pattern, Error Marshalling | Tauri IPC Dispatcher | `UnifiedDiscoveryService`, `WslDistroDiscovery` |
+| [`src/types/environment.ts`](file:///d:/ak/project/devhub/DevHub/src/types/environment.ts) | Frontend Types | `Environment`, `WslDistribution`, `UnifiedSnapshot`, `DiscoveryDiagnostic` | TypeScript Multi-Environment Contracts | UI Components, Commands | - |
+| [`src/lib/serverUtils.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/serverUtils.ts) | Presentation Logic | Environment-aware server derivation, filtering, and search | Composite Key Grouping, Distro Search | `Dashboard.tsx`, `Servers.tsx` | - |
+| [`src/lib/commands.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/commands.ts) | Frontend API | Gateway wrapper over Tauri `invoke()` calls | Unified Snapshot Gateway | `Dashboard.tsx`, `Servers.tsx` | `@tauri-apps/api/core` |
+| [`src/components/dashboard/SummaryCards.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/SummaryCards.tsx) | Presentation View | Summary metrics cards including WSL Distros | Metrics Visualization | `Dashboard.tsx`, `Servers.tsx` | - |
+| [`src/components/dashboard/ServerToolbar.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerToolbar.tsx) | Presentation View | Search and filter toolbar with active WSL/Distro filtering | Environment Filter Chips | `Dashboard.tsx`, `Servers.tsx` | - |
+| [`src/components/dashboard/ServerCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerCard.tsx) | Presentation View | Server card with dynamic Windows/WSL badge & read-only guard | Safe Control Boundary | `ServerList.tsx` | `CopyButton` |
+| [`src/components/dashboard/ServerDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerDetailsModal.tsx) | Presentation View | Server details modal with environment details & ancestry | Progressive Disclosure | `Dashboard.tsx`, `Servers.tsx` | `ProcessTree`, `CopyButton` |
+| [`src/pages/Dashboard.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Dashboard.tsx) | Page Container | Main multi-environment development server control center | Unified Single Source of Truth | `App.tsx` | UI Components, APIs |
+
 
 

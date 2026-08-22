@@ -98,7 +98,19 @@ DevHub provides a unified control layer over local development processes without
   - Full suite of 45 Rust unit/integration tests and 21 React frontend tests passing
   - Chapters 50–61 added to `LEARNING.md` covering OS process control, PID reuse, TOCTOU mitigation, and HLD/LLD interview preparation
 
-*Next Milestone: Milestone 6 — WSL Discovery & Control*
+- **Milestone 6: WSL Integration (Complete)**
+  - Dual-environment architecture modeling Windows host and WSL Linux distributions as distinct infrastructure sources feeding a normalized domain model
+  - Multi-environment `Environment` enum (`Environment::Windows` & `Environment::Wsl { distro }`) and composite `(Environment, PID)` keys preventing cross-environment process or port collisions
+  - Robust WSL distribution discovery (`wsl.exe -l -v`) with UTF-16LE / wide-character byte decoding and state filtering (only inspecting active `Running` distributions)
+  - Linux process discovery (`ps -eo pid,ppid,comm,args --no-headers`) and socket statistics discovery (`ss -tlpn -H`) executing with direct argument vectors and a strict 3000 ms timeout bound
+  - Environment-isolated process tree reconstruction and runtime detection (`Node.js`, `Python`, `Rust`, `npm`, `pnpm`, `yarn`, `bun`, `cargo`)
+  - Unified multi-environment discovery service (`UnifiedDiscoveryService`) with graceful degradation and partial failure isolation (`DiscoveryDiagnostic`)
+  - Strict read-only safety boundary for WSL processes preserving Milestone 5 Windows process control guarantees
+  - Unified Dashboard UI with environment badge chips, WSL distro filters, WSL distribution summary metrics, and diagnostic warning notices
+  - 68 Rust unit/integration tests and 25 React frontend tests passing (100% test pass rate)
+  - Chapters 62–73 added to `LEARNING.md` covering WSL architecture, UTF-16 decoding, multi-environment domain modeling, and interview Q&A
+
+*Next Milestone: Milestone 7 — Server Management, Configuration & Profiles*
 
 ---
 
@@ -113,6 +125,7 @@ DevHub provides a unified control layer over local development processes without
    winget install Rustlang.Rustup
    ```
 3. **Microsoft C++ Build Tools** & **WebView2** (included with modern Windows 10/11)
+4. **WSL 2** (optional, for inspecting Linux development servers)
 
 ### Installation
 
@@ -138,11 +151,11 @@ npm run dev
 ### Running Tests
 
 ```bash
-# Run Rust backend unit and integration tests (45 tests)
+# Run Rust backend unit and integration tests (68 tests)
 cd src-tauri
 cargo test
 
-# Run frontend unit and component tests (21 tests)
+# Run frontend unit and component tests (25 tests)
 npm test
 
 # Run frontend build and typecheck
@@ -173,19 +186,20 @@ DevHub/
 │   │   ├── Header.tsx        # Top header
 │   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── types/                # TypeScript interfaces (control.ts, identity.ts, port.ts, process.ts, server.ts)
+│   ├── types/                # TypeScript interfaces (control.ts, environment.ts, identity.ts, port.ts, process.ts, server.ts)
 │   ├── lib/                  # Commands API client (commands.ts) & View Pipeline (serverUtils.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (control.rs, identity.rs, ports.rs, processes.rs, system.rs)
-│   │   ├── discovery/        # Discovery services (port.rs, process.rs)
+│   │   ├── commands/         # Tauri IPC commands (control.rs, identity.rs, ports.rs, processes.rs, system.rs, wsl.rs)
+│   │   ├── discovery/        # Discovery services (port.rs, process.rs, unified.rs)
 │   │   ├── identity/         # Process identity engine (detector.rs, service.rs, tree.rs)
-│   │   ├── models/           # Domain models (control.rs, identity.rs, port.rs, process.rs)
+│   │   ├── models/           # Domain models (control.rs, environment.rs, identity.rs, port.rs, process.rs)
 │   │   ├── process/          # Process control domain service (service.rs)
 │   │   ├── windows/          # Windows Win32 FFI (networking.rs, process.rs)
+│   │   ├── wsl/              # WSL infrastructure (distro.rs, executor.rs, port.rs, process.rs)
 │   │   ├── lib.rs            # Tauri application entry point & handler registry
 │   │   └── main.rs           # Desktop binary entry
 │   ├── Cargo.toml            # Rust dependencies and package configuration
@@ -201,3 +215,4 @@ DevHub/
 ## 📄 License
 
 Private / Proprietary.
+
