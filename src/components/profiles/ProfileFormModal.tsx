@@ -6,6 +6,7 @@ import type {
   WslDistribution,
   Environment,
 } from '../../types';
+import { WorkingDirectoryField } from '../common/WorkingDirectoryField';
 
 interface ProfileFormModalProps {
   initialProfile?: ServerProfile | null;
@@ -270,29 +271,19 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
           </div>
 
           {/* Working Directory */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="profile-cwd" className="text-xs font-medium text-zinc-300">
-                Working Directory <span className="text-rose-400">*</span>
-              </label>
-              <span className="text-[10px] text-zinc-500">
-                {envType === 'windows' ? 'e.g. C:\\Projects\\app' : 'e.g. /home/user/projects/app'}
-              </span>
-            </div>
-            <input
-              id="profile-cwd"
-              type="text"
-              required
-              value={workingDirectory}
-              onChange={(e) => setWorkingDirectory(e.target.value)}
-              placeholder={
-                envType === 'windows'
-                  ? 'C:\\Projects\\my-project'
-                  : '/home/developer/projects/api'
-              }
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
+          <WorkingDirectoryField
+            id="profile-cwd"
+            label="Working Directory"
+            required
+            environment={
+              envType === 'wsl'
+                ? { type: 'wsl', distro: distro.trim() }
+                : { type: 'windows' }
+            }
+            value={workingDirectory}
+            onChange={setWorkingDirectory}
+            disabled={isSaving}
+          />
 
           {/* Command */}
           <div className="space-y-1.5">

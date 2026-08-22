@@ -34,3 +34,4 @@ export * from './control';
 export * from './profile';
 export * from './adoption';
 export * from './project';
+export * from './filesystem';

@@ -23,6 +23,8 @@ import type {
   AddProfileToProjectRequest,
   ReorderProjectProfilesRequest,
   ProjectOperationResult,
+  DirectoryListing,
+  PathValidationResult,
 } from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
@@ -169,6 +171,22 @@ export async function restartProject(id: string): Promise<ProjectOperationResult
   return invoke<ProjectOperationResult>('restart_project', { id });
 }
 
+// Filesystem & Folder Picker API commands
+export async function pickFolder(defaultPath?: string): Promise<string | null> {
+  return invoke<string | null>('pick_folder', { defaultPath: defaultPath || null });
+}
+
+export async function listWslDirectories(distro: string, path?: string): Promise<DirectoryListing> {
+  return invoke<DirectoryListing>('list_wsl_directories', { distro, path: path || null });
+}
+
+export async function validateDirectory(
+  environment: Environment,
+  path: string
+): Promise<PathValidationResult> {
+  return invoke<PathValidationResult>('validate_directory', { environment, path });
+}
+
 export const processApi = {
   getProcesses,
 };
@@ -226,6 +244,12 @@ export const projectApi = {
   startProject,
   stopProject,
   restartProject,
+};
+
+export const filesystemApi = {
+  pickFolder,
+  listWslDirectories,
+  validateDirectory,
 };
 
 

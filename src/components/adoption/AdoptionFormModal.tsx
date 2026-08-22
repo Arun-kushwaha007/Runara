@@ -7,6 +7,7 @@ import type {
 import { buildAdoptionDraft } from '../../lib/adoptionDraft';
 import { profileApi } from '../../lib/commands';
 import { DuplicateProfileWarning } from './DuplicateProfileWarning';
+import { WorkingDirectoryField } from '../common/WorkingDirectoryField';
 
 interface AdoptionFormModalProps {
   server: DashboardServer;
@@ -326,20 +327,15 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
           </div>
 
           {/* Working Directory Field */}
-          <div className="space-y-1.5">
-            <label htmlFor="adoption-working-dir" className="text-xs font-medium text-zinc-300">
-              Working Directory <span className="text-rose-400">*</span>
-            </label>
-            <input
-              id="adoption-working-dir"
-              type="text"
-              required
-              value={workingDirectory}
-              onChange={(e) => setWorkingDirectory(e.target.value)}
-              placeholder="e.g. C:\Projects\my-app or /home/user/my-app"
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
+          <WorkingDirectoryField
+            id="adoption-working-dir"
+            label="Working Directory"
+            required
+            environment={draft.environment}
+            value={workingDirectory}
+            onChange={setWorkingDirectory}
+            disabled={isSaving}
+          />
 
           {/* Command Field */}
           <div className="space-y-1.5">
