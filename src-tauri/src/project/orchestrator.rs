@@ -2,7 +2,6 @@ use crate::db::{ProjectRepository, ServerProfileRepository};
 use crate::discovery::{UnifiedDiscovery, UnifiedDiscoveryService};
 use crate::models::control::ProcessTarget;
 use crate::models::environment::Environment;
-use crate::models::profile::ProfileRuntimeStatus;
 use crate::models::project::{
     ProjectError, ProjectErrorCode, ProjectOperationResult, ProjectRuntimeStatus,
 };
@@ -19,6 +18,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 /// WSL boundary reporting, and Windows-only restart sequencing.
 pub struct ProjectOrchestrator {
     project_repository: Arc<dyn ProjectRepository>,
+    #[allow(dead_code)]
     profile_repository: Arc<dyn ServerProfileRepository>,
     start_service: Arc<ServerStartService>,
     process_control: Arc<ProcessControlService>,
@@ -419,7 +419,7 @@ mod tests {
     use crate::db::repository::SqliteServerProfileRepository;
     use crate::db::MigrationRunner;
     use crate::discovery::{PortDiscovery, ProcessDiscovery};
-    use crate::models::{PortInfo, ProcessInfo, ProcessStatus, ServerProfile};
+    use crate::models::{PortInfo, ProcessInfo, ServerProfile};
     use crate::windows::{ProcessController, ProcessHandle};
     use rusqlite::Connection;
     use std::sync::Mutex;

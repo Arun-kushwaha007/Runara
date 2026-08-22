@@ -63,6 +63,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::system::get_system_info,
+            commands::system::get_diagnostics,
             commands::processes::get_processes,
             commands::ports::get_listening_ports,
             commands::identity::get_process_identities,
