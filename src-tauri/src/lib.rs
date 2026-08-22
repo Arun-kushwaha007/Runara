@@ -2,6 +2,7 @@ pub mod commands;
 pub mod discovery;
 pub mod identity;
 pub mod models;
+pub mod process;
 pub mod windows;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -13,8 +14,11 @@ pub fn run() {
             commands::processes::get_processes,
             commands::ports::get_listening_ports,
             commands::identity::get_process_identities,
-            commands::identity::get_process_identity
+            commands::identity::get_process_identity,
+            commands::control::stop_server,
+            commands::control::force_stop_server
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
