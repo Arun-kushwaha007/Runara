@@ -26,7 +26,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   onInspect,
 }) => {
   const { profile, status, activePid, activePort, errorMessage } = view;
-  const isWsl = profile.environment.type === 'wsl';
   const isRunning = status === 'running';
   const isError = status === 'error';
   const isStartingState = status === 'starting' || isStarting;
@@ -286,7 +285,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             </button>
           )}
 
-          {isRunning && !isWsl && onStop && (
+          {isRunning && onStop && (
             <button
               type="button"
               onClick={() => onStop(view)}
@@ -306,13 +305,13 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             </button>
           )}
 
-          {isRunning && !isWsl && (
+          {isRunning && (
             <button
               type="button"
               onClick={() => onRestart(profile.id)}
               disabled={isStartingState || isStopping}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-              title="Restart Windows Server"
+              title="Restart Server"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -332,12 +331,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               </svg>
               Restart
             </button>
-          )}
-
-          {isRunning && isWsl && (
-            <span className="text-[11px] text-zinc-500 italic">
-              WSL Control Read-Only
-            </span>
           )}
         </div>
 

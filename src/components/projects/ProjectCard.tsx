@@ -20,7 +20,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const { project, status, profiles, totalServices, runningServices } = projectView;
 
-  const hasWsl = profiles.some((p) => p.profile.environment.type === 'wsl');
   const isRunning = status === 'running';
   const isPartial = status === 'partial';
   const isError = status === 'error';
@@ -185,12 +184,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </button>
           )}
 
-          {/* Restart Button (Windows-only projects) */}
+          {/* Restart Button */}
           {(isRunning || isPartial) && (
             <button
               onClick={() => onRestart(project.id)}
-              disabled={isOperating || isStarting || isStopping || hasWsl}
-              title={hasWsl ? 'Restart unavailable: WSL process control is restricted' : 'Restart all services'}
+              disabled={isOperating || isStarting || isStopping}
+              title="Restart all services"
               className="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

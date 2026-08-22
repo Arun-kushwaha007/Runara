@@ -175,8 +175,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             {(isRunning || isPartial) && (
               <button
                 onClick={() => onRestart(project.id)}
-                disabled={isOperating || isStarting || isStopping || hasWsl}
-                title={hasWsl ? 'Restart unavailable: Project contains WSL services' : 'Restart all services'}
+                disabled={isOperating || isStarting || isStopping}
+                title="Restart all services"
                 className="px-3.5 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700 hover:text-white rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -212,7 +212,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <div>
                 <p className="font-semibold text-zinc-300">WSL Services in Project</p>
                 <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
-                  This project contains WSL services. WSL servers start automatically during project startup. Note that WSL process stop is restricted in this milestone, so stopping this project will stop Windows services while WSL services remain running (resulting in a Partial state). Project restart is supported for Windows-only projects.
+                  This project contains WSL services. DevHub provides full lifecycle orchestration (start, graceful stop, and restart) across both Windows and WSL environments.
                 </p>
               </div>
             </div>

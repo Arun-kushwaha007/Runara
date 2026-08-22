@@ -35,7 +35,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
 
   const handleStop = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onStop && !isStopping && !isWsl) {
+    if (onStop && !isStopping) {
       onStop(server);
     }
   };
@@ -335,28 +335,20 @@ export const ServerCard: React.FC<ServerCardProps> = ({
           {onStop && (
             <button
               type="button"
-              disabled={isStopping || isWsl}
+              disabled={isStopping}
               onClick={handleStop}
               title={
-                isWsl
-                  ? 'WSL process control is read-only in MVP'
-                  : isStopping
+                isStopping
                   ? 'Server is stopping...'
                   : `Stop ${server.name} (PID ${server.pid})`
               }
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-xs flex items-center gap-1.5 ${
-                isWsl
-                  ? 'bg-zinc-800/50 text-zinc-500 border-zinc-800 cursor-not-allowed opacity-60'
-                  : 'bg-red-950/40 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed text-red-300 hover:text-red-100 border-red-800/50 hover:border-red-700 cursor-pointer'
-              }`}
+              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-xs flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed text-red-300 hover:text-red-100 border-red-800/50 hover:border-red-700 cursor-pointer"
             >
               {isStopping ? (
                 <>
                   <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
                   <span>Stopping</span>
                 </>
-              ) : isWsl ? (
-                <span>Read-Only</span>
               ) : (
                 <span>Stop</span>
               )}

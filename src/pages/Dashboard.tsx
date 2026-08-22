@@ -159,13 +159,6 @@ export const Dashboard: React.FC = () => {
 
   // Request Stop Confirmation
   const handleRequestStop = useCallback((server: DashboardServer) => {
-    if (server.environment?.type === 'wsl') {
-      setFeedbackToast({
-        type: 'info',
-        message: 'WSL process control is read-only. Direct termination of Linux processes is restricted in MVP.',
-      });
-      return;
-    }
     setServerToStop(server);
     setStopError(null);
   }, []);

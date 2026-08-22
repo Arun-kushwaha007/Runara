@@ -243,28 +243,20 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({
               {onStopServer && (
                 <button
                   type="button"
-                  disabled={isStopping || isWsl}
+                  disabled={isStopping}
                   onClick={() => onStopServer(server)}
                   title={
-                    isWsl
-                      ? 'WSL process control is read-only in MVP'
-                      : isStopping
+                    isStopping
                       ? 'Stopping...'
                       : `Stop ${server.name}`
                   }
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors shadow-xs ${
-                    isWsl
-                      ? 'bg-zinc-800/50 text-zinc-500 border-zinc-800 cursor-not-allowed opacity-60'
-                      : 'bg-red-950/70 hover:bg-red-900 text-red-300 hover:text-white disabled:opacity-50 border-red-800/60 cursor-pointer'
-                  }`}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors shadow-xs bg-red-950/70 hover:bg-red-900 text-red-300 hover:text-white disabled:opacity-50 border-red-800/60 cursor-pointer"
                 >
                   {isStopping ? (
                     <>
                       <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
                       <span>Stopping...</span>
                     </>
-                  ) : isWsl ? (
-                    <span>Read-Only</span>
                   ) : (
                     <span>Stop Server</span>
                   )}
