@@ -2,9 +2,9 @@
 
 ```
 Project:           DevHub — Local Development Control Center
-Current Milestone: Milestone 4 (Server Dashboard)
+Current Milestone: Milestone 5 (Safe Windows Process Control)
 Document Purpose:  Comprehensive Engineering Learning and Code-Reading Guide for CS Students & HLD/LLD Interview Preparation
-Document Version:  4.0.0
+Document Version:  5.0.0
 ```
 
 ---
@@ -162,6 +162,48 @@ Document Version:  4.0.0
 47. [Milestone 4: End-to-End User Interaction Code Trace](#47-milestone-4-end-to-end-user-interaction-code-trace)
 48. [Milestone 4: Deep Systems Engineering & HLD/LLD Interview Q&A](#48-milestone-4-deep-systems-engineering--hldlld-interview-qa)
 49. [Milestone 4: Complete Repository File Inventory & Architecture Matrix](#49-milestone-4-complete-repository-file-inventory--architecture-matrix)
+50. [Milestone 5: Operating System Process Control & Destruction Concepts](#50-milestone-5-operating-system-process-control--destruction-concepts)
+    - [50.1 What Process Termination Means at the Kernel Level](#501-what-process-termination-means-at-the-kernel-level)
+    - [50.2 Graceful vs. Forceful Termination on Windows](#502-graceful-vs-forceful-termination-on-windows)
+    - [50.3 Win32 Process Handles, Access Rights & Kernel Objects](#503-win32-process-handles-access-rights--kernel-objects)
+    - [50.4 Why Process Termination Differs from Closing a Terminal Window](#504-why-process-termination-differs-from-closing-a-terminal-window)
+51. [Milestone 5: Process Tree Control & Ancestry Protection](#51-milestone-5-process-tree-control--ancestry-protection)
+    - [51.1 Hierarchy Definitions: Parent, Child, Descendant, Ancestor, Sibling](#511-hierarchy-definitions-parent-child-descendant-ancestor-sibling)
+    - [51.2 The Anatomy of a Development Process Tree](#512-the-anatomy-of-a-development-process-tree)
+    - [51.3 The "Ancestor Safety Rule": Why Killing Parents is Catastrophic](#513-the-ancestor-safety-rule-why-killing-parents-is-catastrophic)
+    - [51.4 Descendant Resolution Algorithm & Leaves-to-Root Termination](#514-descendant-resolution-algorithm--leaves-to-root-termination)
+52. [Milestone 5: PID Lifecycle, PID Reuse & TOCTOU Race Condition Mitigation](#52-milestone-5-pid-lifecycle-pid-reuse--toctou-race-condition-mitigation)
+    - [52.1 The Transient Nature of Process Identifiers](#521-the-transient-nature-of-process-identifiers)
+    - [52.2 The Windows PID Reuse Collision Threat Model](#522-the-windows-pid-reuse-collision-threat-model)
+    - [52.3 Time-of-Check to Time-of-Use (TOCTOU) in Desktop Systems](#523-time-of-check-to-time-of-use-toctou-in-desktop-systems)
+    - [52.4 How Win32 Kernel Handles Pin Process Objects in Memory](#524-how-win32-kernel-handles-pin-process-objects-in-memory)
+53. [Milestone 5: Target Validation Strategy & Least Privilege in Developer Tooling](#53-milestone-5-target-validation-strategy--least-privilege-in-developer-tooling)
+    - [53.1 Why Read-Only Tools Differ from Destructive Control Layers](#531-why-read-only-tools-differ-from-destructive-control-layers)
+    - [53.2 DevHub's 9-Point Pre-Termination Identity Verification Checklist](#532-devhubs-9-point-pre-termination-identity-verification-checklist)
+    - [53.3 Protecting Critical System Processes & Failsafe Behavior](#533-protecting-critical-system-processes--failsafe-behavior)
+    - [53.4 Explicit User Confirmation: Preventing Accidental Outages](#534-explicit-user-confirmation-preventing-accidental-outages)
+54. [Milestone 5: Post-Termination Verification & Port Owner Diagnostics](#54-milestone-5-post-termination-verification--port-owner-diagnostics)
+    - [54.1 Why API Success Does Not Imply Process Termination](#541-why-api-success-does-not-imply-process-termination)
+    - [54.2 Bounded Exit Polling Loops & Non-Blocking Timeouts](#542-bounded-exit-polling-loops--non-blocking-timeouts)
+    - [54.3 Port Release Verification via Win32 IP Helper API](#543-port-release-verification-via-win32-ip-helper-api)
+    - [54.4 Disambiguating "Freed Port" vs. "Port Owner Changed"](#544-disambiguating-freed-port-vs-port-owner-changed)
+55. [Milestone 5: Asynchronous Lifecycle State Machines & Per-Server Concurrency](#55-milestone-5-asynchronous-lifecycle-state-machines--per-server-concurrency)
+    - [55.1 The 5 Fundamental Process Control Lifecycle States](#551-the-5-fundamental-process-control-lifecycle-states)
+    - [55.2 Per-Server State Machines vs. Global UI Freezes](#552-per-server-state-machines-vs-global-ui-freezes)
+    - [55.3 Preventing Duplicate Concurrent Operations (Double-Click Guards)](#553-preventing-duplicate-concurrent-operations-double-click-guards)
+56. [Milestone 5: Idempotency & Resilient Error Design](#56-milestone-5-idempotency--resilient-error-design)
+    - [56.1 Idempotency in Destructive Operations](#561-idempotency-in-destructive-operations)
+    - [56.2 Handling External Process Termination Gracefully](#562-handling-external-process-termination-gracefully)
+    - [56.3 Three-Tier Error Architecture: Technical vs. Domain vs. User Errors](#563-three-tier-error-architecture-technical-vs-domain-vs-user-errors)
+57. [Milestone 5: Updated High-Level Design (HLD)](#57-milestone-5-updated-high-level-design-hld)
+    - [57.1 Milestone 5 Architecture Topology Diagram](#571-milestone-5-architecture-topology-diagram)
+    - [57.2 Layer Responsibility Matrix](#572-layer-responsibility-matrix)
+58. [Milestone 5: Updated Low-Level Design (LLD)](#58-milestone-5-updated-low-level-design-lld)
+    - [58.1 Component Signatures and Contracts](#581-component-signatures-and-contracts)
+    - [58.2 Win32 Kernel FFI Layer & ProcessHandle RAII](#582-win32-kernel-ffi-layer--processhandle-raii)
+59. [Milestone 5: End-to-End Stop Server Code Trace](#59-milestone-5-end-to-end-stop-server-code-trace)
+60. [Milestone 5: Deep Systems Engineering & HLD/LLD Interview Q&A](#60-milestone-5-deep-systems-engineering--hldlld-interview-qa)
+61. [Milestone 5: Complete Repository File Inventory & Architecture Matrix](#61-milestone-5-complete-repository-file-inventory--architecture-matrix)
 
 ---
 
@@ -2260,5 +2302,744 @@ Milestone 4 establishes the `DashboardServer` card and details modal where actio
 | [`src/App.tsx`](file:///d:/ak/project/devhub/DevHub/src/App.tsx) | Root Component | Navigational routing and root page rendering | Application Root | `main.tsx` | `Layout`, Pages |
 
 ---
+
+## 50. Milestone 5: Operating System Process Control & Destruction Concepts
+
+### 50.1 What Process Termination Means at the Kernel Level
+In modern multitasking operating systems like Windows and Linux, process termination is a complex kernel-managed teardown operation, not simply flipping a bit in memory.
+
+When a process terminates (whether voluntarily via `ExitProcess` or involuntarily via `TerminateProcess`):
+1. **Thread Destruction**: All user-mode threads associated with the process are halted immediately. No further user-mode instructions are executed.
+2. **Virtual Memory Reclamation**: The process's private virtual address space (code segment, data segment, heaps, and thread stacks) is decommitted and unmapped from physical RAM and pagefiles.
+3. **Handle Table Closure**: The Windows Object Manager automatically enumerates the process's internal handle table, closing all open handles to kernel objects (files, sockets, mutexes, semaphores, pipes, registry keys).
+4. **Socket Teardown**: TCP sockets bound by the process enter socket teardown. The kernel network stack sends TCP `FIN` or `RST` packets to connected remote peers, transitioning the local socket into `TIME_WAIT` or freeing the port binding immediately.
+5. **Signaling Executive Object**: The kernel `EPROCESS` executive object transitions to the **Signaled** state (`WAIT_OBJECT_0`), waking any threads or processes waiting on its handle via `WaitForSingleObject`.
+6. **Exit Code Recording**: The termination status code (e.g. `0` for clean exit, `1` for forced termination) is written into the kernel `EPROCESS` block, accessible to other processes with query permissions via `GetExitCodeProcess`.
+
+```
+[ Active Process Execution ]
+          │
+          ▼  TerminateProcess(hProcess, 1)
+[ Kernel Halts All Threads ]
+          │
+          ▼
+[ Decommit Virtual Memory & Unmap RAM ]
+          │
+          ▼
+[ Close Handle Table & Release TCP Sockets ]
+          │
+          ▼
+[ Transition EPROCESS to Signaled (WAIT_OBJECT_0) ]
+          │
+          ▼
+[ Kernel Retains EPROCESS until All Open Handles Close ]
+```
+
+### 50.2 Graceful vs. Forceful Termination on Windows
+Operating systems differ fundamentally in how user-space processes cooperate during shutdown:
+
+| Metric / Dimension | Graceful Termination | Forceful Termination |
+| :--- | :--- | :--- |
+| **POSIX (Linux/macOS)** | Sends `SIGTERM` (15); process can catch signal, run cleanup hooks, flush database buffers, write state to disk, and exit. | Sends `SIGKILL` (9); kernel unconditionally destroys the process without running handlers. |
+| **Windows Win32** | Console processes: `GenerateConsoleCtrlEvent(CTRL_C_EVENT, pid)` (requires process group). GUI processes: Post `WM_CLOSE` / `WM_QUIT` message to window queue. | `TerminateProcess(hProcess, uExitCode)`: Kernel immediately halts all threads and releases resources without executing DLL detach routines or `finally` blocks. |
+| **Data Integrity** | High: application flushes disk writes, closes SQLite transactions, and notifies connected clients. | Moderate/Low: in-flight memory writes are aborted; file handles are closed by OS but unwritten buffers in user space are lost. |
+| **Reliability** | Susceptible to hangs if the application is stuck in an infinite loop, blocked on I/O, or ignores signals. | 100% deterministic termination by the kernel (unless process is blocked inside a faulty kernel-mode driver). |
+
+**DevHub's Termination Strategy on Windows:**
+On Windows, development servers (`node.exe`, `python.exe`, `uvicorn`, `vite`) are frequently spawned as child processes without window message loops, and standard user accounts cannot inject arbitrary console control events into separate console sessions. DevHub implements a **verified leaves-to-root termination model**:
+1. It acquires native Win32 process handles (`OpenProcess`) with `PROCESS_TERMINATE | SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION`.
+2. It attempts clean termination on child worker processes first, then the root server process.
+3. It performs a bounded wait (`WaitForSingleObject`) up to 3000 ms to confirm exit.
+4. If a process does not exit within the timeout, DevHub exposes an explicit **Force Stop** option.
+
+### 50.3 Win32 Process Handles, Access Rights & Kernel Objects
+In Windows, processes are represented internally by executive objects (`EPROCESS`). User-mode code cannot manipulate `EPROCESS` pointers directly; instead, it requests an opaque **Handle** from the kernel via `OpenProcess`:
+
+```rust
+let handle = OpenProcess(
+    PROCESS_TERMINATE | SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
+    FALSE, // Do not inherit
+    pid    // Target Process ID
+);
+```
+
+#### Key Win32 Process Access Rights
+- `PROCESS_TERMINATE (0x0001)`: Required to invoke `TerminateProcess` on the handle.
+- `SYNCHRONIZE (0x00100000)`: Required to pass the handle to wait functions (`WaitForSingleObject`, `WaitForMultipleObjects`).
+- `PROCESS_QUERY_LIMITED_INFORMATION (0x1000)`: Allows querying exit codes and basic metadata without full debugging privileges.
+
+#### Kernel Reference Counting & Object Pinning
+Every kernel object in Windows has an internal **reference count**. When `OpenProcess` succeeds:
+1. The kernel increments the reference count of the target's `EPROCESS` block.
+2. Even if the process terminates immediately, the `EPROCESS` block **cannot be deleted from kernel memory** until all open handles are closed via `CloseHandle`.
+3. This is a critical security property: once DevHub acquires a valid handle to a verified process, subsequent termination calls on that handle are guaranteed to operate on **that exact process instance**, eliminating PID reuse race conditions for the lifetime of the handle!
+
+### 50.4 Why Process Termination Differs from Closing a Terminal Window
+Developers frequently assume that closing a terminal tab (e.g. in Windows Terminal or VS Code) is the same as stopping a development server. In reality, these are completely different OS mechanisms:
+
+```
+Scenario A: Closing Terminal Window
+[ VS Code / Terminal ] ──(Killed by User)──> [ ConHost.exe Dies ]
+                                                      │ (Orphaned / Detached)
+                                                      ▼
+                                              [ node.exe (Zombie Server) ]
+                                              Port 3000 Remains Occupied!
+
+Scenario B: DevHub Verified Process Control
+[ DevHub ] ──(Discovers & Validates PID)──> [ OpenProcess Handle ]
+    │
+    ├─► [ Terminate Leaf Workers (esbuild.exe) ]
+    ├─► [ Terminate Root Server (node.exe) ]
+    └─► [ Verify Port 3000 Freed ]
+```
+
+When a terminal closes, Windows may terminate the console host (`conhost.exe`) or send a disconnect notification. If the child runtime was spawned detached, in the background, or with ignored console signals, it becomes an **orphan process** that continues running in the background while holding the TCP listening port. DevHub operates directly on the process tree and socket layer, terminating the actual listener and freeing the port cleanly.
+
+---
+
+## 51. Milestone 5: Process Tree Control & Ancestry Protection
+
+### 51.1 Hierarchy Definitions: Parent, Child, Descendant, Ancestor, Sibling
+To build safe process control systems, precise graph terminology is mandatory:
+
+```
+                    [ explorer.exe (PID 800) ]              ◄── Ancestor
+                               │
+                               ▼
+                    [ Code.exe (PID 16300) ]                ◄── Ancestor (IDE)
+                               │
+                               ▼
+                    [ pwsh.exe (PID 17120) ]                ◄── Ancestor (Shell)
+                               │
+                               ▼
+                    [ npm.cmd (PID 17820) ]                 ◄── Parent
+                               │
+                ┌──────────────┴──────────────┐
+                ▼                             ▼
+   [ node.exe (PID 18240) ]       [ git.exe (PID 18290) ]   ◄── Sibling (Do not touch)
+         (TARGET SERVER)
+                │
+                ▼
+   [ esbuild.exe (PID 18300) ]                              ◄── Child (Descendant)
+                │
+                ▼
+   [ worker.exe (PID 18400) ]                               ◄── Grandchild (Descendant)
+```
+
+- **Target Process**: The specific server process identified by DevHub as owning the listening TCP port (`node.exe`, PID 18240).
+- **Parent Process**: The direct process that created the target (`npm.cmd`, PID 17820).
+- **Ancestors**: The entire lineage above the target (`npm.cmd` &rarr; `pwsh.exe` &rarr; `Code.exe` &rarr; `explorer.exe`).
+- **Children**: Direct subprocesses spawned by the target (`esbuild.exe`, PID 18300).
+- **Descendants**: The transitive closure of all children, grandchildren, and subsequent sub-workers spawned under the target.
+- **Siblings**: Processes spawned by the same parent that are not descendants of the target (`git.exe`, PID 18290).
+
+### 51.2 The Anatomy of a Development Process Tree
+Modern development tooling creates deep, layered process hierarchies:
+1. **IDE Layer**: VS Code (`Code.exe`) or Cursor acts as the host environment.
+2. **Interactive Shell**: An integrated terminal spawns `pwsh.exe`, `cmd.exe`, or `bash.exe`.
+3. **Package Manager / CLI Wrapper**: Running `npm run dev` spawns `npm.cmd`, which invokes Node scripts.
+4. **Build Tool / Runtime**: Node executes Vite (`vite.js`), Webpack, Next.js, or Uvicorn.
+5. **Native Compiler / Bundler Workers**: Vite spawns Go/Rust binary workers (`esbuild.exe`, SWC) to perform instant incremental compilation.
+
+### 51.3 The "Ancestor Safety Rule": Why Killing Parents is Catastrophic
+A common anti-pattern in naive developer utilities is invoking `taskkill /F /T /PID <parent>` or blindly climbing up the process tree.
+
+**Why Terminating Ancestors is Catastrophic:**
+- If you terminate `pwsh.exe`, the developer's entire terminal session crashes, destroying their command history, active shell variables, and other tabs.
+- If you terminate `Code.exe`, the developer's entire code editor closes unexpectedly, risking unsaved file changes across all open workspaces.
+- If you terminate `npm.cmd` while other background tasks or build watchers are running under it, unrelated processes are destroyed.
+
+> [!IMPORTANT]
+> **DevHub Ancestor Safety Invariant**:
+> Process control operations MUST ONLY target the selected server process and its verified descendants. Ancestors and siblings are NEVER included in the termination set under any circumstances.
+
+### 51.4 Descendant Resolution Algorithm & Leaves-to-Root Termination
+DevHub reconstructs the descendant tree using a breadth-first search (BFS) traversal over the in-memory process snapshot:
+
+```rust
+pub fn find_descendants(
+    &self,
+    target_pid: u32,
+    process_map: &HashMap<u32, &ProcessInfo>,
+) -> Vec<u32> {
+    let mut children_by_parent: HashMap<u32, Vec<u32>> = HashMap::new();
+    for proc in process_map.values() {
+        if let Some(parent_pid) = proc.parent_pid {
+            if parent_pid != proc.pid {
+                children_by_parent.entry(parent_pid).or_default().push(proc.pid);
+            }
+        }
+    }
+
+    let mut descendants = Vec::new();
+    let mut visited = HashSet::new();
+    visited.insert(target_pid); // Guard against self-parent cycles
+
+    let mut queue = VecDeque::new();
+    if let Some(immediate_children) = children_by_parent.get(&target_pid) {
+        for &child_pid in immediate_children {
+            if visited.insert(child_pid) {
+                queue.push_back((child_pid, 1));
+                descendants.push(child_pid);
+            }
+        }
+    }
+
+    while let Some((curr_pid, depth)) = queue.pop_front() {
+        if depth >= MAX_DESCENDANT_DEPTH {
+            continue;
+        }
+        if let Some(children) = children_by_parent.get(&curr_pid) {
+            for &child_pid in children {
+                if visited.insert(child_pid) {
+                    queue.push_back((child_pid, depth + 1));
+                    descendants.push(child_pid);
+                }
+            }
+        }
+    }
+
+    descendants
+}
+```
+
+#### Why Leaves-to-Root Termination Matters
+When terminating a process tree, DevHub iterates through descendant handles in **reverse order** (leaves first, then intermediate parents, then the target root). If the root process were killed first, child workers might detect an orphaned IPC channel, attempt recovery, or spawn crash-reporting sub-processes before exit. Terminating leaf workers first guarantees a clean, deterministic shutdown.
+
+---
+
+## 52. Milestone 5: PID Lifecycle, PID Reuse & TOCTOU Race Condition Mitigation
+
+### 52.1 The Transient Nature of Process Identifiers
+In Windows, Process Identifiers (PIDs) are 32-bit unsigned integers allocated by the kernel from an internal process ID table. 
+- PIDs are **not unique over time**.
+- PIDs are **recycled**. When process A exits, its PID is returned to the pool and can be assigned to process B milliseconds later.
+
+### 52.2 The Windows PID Reuse Collision Threat Model
+Consider this failure scenario in a naive application:
+1. **Time $t_0$**: DevHub discovers `node.exe` running on PID `18240` on port `3000`.
+2. **Time $t_1$**: Developer opens their browser, tests their application, and decides to stop the server.
+3. **Time $t_2$**: In the background, `node.exe` crashes or is stopped by the developer via `Ctrl+C` in a terminal. PID `18240` exits.
+4. **Time $t_3$**: Windows launches a critical service (e.g. `sqlservr.exe` or `Spotify.exe`) and assigns it recycled PID `18240`.
+5. **Time $t_4$**: Developer clicks "Stop Server" in DevHub.
+6. **Naive Action**: Tool executes `taskkill /PID 18240`.
+7. **Disaster**: DevHub kills the new, unrelated process (`sqlservr.exe`) instead of the server!
+
+### 52.3 Time-of-Check to Time-of-Use (TOCTOU) in Desktop Systems
+This race condition is a textbook **Time-of-Check to Time-of-Use (TOCTOU)** vulnerability:
+$$\text{Check Time } (t_0) \ll \text{Action Time } (t_4)$$
+
+To mitigate TOCTOU, DevHub enforces two critical layers of defense:
+1. **Fresh Pre-Termination Verification**: Right before any destructive action, DevHub queries a fresh snapshot from the OS and verifies all identity signals (PID, Process Name, Executable Path, Working Directory, and Port).
+2. **Kernel Handle Acquisition**: Once `OpenProcess` succeeds on the verified process, the kernel pins the process object in memory, ensuring that subsequent termination acts exclusively on the verified target.
+
+### 52.4 How Win32 Kernel Handles Pin Process Objects in Memory
+In Windows, when a process terminates while open handles exist:
+- The process transitions from `Active` to `Terminated` (Signaled).
+- Its virtual memory is unmapped.
+- **However, its PID is NOT immediately recycled** for a new process while external handles remain open.
+- The `EPROCESS` kernel structure remains allocated with reference count $> 0$.
+- Calling `TerminateProcess` on that handle is safely idempotent (returns `STILL_ACTIVE` or already exited) and can never affect a new process.
+
+---
+
+## 53. Milestone 5: Target Validation Strategy & Least Privilege in Developer Tooling
+
+### 53.1 Why Read-Only Tools Differ from Destructive Control Layers
+In read-only telemetry tools (Milestones 1-4), displaying stale data is a minor cosmetic defect that fixes itself on the next refresh.
+
+In destructive process-control tools (Milestone 5+), executing against stale data results in **data loss, crashed developer tools, or corrupted operating system state**. Therefore, destructive operations must follow the **Principle of Least Privilege** and **Fail-Safe Defaults**:
+- If any identity check is ambiguous: **ABORT AND FAIL CLOSED**.
+- Require explicit user confirmation with full target disclosure.
+- Never guess or approximate process state.
+
+### 53.2 DevHub's 9-Point Pre-Termination Identity Verification Checklist
+Before sending a termination command, `ProcessControlService::validate_target` validates the target against 9 strict rules:
+
+```
++-------------------------------------------------------------------------+
+|                9-Point Pre-Termination Identity Verification            |
++---+-----------------------------+---------------------------------------+
+| # | Verification Signal         | Policy / Failure Action               |
++---+-----------------------------+---------------------------------------+
+| 1 | PID Boundary Check          | Refuse PID 0 (Idle) & PID 4 (System)  |
+| 2 | System Process Blacklist    | Refuse csrss, smss, services, lsass   |
+| 3 | Process Existence Check     | PID must exist in fresh OS snapshot   |
+| 4 | Process Name Equality       | Case-insensitive match (node.exe)     |
+| 5 | Executable Path Equality    | Normalized disk path must match       |
+| 6 | Working Directory Equality  | Project root folder path must match   |
+| 7 | Ancestor Safety Guard       | Ancestors never in termination set    |
+| 8 | Cycle Protection Check      | Visited set prevents infinite loops   |
+| 9 | Explicit User Intent        | User confirmed in detailed modal      |
++---+-----------------------------+---------------------------------------+
+```
+
+### 53.3 Protecting Critical System Processes & Failsafe Behavior
+DevHub maintains a hardcoded kernel protection guard:
+```rust
+const PROTECTED_SYSTEM_PROCESSES: &[&str] = &[
+    "system", "idle", "smss.exe", "csrss.exe", "wininit.exe",
+    "services.exe", "lsass.exe", "svchost.exe", "explorer.exe",
+    "winlogon.exe", "fontdrvhost.exe", "dwm.exe",
+];
+```
+If a developer accidentally attempts to stop a system process (e.g. if `svchost.exe` binds port 135 or 5353), DevHub immediately refuses the operation with domain error `UNSAFE_TARGET`.
+
+### 53.4 Explicit User Confirmation: Preventing Accidental Outages
+DevHub does not feature one-click accidental kills. Clicking "Stop" triggers the `StopConfirmationModal`, which discloses:
+- Target Server Name
+- Listening Port and URL (`localhost:3000`)
+- Process ID (PID)
+- Executable Image Name
+- Project Workspace Directory
+- Number of descendant worker processes that will be stopped
+- Pre-termination safety notice
+
+---
+
+## 54. Milestone 5: Post-Termination Verification & Port Owner Diagnostics
+
+### 54.1 Why API Success Does Not Imply Process Termination
+Calling `TerminateProcess` requests the operating system kernel to halt the process. However:
+- The call returns immediately while kernel worker threads asynchronously clean up memory and socket buffers.
+- The process object may take 10 to 100 milliseconds to transition to the signaled state.
+- Sockets may linger in `TIME_WAIT` or `CLOSE_WAIT` states in the Windows TCP/IP stack.
+
+Therefore, returning success to the user immediately after calling `TerminateProcess` is premature and inaccurate.
+
+### 54.2 Bounded Exit Polling Loops & Non-Blocking Timeouts
+DevHub executes a bounded exit polling loop with a 3000 ms ceiling:
+```rust
+let wait_timeout_ms = 3000u32;
+let slice_ms = 100u32;
+let mut elapsed_ms = 0u32;
+let mut target_exited = false;
+
+while elapsed_ms < wait_timeout_ms {
+    if let Some(ref handle) = target_handle {
+        if let Ok(exited) = self.process_controller.wait_for_exit(handle, slice_ms) {
+            if exited {
+                target_exited = true;
+                break;
+            }
+        }
+    }
+    elapsed_ms += slice_ms;
+}
+```
+
+### 54.3 Port Release Verification via Win32 IP Helper API
+Once the process has exited, DevHub performs an immediate query against `GetExtendedTcpTable`:
+1. It verifies whether the target port is still present in the TCP table.
+2. If the port has disappeared from the table: **PORT CONFIRMED RELEASED**.
+3. If the port remains in the table: DevHub checks the owning PID of the lingering socket.
+
+### 54.4 Disambiguating "Freed Port" vs. "Port Owner Changed"
+If port 3000 is still bound after process exit, DevHub distinguishes two critical scenarios:
+- **`PortStillInUse`**: The socket is held by the operating system kernel network stack or lingering child process. Message: *"Process terminated, but port 3000 remains occupied by the operating system socket stack."*
+- **`PortOwnerChanged`**: Another process (e.g. PID `19320`, `python.exe`) immediately rebound port 3000. Message: *"Process 18240 stopped, but port 3000 is now owned by python.exe (PID 19320)."*
+
+This provides clear diagnostic visibility instead of claiming false success or reporting misleading errors.
+
+---
+
+## 55. Milestone 5: Asynchronous Lifecycle State Machines & Per-Server Concurrency
+
+### 55.1 The 5 Fundamental Process Control Lifecycle States
+In Milestone 5, server endpoints operate across a 5-state lifecycle model:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Running: Discovered via OS Snapshot
+    Running --> Stopping: User Confirms Stop Action
+    Stopping --> Stopped: Process Exits & Port Freed
+    Stopping --> Error: Access Denied / Timeout
+    Running --> Stale: Process Identity Changed Externally
+    Stale --> Running: Discovery Refresh
+    Error --> Stopping: Force Stop Triggered
+    Stopped --> [*]: Removed from Dashboard
+```
+
+1. **`Running`**: Process is alive, listening on port, verified by OS telemetry.
+2. **`Stopping`**: Stop request in flight; handles opened; UI disables duplicate actions and renders animated stopping indicator.
+3. **`Stopped`**: Verified process exit; verified port release; server removed from dashboard.
+4. **`Error`**: Windows access denied, timeout, or failure; diagnostics displayed with Retry/Force Stop options.
+5. **`Stale`**: Process metadata changed externally between snapshot and user click; destructive action refused.
+
+### 55.2 Per-Server State Machines vs. Global UI Freezes
+A major architectural flaw in naive desktop applications is holding a single global `isStopping: boolean` flag in frontend state. If stopping server A takes 2 seconds, the entire UI freezes and server B cannot be stopped.
+
+DevHub implements **per-server state tracking**:
+```typescript
+const [stoppingPids, setStoppingPids] = useState<Set<number>>(new Set());
+```
+- Server A (PID 18240): `stoppingPids.has(18240) === true` &rarr; Card shows `STOPPING...` badge.
+- Server B (PID 22096): `stoppingPids.has(22096) === false` &rarr; Card remains fully interactive with enabled `Stop` button.
+- Multiple servers can be stopped concurrently without UI contention.
+
+### 55.3 Preventing Duplicate Concurrent Operations (Double-Click Guards)
+When a user rapidly double-clicks the "Stop" button:
+1. The first click registers the server PID into `stoppingPids`.
+2. The UI instantly disables the button (`disabled={isStopping}`).
+3. Backend service enforces handle acquisition validation, ensuring redundant calls fail safely without corrupting kernel state.
+
+---
+
+## 56. Milestone 5: Idempotency & Resilient Error Design
+
+### 56.1 Idempotency in Destructive Operations
+An operation is **idempotent** if applying it multiple times produces the same outcome as applying it once.
+
+In process control:
+- Attempting to stop a process that has **already exited** should not throw an ugly crash or destroy state.
+- DevHub recognizes `ALREADY_STOPPED`, cleans up UI state, refreshes discovery, and reports: *"Process with PID 18240 is no longer running. Refreshed."*
+
+### 56.2 Handling External Process Termination Gracefully
+Developers frequently stop processes externally via `Ctrl+C` in their terminal. If DevHub displays a server card and the developer stops it externally before clicking "Stop" in DevHub:
+1. User clicks "Stop".
+2. Pre-termination verification checks the OS process table.
+3. Target PID is not found.
+4. DevHub safely aborts termination, returns `ALREADY_STOPPED`, triggers an automatic discovery refresh, and removes the dead card.
+
+### 56.3 Three-Tier Error Architecture: Technical vs. Domain vs. User Errors
+DevHub strictly separates error layers to prevent raw C++ / Win32 HRESULTs from leaking into the UI:
+
+```
+[ Tier 1: Technical Error ]
+Win32 GetLastError() = 5 (ERROR_ACCESS_DENIED)
+          │
+          ▼
+[ Tier 2: Domain Error ]
+ProcessControlError {
+    code: ProcessControlErrorCode::ProcessAccessDenied,
+    message: "Access denied by Windows when opening process 18240...",
+    pid: Some(18240)
+}
+          │
+          ▼
+[ Tier 3: User-Facing Presentation Error ]
+"Unable to stop Company Frontend. Windows denied access because the process is running under elevated administrator privileges. Try running DevHub as Administrator."
+```
+
+---
+
+## 57. Milestone 5: Updated High-Level Design (HLD)
+
+### 57.1 Milestone 5 Architecture Topology Diagram
+
+```mermaid
+graph TD
+    subgraph Presentation Layer (Chromium/WebView2)
+        UI[ServerCard / ServerDetailsModal] -->|User clicks Stop| ConfirmModal[StopConfirmationModal]
+        ConfirmModal -->|User Confirms| FrontendState[stoppingPids State Set]
+        FrontendState --> FrontendAPI[commands.ts: stopServer / forceStopServer]
+    end
+
+    subgraph Tauri IPC Boundary
+        FrontendAPI -->|JSON-RPC via WebKit IPC| IPCDispatcher[Tauri 2 IPC Router]
+    end
+
+    subgraph Native Application Layer (Rust)
+        IPCDispatcher --> TauriCommand[commands::control::stop_server]
+        TauriCommand --> ControlService[process::service::ProcessControlService]
+        
+        subgraph Pre-Termination Verification
+            ControlService --> TargetValidator[Target Identity Validator]
+            TargetValidator --> DiscoveryProc[WindowsProcessDiscovery]
+            TargetValidator --> DiscoveryPort[WindowsPortDiscovery]
+        end
+
+        subgraph Process Tree Resolution
+            ControlService --> TreeResolver[Descendant Tree Resolver & Cycle Guard]
+        end
+
+        subgraph Win32 Process Control
+            ControlService --> WinController[windows::process::WindowsProcessController]
+            WinController --> WinKernel[kernel32.dll: OpenProcess, TerminateProcess, WaitForSingleObject]
+        end
+
+        subgraph Post-Termination Verification
+            ControlService --> PostVerify[Post-Termination Verification]
+            PostVerify --> DiscoveryPort
+            PostVerify --> ControlResultModel[models::control::ControlResult]
+        end
+    end
+
+    subgraph Operating System & Kernel
+        WinKernel --> OSKernel[Windows Kernel Executive & Process Manager]
+        DiscoveryPort --> NetStack[Windows TCP/IP Stack & iphlpapi.dll]
+    end
+```
+
+### 57.2 Layer Responsibility Matrix
+
+| Layer | Component | Core Responsibility | Safety Invariant |
+| :--- | :--- | :--- | :--- |
+| **Presentation** | `StopConfirmationModal.tsx` | Visual target confirmation, pre-termination warnings | Discloses all target metadata before destructive action |
+| **Presentation** | `ServerCard.tsx` | Per-server stopping status badge, disabled button state | Prevents duplicate clicks while stopping |
+| **Frontend API** | `commands.ts` | Typed gateway over Tauri IPC `stop_server` | Transmits structured `ProcessTarget` payload |
+| **IPC Command** | `commands/control.rs` | Thin controller validating IPC payload | Unpacks parameters, delegates to service layer |
+| **Domain Service** | `process/service.rs` | Target validation, descendant resolution, post-verification | Enforces 9-point validation; excludes ancestors |
+| **Win32 Layer** | `windows/process.rs` | Direct `kernel32.dll` FFI handle management | RAII `ProcessHandle` prevents handle leaks |
+| **Domain Models** | `models/control.rs` | `ProcessTarget`, `ControlResult`, `ProcessControlError` | Serde `camelCase` contract synchronization |
+
+---
+
+## 58. Milestone 5: Updated Low-Level Design (LLD)
+
+### 58.1 Component Signatures and Contracts
+
+#### 1. `ProcessTarget` (`models/control.rs`)
+```rust
+pub struct ProcessTarget {
+    pub pid: u32,
+    pub process_name: String,
+    pub executable_path: Option<String>,
+    pub working_directory: Option<String>,
+    pub expected_ports: Vec<u16>,
+    pub force: bool,
+}
+```
+
+#### 2. `ControlResult` (`models/control.rs`)
+```rust
+pub struct ControlResult {
+    pub status: ControlStatus,
+    pub pid: u32,
+    pub released_ports: Vec<u16>,
+    pub remaining_children: Vec<u32>,
+    pub remaining_owner: Option<RemainingOwnerInfo>,
+    pub message: String,
+}
+```
+
+#### 3. `ProcessControlService` (`process/service.rs`)
+```rust
+impl ProcessControlService {
+    pub fn new() -> Self;
+    pub fn validate_target(
+        &self,
+        target: &ProcessTarget,
+        current_processes: &[ProcessInfo],
+        current_ports: &[PortInfo],
+    ) -> Result<ProcessInfo, ProcessControlError>;
+
+    pub fn find_descendants(
+        &self,
+        target_pid: u32,
+        process_map: &HashMap<u32, &ProcessInfo>,
+    ) -> Vec<u32>;
+
+    pub fn stop_server(
+        &self,
+        target: &ProcessTarget,
+    ) -> Result<ControlResult, ProcessControlError>;
+}
+```
+
+#### 4. `ProcessController` Trait (`windows/process.rs`)
+```rust
+pub trait ProcessController: Send + Sync {
+    fn open_process(&self, pid: u32, desired_access: u32) -> Result<ProcessHandle, u32>;
+    fn terminate_process(&self, handle: &ProcessHandle, exit_code: u32) -> Result<(), u32>;
+    fn wait_for_exit(&self, handle: &ProcessHandle, timeout_ms: u32) -> Result<bool, u32>;
+    fn is_process_alive(&self, pid: u32) -> bool;
+}
+```
+
+### 58.2 Win32 Kernel FFI Layer & ProcessHandle RAII
+```rust
+pub struct ProcessHandle {
+    raw: *mut c_void,
+    pid: u32,
+}
+
+impl Drop for ProcessHandle {
+    fn drop(&mut self) {
+        if !self.raw.is_null() && self.raw != usize::MAX as *mut c_void {
+            unsafe { CloseHandle(self.raw); }
+        }
+    }
+}
+```
+
+---
+
+## 59. Milestone 5: End-to-End Stop Server Code Trace
+
+Here is the exact, step-by-step execution path when a developer clicks "Stop" on a running server:
+
+```
+[ Step 1: User Action in UI ]
+Developer clicks "Stop" on ServerCard (PID 18240, node.exe, port 3000).
+ServerCard dispatches onStop(server) -> Dashboard.tsx opens StopConfirmationModal.
+
+[ Step 2: Confirmation & Target Construction ]
+Developer reviews target details in StopConfirmationModal and clicks "Stop Server".
+Dashboard.tsx adds PID 18240 to stoppingPids state set.
+Dashboard.tsx constructs ProcessTarget payload:
+{
+    pid: 18240,
+    processName: "node.exe",
+    executablePath: "C:\\Program Files\\nodejs\\node.exe",
+    workingDirectory: "C:\\Projects\\company-frontend",
+    expectedPorts: [3000, 3001],
+    force: false
+}
+
+[ Step 3: Tauri IPC Invocation ]
+commands.ts invokes stopServer(target) -> Tauri WebKit IPC marshals JSON payload to Rust.
+commands::control::stop_server receives ProcessTarget.
+
+[ Step 4: Fresh OS Snapshot & Target Validation ]
+ProcessControlService queries fresh WindowsProcessDiscovery & WindowsPortDiscovery.
+validate_target verifies:
+  ✓ PID 18240 is not PID 0 or 4.
+  ✓ Process name is "node.exe" (case-insensitive match).
+  ✓ Executable path matches disk path.
+  ✓ Working directory matches project folder.
+  ✓ Process is not in system blacklist.
+
+[ Step 5: Descendant Tree Resolution ]
+find_descendants performs BFS traversal with HashSet<u32> cycle guard.
+Identifies leaf worker (PID 18300, esbuild.exe).
+Guarantees parent npm.cmd (PID 17820) and VS Code (PID 16300) are EXCLUDED.
+
+[ Step 6: Win32 Handle Acquisition & Termination ]
+WindowsProcessController::open_process opens handles for PID 18300 and PID 18240 with
+PROCESS_TERMINATE | SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION.
+Kernel pins process objects in memory.
+Terminates leaf worker PID 18300 first via TerminateProcess.
+Terminates root server PID 18240 via TerminateProcess.
+
+[ Step 7: Bounded Exit Polling ]
+wait_for_exit polls WaitForSingleObject in 100 ms slices up to 3000 ms.
+Kernel transitions process to signaled state (WAIT_OBJECT_0).
+ProcessHandle instances are dropped -> CloseHandle called automatically.
+
+[ Step 8: Post-Termination Verification ]
+WindowsPortDiscovery queries GetExtendedTcpTable.
+Confirms ports 3000 and 3001 are no longer present in TCP table.
+Builds ControlResult { status: Stopped, releasedPorts: [3000, 3001], ... }.
+
+[ Step 9: Frontend State & Dashboard Update ]
+Tauri IPC returns ControlResult to React.
+Dashboard.tsx removes PID 18240 from stoppingPids set.
+Displays green success notification banner:
+"Server 'company-frontend' (PID 18240) stopped. Port 3000, 3001 freed."
+Triggers refreshAll() -> ServerCard disappears from Dashboard.
+```
+
+---
+
+## 60. Milestone 5: Deep Systems Engineering & HLD/LLD Interview Q&A
+
+### Q1: Why is process termination fundamentally more dangerous than process discovery?
+**Answer**:
+Process discovery is a read-only, non-destructive inspection of operating system telemetry. If an erroneous PID is read, the worst consequence is a temporary UI display anomaly. Process termination is an irreversible, destructive kernel operation. If a process control tool terminates the wrong process due to stale data, PID reuse, or faulty ancestor traversal, it can crash database engines, kill user shell sessions, or terminate editor instances with unsaved code.
+
+### Q2: Why is PID alone insufficient as a target identifier?
+**Answer**:
+Operating system PIDs are transient, recyclable integers. When process A exits, the kernel immediately reclaims its PID and can assign it to a completely unrelated process B within milliseconds. Relying solely on PID leads to TOCTOU race conditions where process control tools inadvertently destroy newly spawned applications that inherited the recycled PID.
+
+### Q3: What is TOCTOU and how does DevHub mitigate it?
+**Answer**:
+Time-of-Check to Time-of-Use (TOCTOU) is a race condition where system state changes between the moment a condition is verified (Check) and the moment an action is executed (Use).
+DevHub mitigates TOCTOU through two complementary mechanisms:
+1. **Fresh Multi-Signal Pre-Check**: It re-verifies PID, process name, executable image, and working directory against a fresh OS snapshot immediately prior to termination.
+2. **Kernel Handle Acquisition**: Once `OpenProcess` succeeds on the verified process, the kernel increments the reference count on the `EPROCESS` executive object. The kernel will not delete or reassign that process object until DevHub closes the handle, guaranteeing that termination operates strictly on the verified target.
+
+### Q4: Why must a server manager terminate descendants but NEVER ancestors?
+**Answer**:
+Development servers are spawned by a hierarchy of parent tools (IDE &rarr; Shell &rarr; Package Manager &rarr; Runtime &rarr; Worker).
+- **Descendants** (e.g. `esbuild.exe`, worker threads) are owned by the server; leaving them running causes orphan processes and CPU leaks.
+- **Ancestors** (e.g. `pwsh.exe`, `Code.exe`) are user tools hosting the server; terminating them crashes the developer's terminal or code editor.
+DevHub's BFS descendant resolver only traverses children downward from the target PID, explicitly excluding all parents and grandparents.
+
+### Q5: How does Windows process termination differ from POSIX signals?
+**Answer**:
+POSIX operating systems feature asynchronous inter-process signals (`kill(pid, SIGTERM)`) that user-mode applications can catch to execute shutdown handlers. Windows does not have general asynchronous signals across arbitrary user processes. Win32 provides `GenerateConsoleCtrlEvent` (limited to console processes in the same process group) and `WM_CLOSE` (for GUI message loops). For non-cooperative or runtime processes, Windows provides `TerminateProcess`, which immediately halts all user-mode threads and tears down the address space via kernel executive routines.
+
+### Q6: What happens if a process disappears after user confirmation but before termination?
+**Answer**:
+DevHub's pre-termination validation detects that the process is no longer present in the process table. It treats the situation idempotently as `ALREADY_STOPPED`, skips termination calls, triggers a background discovery refresh, and informs the user that the process has already exited.
+
+### Q7: What if another process immediately rebinds the target port after termination?
+**Answer**:
+During post-termination verification, DevHub queries `GetExtendedTcpTable`. If the expected port is still bound, DevHub inspects the owning PID:
+- If the owning PID differs from the target PID, DevHub returns `PortOwnerChanged` with diagnostic metadata (`remainingOwner: { pid: 19320, processName: "python.exe", port: 3000 }`).
+- The UI informs the developer: *"Server stopped, but port 3000 is now owned by python.exe (PID 19320)."*
+
+### Q8: Why does DevHub use a bounded wait loop after termination?
+**Answer**:
+`TerminateProcess` is asynchronous; the kernel takes several milliseconds to halt threads, decommit memory pages, close file handles, and transition socket buffers out of the TCP stack. A bounded polling loop with `WaitForSingleObject` (up to 3000 ms in 100 ms slices) gives the operating system sufficient time to complete teardown without freezing the UI event loop.
+
+### Q9: How does DevHub prevent duplicate concurrent termination requests?
+**Answer**:
+1. **Frontend**: Dashboard maintains a `stoppingPids: Set<number>` state. While a PID is present in the set, the "Stop" button is disabled and renders a spinning indicator.
+2. **Backend**: ProcessControlService validates target existence and handle status, returning structured error codes if the target has already exited or is currently being torn down.
+
+### Q10: Why should React components never execute `taskkill` or shell commands directly?
+**Answer**:
+1. **Security Vulnerability**: Executing shell commands from JavaScript introduces command injection risks if process names or paths contain special shell characters.
+2. **No Handle Pinning**: Shell commands (`taskkill /PID`) operate by raw PID lookup without holding kernel handles, maximizing the TOCTOU PID reuse window.
+3. **No Structured Feedback**: Shell commands return unstructured text stdout/stderr strings that are difficult to parse and localize across different Windows language editions.
+
+### Q11: How would process control differ on Linux vs. Windows?
+**Answer**:
+On Linux, process control is implemented via POSIX signals (`kill(pid, SIGTERM)` for graceful shutdown, `kill(pid, SIGKILL)` for force kill) and `/proc/<pid>/stat` inspection. Process group IDs (PGID) and session IDs (SID) can be used to send signals to entire process groups (`kill(-pgid, SIGTERM)`).
+
+### Q12: How will process control work for WSL in Milestone 6?
+**Answer**:
+WSL processes run inside a lightweight Linux utility VM managed by Hyper-V. Windows Win32 `OpenProcess` cannot inspect or terminate Linux processes inside WSL directly. In Milestone 6, DevHub will execute WSL process control by bridging through `wsl.exe -d <distro> kill <pid>` using Linux domain abstractions.
+
+### Q13: Why is restart functionality restricted in Milestone 5?
+**Answer**:
+Restarting a development server requires an authentic, verified startup command and environment configuration (e.g. exact environment variables, shell wrappers, working directory). Guessing a startup command from raw process telemetry (`node.exe server.js`) frequently fails because necessary build flags or package manager scripts (`npm run dev`) are omitted. Full server startup and profiles belong to Milestone 7.
+
+### Q14: How does DevHub handle protected system processes?
+**Answer**:
+`ProcessControlService` enforces a strict system process guard checking for PID 0, PID 4, and known critical Windows binaries (`csrss.exe`, `smss.exe`, `services.exe`, `explorer.exe`). If an operation targets a protected process, DevHub immediately fails closed with `UNSAFE_TARGET` without attempting handle acquisition.
+
+### Q15: What is the benefit of wrapping Win32 handles in a Rust RAII struct?
+**Answer**:
+In Win32 C/C++, forgetting to call `CloseHandle` leaks kernel executive objects, consuming non-paged kernel pool memory and preventing terminated processes from being fully reaped. In Rust, implementing `Drop` on `ProcessHandle` guarantees that `CloseHandle` is called deterministically when the handle goes out of scope, even if an early return, error, or panic occurs.
+
+---
+
+## 61. Milestone 5: Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/models/control.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/control.rs) | Domain Model | `ProcessTarget`, `ControlResult`, `ProcessControlError` | Serde Contracts, Structured Error Codes | Control Service, Commands | `serde` |
+| [`src-tauri/src/models/process.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/process.rs) | Domain Model | `ProcessInfo` & `ProcessStatus` structs | Serde `camelCase` Contract, Raw OS Model | Discovery, Identity | `serde` |
+| [`src-tauri/src/models/port.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/port.rs) | Domain Model | `PortInfo` struct for TCP sockets | Endpoint Normalization, Byte Order | Discovery, Identity | `serde` |
+| [`src-tauri/src/models/identity.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/identity.rs) | Domain Model | `Runtime`, `PackageManager`, `ProcessTreeNode`, `ProcessIdentity` | Data Composition, Typed Enums | Identity Service, Commands | `serde` |
+| [`src-tauri/src/windows/process.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/windows/process.rs) | Infrastructure | Win32 `kernel32.dll` FFI & `ProcessHandle` RAII | `OpenProcess`, `TerminateProcess`, `WaitForSingleObject` | `process::service` | `kernel32.dll` |
+| [`src-tauri/src/windows/networking.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/windows/networking.rs) | Infrastructure | Win32 `GetExtendedTcpTable` FFI bindings | Win32 IP Helper, Big-Endian Conversion | `discovery::port` | `iphlpapi.dll` |
+| [`src-tauri/src/process/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/process/service.rs) | Domain Service | `ProcessControlService` validation & termination | 9-Point Target Validation, BFS Descendants, Verification | `commands::control` | `windows::process`, `discovery` |
+| [`src-tauri/src/commands/control.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/control.rs) | Presentation / IPC | Tauri commands: `stop_server`, `force_stop_server` | Thin Controller Pattern, Error Marshalling | Tauri IPC Dispatcher | `ProcessControlService` |
+| [`src-tauri/src/commands/identity.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/identity.rs) | Presentation / IPC | Thin Tauri command handlers for process identities | Thin Controller Pattern, Error Marshalling | Tauri IPC Dispatcher | `ProcessIdentityService` |
+| [`src-tauri/src/commands/ports.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/ports.rs) | Presentation / IPC | Thin Tauri command handler for listening ports | Backward Compatibility | Tauri IPC Dispatcher | `WindowsPortDiscovery` |
+| [`src-tauri/src/commands/processes.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/processes.rs) | Presentation / IPC | Thin Tauri command handler for raw processes | Backward Compatibility | Tauri IPC Dispatcher | `WindowsProcessDiscovery` |
+| [`src-tauri/src/commands/system.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/system.rs) | Presentation / IPC | Returns platform, backend, and app version | Health Check | Tauri IPC Dispatcher | `std::env` |
+| [`src-tauri/src/lib.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/lib.rs) | Core | Application composition root and command registry | Tauri Builder, IPC Handler Registration | `main.rs` | All Commands |
+| [`src/types/control.ts`](file:///d:/ak/project/devhub/DevHub/src/types/control.ts) | Frontend Types | `ProcessTarget`, `ControlResult`, `ProcessControlError` | Control Contract | UI Components, Commands | - |
+| [`src/types/server.ts`](file:///d:/ak/project/devhub/DevHub/src/types/server.ts) | Frontend Types | `DashboardServer`, `ServerSortField`, `ServerFilterOptions` | View Model Definition | UI Components | - |
+| [`src/types/identity.ts`](file:///d:/ak/project/devhub/DevHub/src/types/identity.ts) | Frontend Types | `ProcessIdentity`, `Runtime`, `PackageManager`, `ProcessTree` | Domain Contract | UI Components | - |
+| [`src/types/port.ts`](file:///d:/ak/project/devhub/DevHub/src/types/port.ts) | Frontend Types | `PortInfo`, `JoinedPortProcess` | Infrastructure Contract | UI Components | - |
+| [`src/types/process.ts`](file:///d:/ak/project/devhub/DevHub/src/types/process.ts) | Frontend Types | `ProcessInfo`, `ProcessStatus` | Infrastructure Contract | UI Components | - |
+| [`src/lib/serverUtils.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/serverUtils.ts) | Presentation Logic | `deriveServerName`, `deriveDashboardServers`, `filterServers`, `sortServers` | Pure Transformation Pipeline | `Dashboard.tsx`, `Servers.tsx` | - |
+| [`src/lib/commands.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/commands.ts) | Frontend API | Gateway wrapper over Tauri `invoke()` calls | Facade Pattern, Async Promises | `Dashboard.tsx`, `Servers.tsx` | `@tauri-apps/api/core` |
+| [`src/components/dashboard/StopConfirmationModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/StopConfirmationModal.tsx) | Presentation View | Modal for reviewing target info before stopping | Confirmation UX, Safety Notices | `Dashboard.tsx`, `Servers.tsx` | `controlApi` |
+| [`src/components/dashboard/ServerCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerCard.tsx) | Presentation View | Server card with Stop action button & stopping state | Per-Server State, Action Dispatch | `ServerList.tsx` | `CopyButton` |
+| [`src/components/dashboard/ServerDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerDetailsModal.tsx) | Presentation View | Modal for inspecting server & stopping from details | 3-Tier Progressive Disclosure | `Dashboard.tsx`, `Servers.tsx` | `ProcessTree`, `CopyButton` |
+| [`src/components/dashboard/ServerList.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerList.tsx) | Presentation View | Responsive 3-column server card grid with stop forwarding | Layout Orchestration | `Dashboard.tsx`, `Servers.tsx` | `ServerCard` |
+| [`src/pages/Dashboard.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Dashboard.tsx) | Page Container | Main development server control center dashboard | Single Source of Truth, `stoppingPids` State | `App.tsx` | UI Components, APIs |
+| [`src/pages/Servers.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.tsx) | Page Container | Dedicated full-page running server management view | Single Source of Truth, `stoppingPids` State | `App.tsx` | UI Components, APIs |
+| [`src/components/Header.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Header.tsx) | Presentation View | Top application header bar | Layout Header | `Layout.tsx` | - |
+| [`src/components/Sidebar.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Sidebar.tsx) | Presentation View | Navigation sidebar (Dashboard, Servers, Projects, Settings) | Global Navigation | `Layout.tsx` | - |
+| [`src/components/Layout.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Layout.tsx) | Presentation View | Application layout wrapper uniting sidebar, header, and content | Layout Frame | `App.tsx` | `Sidebar`, `Header` |
+| [`src/App.tsx`](file:///d:/ak/project/devhub/DevHub/src/App.tsx) | Root Component | Navigational routing and root page rendering | Application Root | `main.tsx` | `Layout`, Pages |
 
 

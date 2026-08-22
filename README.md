@@ -33,6 +33,7 @@ DevHub provides a unified control layer over local development processes without
 - **Frontend Framework:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - **Bundler:** [Vite](https://vite.dev/)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Testing:** [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (Frontend) & `cargo test` (Rust Backend)
 
 ---
 
@@ -84,7 +85,20 @@ DevHub provides a unified control layer over local development processes without
   - Auto-refresh polling (3s) with clean lifecycle unmount handling
   - Chapters 40–49 added to `LEARNING.md` covering View Models, Derived State, UI Data Pipelines, UX State Machines, and HLD/LLD Interview Q&A
 
-*Next Milestone: Milestone 5 — Process Control*
+- **Milestone 5: Safe Windows Process Control (Complete)**
+  - Native Win32 `kernel32.dll` direct FFI bindings (`OpenProcess`, `TerminateProcess`, `WaitForSingleObject`, `CloseHandle`)
+  - Memory-safe RAII `ProcessHandle` wrapper guaranteeing deterministic handle reclamation
+  - 9-point pre-termination identity verification (PID existence, process name match, executable path equality, CWD verification, system process protection)
+  - BFS descendant tree discovery terminating leaf worker processes before the root server process
+  - Strict Ancestor Safety Rule preventing accidental termination of IDEs (`Code.exe`), shells (`pwsh.exe`, `cmd.exe`), or parent wrappers
+  - Bounded post-termination exit polling loop (3000 ms) via `WaitForSingleObject`
+  - Post-termination TCP port verification diagnosing freed ports vs. port ownership changes
+  - Modal-based stop confirmation with target metadata disclosure and pre-termination safety notice
+  - Per-server non-blocking stopping state machine (`stoppingPids: Set<number>`) with animated indicators
+  - Full suite of 45 Rust unit/integration tests and 21 React frontend tests passing
+  - Chapters 50–61 added to `LEARNING.md` covering OS process control, PID reuse, TOCTOU mitigation, and HLD/LLD interview preparation
+
+*Next Milestone: Milestone 6 — WSL Discovery & Control*
 
 ---
 
@@ -124,9 +138,12 @@ npm run dev
 ### Running Tests
 
 ```bash
-# Run Rust backend unit and integration tests
+# Run Rust backend unit and integration tests (45 tests)
 cd src-tauri
-cargo test -- --nocapture
+cargo test
+
+# Run frontend unit and component tests (21 tests)
+npm test
 
 # Run frontend build and typecheck
 npm run build
@@ -147,24 +164,28 @@ npm run tauri build
 DevHub/
 ├── src/                      # React Frontend
 │   ├── components/           # Reusable UI components
+│   │   ├── common/           # CopyButton, EmptyState, LoadingState, ErrorState
+│   │   ├── dashboard/        # ServerCard, ServerList, ServerToolbar, SummaryCards, 
+│   │   │                     # ServerDetailsModal, StopConfirmationModal, ProcessTree
 │   │   ├── ports/            # PortTable, PortDetailsModal
-│   │   ├── processes/        # ProcessTable, ProcessDetailsModal (Process Tree & Identity)
+│   │   ├── processes/        # ProcessTable, ProcessDetailsModal
 │   │   ├── Sidebar.tsx       # Navigation sidebar
 │   │   ├── Header.tsx        # Top header
 │   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── types/                # TypeScript interfaces (identity.ts, port.ts, process.ts, index.ts)
-│   ├── lib/                  # Typed Tauri command wrappers & API client (commands.ts)
+│   ├── types/                # TypeScript interfaces (control.ts, identity.ts, port.ts, process.ts, server.ts)
+│   ├── lib/                  # Commands API client (commands.ts) & View Pipeline (serverUtils.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (identity.rs, ports.rs, processes.rs, system.rs)
+│   │   ├── commands/         # Tauri IPC commands (control.rs, identity.rs, ports.rs, processes.rs, system.rs)
 │   │   ├── discovery/        # Discovery services (port.rs, process.rs)
 │   │   ├── identity/         # Process identity engine (detector.rs, service.rs, tree.rs)
-│   │   ├── models/           # Domain models (identity.rs, port.rs, process.rs)
-│   │   ├── windows/          # Windows Win32 networking (networking.rs)
+│   │   ├── models/           # Domain models (control.rs, identity.rs, port.rs, process.rs)
+│   │   ├── process/          # Process control domain service (service.rs)
+│   │   ├── windows/          # Windows Win32 FFI (networking.rs, process.rs)
 │   │   ├── lib.rs            # Tauri application entry point & handler registry
 │   │   └── main.rs           # Desktop binary entry
 │   ├── Cargo.toml            # Rust dependencies and package configuration
