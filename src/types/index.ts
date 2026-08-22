@@ -15,6 +15,7 @@ export * from './identity';
 export * from './server';
 export * from './control';
 export * from './profile';
+export * from './adoption';
 
 
 

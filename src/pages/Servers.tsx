@@ -333,6 +333,8 @@ export const Servers: React.FC = () => {
       processTree: [],
       environment: view.profile.environment,
       environmentLabel: view.profile.environment.type === 'windows' ? 'Windows' : 'WSL',
+      managed: true,
+      profileId: view.profile.id,
     };
 
     setServerToStop(targetServer);

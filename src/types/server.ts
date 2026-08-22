@@ -47,6 +47,11 @@ export interface DashboardServer {
   environmentLabel: string;
   /** Optional distribution name for WSL environments */
   wslDistro?: string | null;
+  // --- Milestone 8: Profile Association (dynamically computed, never stored in DB) ---
+  /** Whether this server has a matching saved ServerProfile */
+  managed: boolean;
+  /** ID of the matching ServerProfile, if managed */
+  profileId?: string;
 }
 
 export type ServerSortField = 'port' | 'pid' | 'name' | 'runtime' | 'environment';
@@ -57,5 +62,7 @@ export interface ServerFilterOptions {
   environment: string; // 'all' | 'windows' | 'wsl' | 'wsl:<distro>'
   runtime: string; // 'all' | 'Node.js' | 'Python' | etc.
   status: string; // 'all' | 'running' | 'unknown'
+  /** Filter by profile association state (Milestone 8) */
+  managedStatus?: 'all' | 'managed' | 'unmanaged';
 }
 

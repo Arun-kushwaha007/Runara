@@ -182,6 +182,7 @@ export function deriveDashboardServers(
         environment: env,
         environmentLabel,
         wslDistro: distro,
+        managed: false, // overwritten by annotateWithProfiles after profile load
       });
     } else {
       // Endpoint with restricted or exited process
@@ -213,6 +214,7 @@ export function deriveDashboardServers(
         environment: env,
         environmentLabel,
         wslDistro: distro,
+        managed: false, // overwritten by annotateWithProfiles after profile load
       });
     }
   }
