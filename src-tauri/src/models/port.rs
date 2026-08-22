@@ -1,3 +1,4 @@
+use crate::models::environment::Environment;
 use serde::{Deserialize, Serialize};
 
 /// Represents a listening network port discovered on the system.
@@ -14,6 +15,9 @@ pub struct PortInfo {
     pub address: String,
     /// Socket connection state (e.g., "listening").
     pub state: String,
+    /// Execution environment (Windows or WSL distro).
+    #[serde(default)]
+    pub environment: Environment,
 }
 
 #[cfg(test)]
@@ -28,6 +32,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "127.0.0.1".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         };
 
         let json = serde_json::to_string(&info).expect("Failed to serialize");
@@ -36,9 +41,28 @@ mod tests {
         assert!(json.contains("\"protocol\":\"tcp\""));
         assert!(json.contains("\"address\":\"127.0.0.1\""));
         assert!(json.contains("\"state\":\"listening\""));
+        assert!(json.contains("\"environment\":{\"type\":\"windows\"}"));
 
         let deserialized: PortInfo = serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(deserialized, info);
+    }
+
+    #[test]
+    fn test_port_info_wsl_serialization() {
+        let info = PortInfo {
+            port: 5000,
+            pid: 421,
+            protocol: "tcp".to_string(),
+            address: "0.0.0.0".to_string(),
+            state: "listening".to_string(),
+            environment: Environment::wsl("Fedora"),
+        };
+
+        let json = serde_json::to_string(&info).expect("Failed to serialize");
+        assert!(json.contains("\"environment\":{\"type\":\"wsl\",\"distro\":\"Fedora\"}"));
+
+        let deserialized: PortInfo = serde_json::from_str(&json).expect("Failed to deserialize");
+        assert_eq!(deserialized.environment, Environment::Wsl { distro: "Fedora".to_string() });
     }
 
     #[test]
@@ -49,6 +73,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "[::1]".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         };
 
         let json = serde_json::to_string(&info).expect("Failed to serialize");
@@ -65,6 +90,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "127.0.0.1".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         };
 
         let port2 = PortInfo {
@@ -73,6 +99,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "127.0.0.1".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         };
 
         let ports = vec![port1, port2];
@@ -89,6 +116,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "0.0.0.0".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         };
 
         let ipv6_wildcard = PortInfo {
@@ -97,6 +125,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "[::]".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         };
 
         assert_eq!(ipv4_wildcard.address, "0.0.0.0");

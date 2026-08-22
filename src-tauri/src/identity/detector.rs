@@ -212,6 +212,7 @@ mod tests {
             command_line: cmd.map(|s| s.to_string()),
             working_directory: None,
             status: ProcessStatus::Running,
+            environment: crate::models::environment::Environment::windows(),
         }
     }
 

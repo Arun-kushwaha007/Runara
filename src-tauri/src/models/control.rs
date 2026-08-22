@@ -1,3 +1,4 @@
+use crate::models::environment::Environment;
 use serde::{Deserialize, Serialize};
 
 /// Target process payload sent by the frontend to request a stop or restart operation.
@@ -19,6 +20,9 @@ pub struct ProcessTarget {
     /// If true, performs immediate force termination without waiting for graceful exit.
     #[serde(default)]
     pub force: bool,
+    /// Target execution environment (Windows or WSL).
+    #[serde(default)]
+    pub environment: Option<Environment>,
 }
 
 /// Operational status returned after a process control action.
@@ -143,6 +147,7 @@ mod tests {
             working_directory: Some("C:\\projects\\app".to_string()),
             expected_ports: vec![3000, 3001],
             force: false,
+            environment: Some(Environment::windows()),
         };
 
         let json = serde_json::to_string(&target).expect("Serialization failed");
@@ -151,6 +156,7 @@ mod tests {
         assert!(json.contains("\"workingDirectory\":\"C:\\\\projects\\\\app\""));
         assert!(json.contains("\"expectedPorts\":[3000,3001]"));
         assert!(json.contains("\"force\":false"));
+        assert!(json.contains("\"environment\":{\"type\":\"windows\"}"));
 
         let deserialized: ProcessTarget = serde_json::from_str(&json).expect("Deserialization failed");
         assert_eq!(deserialized, target);

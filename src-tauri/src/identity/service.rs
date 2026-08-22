@@ -1,7 +1,7 @@
 use crate::discovery::{PortDiscovery, ProcessDiscovery, WindowsPortDiscovery, WindowsProcessDiscovery};
 use crate::identity::detector::{PackageManagerDetector, RuntimeDetector};
 use crate::identity::tree::ProcessTreeBuilder;
-use crate::models::{PortInfo, ProcessIdentity, ProcessInfo};
+use crate::models::{Environment, PortInfo, ProcessIdentity, ProcessInfo};
 use std::collections::HashMap;
 
 /// Trait defining the process identity enrichment service abstraction.
@@ -68,15 +68,19 @@ impl ProcessIdentityEnricher for ProcessIdentityService {
         processes: &[ProcessInfo],
         ports: &[PortInfo],
     ) -> Vec<ProcessIdentity> {
-        // Step 1: Build O(P) Process Map
-        let process_map: HashMap<u32, &ProcessInfo> =
-            processes.iter().map(|p| (p.pid, p)).collect();
+        let mut results = Vec::with_capacity(processes.len());
 
-        // Step 2: Build O(S) Port Map (PID -> sorted unique listening ports)
-        let mut port_map: HashMap<u32, Vec<u16>> = HashMap::new();
+        // Group processes by environment to ensure complete isolation
+        let mut env_processes: HashMap<Environment, Vec<&ProcessInfo>> = HashMap::new();
+        for proc in processes {
+            env_processes.entry(proc.environment.clone()).or_default().push(proc);
+        }
+
+        // Group ports by (environment, PID)
+        let mut port_map: HashMap<(Environment, u32), Vec<u16>> = HashMap::new();
         for port_info in ports {
             port_map
-                .entry(port_info.pid)
+                .entry((port_info.environment.clone(), port_info.pid))
                 .or_default()
                 .push(port_info.port);
         }
@@ -85,10 +89,13 @@ impl ProcessIdentityEnricher for ProcessIdentityService {
             port_list.dedup();
         }
 
-        // Step 3: Enrich each process into ProcessIdentity
-        processes
-            .iter()
-            .map(|proc| {
+        // Process each environment independently
+        for (env, env_procs) in env_processes {
+            // Build O(P) Process Map scoped strictly to this environment
+            let process_map: HashMap<u32, &ProcessInfo> =
+                env_procs.iter().map(|p| (p.pid, *p)).collect();
+
+            for proc in env_procs {
                 let runtime = RuntimeDetector::detect(proc);
                 let parent = ProcessTreeBuilder::resolve_parent(proc, &process_map);
                 let ancestors = ProcessTreeBuilder::collect_ancestors(proc, &process_map);
@@ -96,18 +103,35 @@ impl ProcessIdentityEnricher for ProcessIdentityService {
                 let package_manager =
                     PackageManagerDetector::detect(proc, parent_proc, &ancestors);
                 let process_tree = ProcessTreeBuilder::build_tree(proc, &process_map);
-                let listening_ports = port_map.get(&proc.pid).cloned().unwrap_or_default();
+                let listening_ports = port_map
+                    .get(&(env.clone(), proc.pid))
+                    .cloned()
+                    .unwrap_or_default();
 
-                ProcessIdentity {
+                results.push(ProcessIdentity {
                     process: proc.clone(),
                     runtime,
                     package_manager,
                     parent,
                     process_tree,
                     listening_ports,
-                }
-            })
-            .collect()
+                    environment: env.clone(),
+                });
+            }
+        }
+
+        // Deterministic sort: Windows first, then by distro name, then by PID
+        results.sort_by(|a, b| {
+            let env_cmp = match (&a.environment, &b.environment) {
+                (Environment::Windows, Environment::Windows) => std::cmp::Ordering::Equal,
+                (Environment::Windows, Environment::Wsl { .. }) => std::cmp::Ordering::Less,
+                (Environment::Wsl { .. }, Environment::Windows) => std::cmp::Ordering::Greater,
+                (Environment::Wsl { distro: d1 }, Environment::Wsl { distro: d2 }) => d1.cmp(d2),
+            };
+            env_cmp.then_with(|| a.process.pid.cmp(&b.process.pid))
+        });
+
+        results
     }
 
     fn enrich_process(
@@ -117,12 +141,18 @@ impl ProcessIdentityEnricher for ProcessIdentityService {
         ports: &[PortInfo],
     ) -> Option<ProcessIdentity> {
         let target_proc = processes.iter().find(|p| p.pid == pid)?;
+        let env = &target_proc.environment;
+
+        let env_procs: Vec<&ProcessInfo> = processes
+            .iter()
+            .filter(|p| &p.environment == env)
+            .collect();
         let process_map: HashMap<u32, &ProcessInfo> =
-            processes.iter().map(|p| (p.pid, p)).collect();
+            env_procs.iter().map(|p| (p.pid, *p)).collect();
 
         let mut listening_ports: Vec<u16> = ports
             .iter()
-            .filter(|p| p.pid == pid)
+            .filter(|p| &p.environment == env && p.pid == pid)
             .map(|p| p.port)
             .collect();
         listening_ports.sort_unstable();
@@ -145,6 +175,7 @@ impl ProcessIdentityEnricher for ProcessIdentityService {
             parent,
             process_tree,
             listening_ports,
+            environment: env.clone(),
         })
     }
 }
@@ -171,6 +202,28 @@ mod tests {
             command_line: cmd.map(|s| s.to_string()),
             working_directory: cwd.map(|s| s.to_string()),
             status: ProcessStatus::Running,
+            environment: Environment::windows(),
+        }
+    }
+
+    fn make_wsl_process_info(
+        distro: &str,
+        pid: u32,
+        parent_pid: Option<u32>,
+        name: &str,
+        exe: Option<&str>,
+        cmd: Option<&str>,
+        cwd: Option<&str>,
+    ) -> ProcessInfo {
+        ProcessInfo {
+            pid,
+            parent_pid,
+            name: name.to_string(),
+            executable_path: exe.map(|s| s.to_string()),
+            command_line: cmd.map(|s| s.to_string()),
+            working_directory: cwd.map(|s| s.to_string()),
+            status: ProcessStatus::Running,
+            environment: Environment::wsl(distro),
         }
     }
 
@@ -211,6 +264,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: Environment::windows(),
             },
             PortInfo {
                 port: 3001,
@@ -218,6 +272,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: Environment::windows(),
             },
         ];
 
@@ -249,6 +304,75 @@ mod tests {
     }
 
     #[test]
+    fn test_cross_environment_pid_isolation() {
+        // Windows PID 421 (e.g. some system helper) on port 8080
+        let win_proc = make_process_info(421, None, "win_helper.exe", None, None, None);
+        let win_port = PortInfo {
+            port: 8080,
+            pid: 421,
+            protocol: "tcp".to_string(),
+            address: "127.0.0.1".to_string(),
+            state: "listening".to_string(),
+            environment: Environment::windows(),
+        };
+
+        // WSL / Fedora PID 421 (Node server) on port 3000
+        let wsl_proc = make_wsl_process_info(
+            "Fedora",
+            421,
+            Some(300),
+            "node",
+            Some("/usr/bin/node"),
+            Some("npm run dev"),
+            Some("/home/dev/api"),
+        );
+        let wsl_parent = make_wsl_process_info(
+            "Fedora",
+            300,
+            None,
+            "bash",
+            Some("/bin/bash"),
+            Some("-bash"),
+            None,
+        );
+        let wsl_port = PortInfo {
+            port: 3000,
+            pid: 421,
+            protocol: "tcp".to_string(),
+            address: "0.0.0.0".to_string(),
+            state: "listening".to_string(),
+            environment: Environment::wsl("Fedora"),
+        };
+
+        let processes = vec![win_proc, wsl_parent, wsl_proc];
+        let ports = vec![win_port, wsl_port];
+
+        let service = ProcessIdentityService::new();
+        let identities = service.enrich_processes(&processes, &ports);
+
+        assert_eq!(identities.len(), 3);
+
+        let win_id = identities
+            .iter()
+            .find(|i| i.environment.is_windows() && i.process.pid == 421)
+            .unwrap();
+        assert_eq!(win_id.listening_ports, vec![8080]);
+        assert_eq!(win_id.process.name, "win_helper.exe");
+
+        let wsl_id = identities
+            .iter()
+            .find(|i| i.environment == Environment::wsl("Fedora") && i.process.pid == 421)
+            .unwrap();
+        assert_eq!(wsl_id.listening_ports, vec![3000]);
+        assert_eq!(wsl_id.runtime, Runtime::NodeJs);
+        assert_eq!(wsl_id.package_manager, PackageManager::Npm);
+        // Ensure WSL process tree does NOT reference Windows processes
+        assert_eq!(wsl_id.process_tree.len(), 2);
+        assert_eq!(wsl_id.process_tree[0].name, "bash");
+        assert_eq!(wsl_id.process_tree[1].name, "node");
+    }
+
+    #[test]
     fn test_process_identity_service_single_process_enrichment() {
         let p_py = make_process_info(
             5000,
@@ -265,6 +389,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "0.0.0.0".to_string(),
             state: "listening".to_string(),
+            environment: Environment::windows(),
         }];
 
         let service = ProcessIdentityService::new();
@@ -323,3 +448,4 @@ mod tests {
         assert!(id.process_tree.last().unwrap().is_target);
     }
 }
+

@@ -146,6 +146,7 @@ fn get_ipv4_listening_ports() -> Result<Vec<PortInfo>, String> {
                 protocol: "tcp".to_string(),
                 address: ip.to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             });
         }
     }
@@ -232,6 +233,7 @@ fn get_ipv6_listening_ports() -> Result<Vec<PortInfo>, String> {
                 protocol: "tcp".to_string(),
                 address: formatted_address,
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             });
         }
     }

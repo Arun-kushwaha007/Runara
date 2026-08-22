@@ -1,3 +1,4 @@
+use crate::models::environment::Environment;
 use crate::models::process::ProcessInfo;
 use serde::{Deserialize, Serialize};
 
@@ -82,7 +83,7 @@ pub struct ProcessTreeNode {
 }
 
 /// Rich, developer-oriented identity combining process metadata, runtime,
-/// package manager, ancestry tree, and associated listening network ports.
+/// package manager, ancestry tree, associated listening network ports, and environment.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProcessIdentity {
@@ -92,6 +93,8 @@ pub struct ProcessIdentity {
     pub parent: Option<ProcessParentInfo>,
     pub process_tree: Vec<ProcessTreeNode>,
     pub listening_ports: Vec<u16>,
+    #[serde(default)]
+    pub environment: Environment,
 }
 
 #[cfg(test)]
@@ -130,6 +133,7 @@ mod tests {
                 command_line: Some("npm run dev".to_string()),
                 working_directory: Some("C:\\Projects\\company-frontend".to_string()),
                 status: ProcessStatus::Running,
+                environment: Environment::windows(),
             },
             runtime: Runtime::NodeJs,
             package_manager: PackageManager::Npm,
@@ -169,6 +173,7 @@ mod tests {
                 },
             ],
             listening_ports: vec![3000, 3001],
+            environment: Environment::windows(),
         };
 
         let json = serde_json::to_string(&identity).expect("Failed to serialize ProcessIdentity");
@@ -178,6 +183,7 @@ mod tests {
         assert!(json.contains("\"isTarget\":true"));
         assert!(json.contains("\"listeningPorts\":[3000,3001]"));
         assert!(json.contains("\"parent\":{\"pid\":17820,\"name\":\"npm.cmd\""));
+        assert!(json.contains("\"environment\":{\"type\":\"windows\"}"));
 
         let deserialized: ProcessIdentity =
             serde_json::from_str(&json).expect("Failed to deserialize ProcessIdentity");

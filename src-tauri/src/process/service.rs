@@ -69,6 +69,20 @@ impl ProcessControlService {
         current_processes: &[ProcessInfo],
         current_ports: &[PortInfo],
     ) -> Result<ProcessInfo, ProcessControlError> {
+        // Rule 0: Refuse WSL targets (WSL process control is not supported in Milestone 6)
+        if let Some(env) = &target.environment {
+            if env.is_wsl() {
+                return Err(ProcessControlError {
+                    code: ProcessControlErrorCode::UnsafeTarget,
+                    message: format!(
+                        "Process control is not supported for WSL environments ({}) in this milestone. WSL processes must not be terminated via Windows process control.",
+                        env.display_name()
+                    ),
+                    pid: Some(target.pid),
+                });
+            }
+        }
+
         // Rule 1: Refuse PID 0 (Idle) and PID 4 (System)
         if target.pid == 0 || target.pid == 4 {
             return Err(ProcessControlError {
@@ -94,8 +108,8 @@ impl ProcessControlService {
             });
         }
 
-        // Rule 3: Find target process in current snapshot
-        let target_proc = match current_processes.iter().find(|p| p.pid == target.pid) {
+        // Rule 3: Find target process in current snapshot (must be a Windows process)
+        let target_proc = match current_processes.iter().find(|p| p.pid == target.pid && p.environment.is_windows()) {
             Some(p) => p,
             None => {
                 // Process does not exist in current process snapshot.
@@ -577,6 +591,7 @@ mod tests {
             command_line: Some(format!("{} test", name)),
             working_directory: cwd.map(|s| s.to_string()),
             status: ProcessStatus::Running,
+            environment: crate::models::environment::Environment::windows(),
         }
     }
 
@@ -596,6 +611,7 @@ mod tests {
             protocol: "tcp".to_string(),
             address: "127.0.0.1".to_string(),
             state: "listening".to_string(),
+            environment: crate::models::environment::Environment::windows(),
         }];
 
         let target = ProcessTarget {
@@ -605,6 +621,7 @@ mod tests {
             working_directory: Some("C:\\Projects\\company-frontend".to_string()),
             expected_ports: vec![3000],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         let service = ProcessControlService::new();
@@ -626,6 +643,7 @@ mod tests {
             working_directory: None,
             expected_ports: vec![3000],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         let service = ProcessControlService::new();
@@ -654,6 +672,7 @@ mod tests {
             working_directory: Some("C:\\Projects\\frontend".to_string()),
             expected_ports: vec![3000],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         let service = ProcessControlService::new();
@@ -681,6 +700,7 @@ mod tests {
             working_directory: Some("C:\\Projects\\app".to_string()),
             expected_ports: vec![],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         let service = ProcessControlService::new();
@@ -708,6 +728,7 @@ mod tests {
             working_directory: Some("C:\\Projects\\project-A".to_string()),
             expected_ports: vec![],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         let service = ProcessControlService::new();
@@ -734,6 +755,7 @@ mod tests {
             working_directory: None,
             expected_ports: vec![],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
         let err_idle = service.validate_target(&t_idle, &procs, &ports).unwrap_err();
         assert_eq!(err_idle.code, ProcessControlErrorCode::UnsafeTarget);
@@ -746,6 +768,7 @@ mod tests {
             working_directory: None,
             expected_ports: vec![],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
         let err_sys = service.validate_target(&t_sys, &procs, &ports).unwrap_err();
         assert_eq!(err_sys.code, ProcessControlErrorCode::UnsafeTarget);
@@ -758,6 +781,7 @@ mod tests {
             working_directory: None,
             expected_ports: vec![],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
         let err_exp = service.validate_target(&t_exp, &procs, &ports).unwrap_err();
         assert_eq!(err_exp.code, ProcessControlErrorCode::UnsafeTarget);
@@ -829,6 +853,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             }]),
         });
 
@@ -847,6 +872,7 @@ mod tests {
             working_directory: None,
             expected_ports: vec![3000],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         // Clear port on termination to simulate OS freeing socket
@@ -881,6 +907,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             }]),
         });
 
@@ -899,6 +926,7 @@ mod tests {
             working_directory: None,
             expected_ports: vec![3000],
             force: false,
+            environment: Some(crate::models::environment::Environment::windows()),
         };
 
         let result = service.stop_server(&target).expect("Should return diagnostic result");
@@ -909,5 +937,23 @@ mod tests {
         assert_eq!(owner.pid, 19320);
         assert_eq!(owner.process_name, "python.exe");
         assert_eq!(owner.port, 3000);
+    }
+
+    #[test]
+    fn test_target_validation_rejects_wsl_targets() {
+        let target = ProcessTarget {
+            pid: 421,
+            process_name: "node".to_string(),
+            executable_path: Some("/usr/bin/node".to_string()),
+            working_directory: Some("/home/dev/app".to_string()),
+            expected_ports: vec![5000],
+            force: false,
+            environment: Some(crate::models::environment::Environment::wsl("Fedora")),
+        };
+
+        let service = ProcessControlService::new();
+        let err = service.validate_target(&target, &[], &[]).unwrap_err();
+        assert_eq!(err.code, ProcessControlErrorCode::UnsafeTarget);
+        assert!(err.message.contains("WSL environments"));
     }
 }

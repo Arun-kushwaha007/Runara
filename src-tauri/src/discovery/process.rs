@@ -76,6 +76,7 @@ impl ProcessDiscovery for WindowsProcessDiscovery {
                 command_line,
                 working_directory,
                 status,
+                environment: crate::models::environment::Environment::windows(),
             });
         }
 

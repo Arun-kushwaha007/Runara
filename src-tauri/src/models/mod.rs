@@ -1,4 +1,5 @@
 pub mod control;
+pub mod environment;
 pub mod identity;
 pub mod port;
 pub mod process;
@@ -6,6 +7,10 @@ pub mod process;
 pub use control::{
     ControlResult, ControlStatus, ProcessControlError, ProcessControlErrorCode, ProcessTarget,
     RemainingOwnerInfo,
+};
+pub use environment::{
+    DiscoveryDiagnostic, Environment, EnvironmentInfo, UnifiedSnapshot, WslDistribution,
+    WslDistroState,
 };
 pub use identity::{
     PackageManager, ProcessIdentity, ProcessParentInfo, ProcessTreeNode, Runtime,

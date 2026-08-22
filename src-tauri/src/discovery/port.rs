@@ -93,6 +93,7 @@ mod tests {
                 command_line: Some("node server.js".to_string()),
                 working_directory: Some("C:\\projects\\frontend".to_string()),
                 status: ProcessStatus::Running,
+                environment: crate::models::environment::Environment::windows(),
             },
             ProcessInfo {
                 pid: 19320,
@@ -102,6 +103,7 @@ mod tests {
                 command_line: Some("python app.py".to_string()),
                 working_directory: Some("C:\\projects\\backend".to_string()),
                 status: ProcessStatus::Running,
+                environment: crate::models::environment::Environment::windows(),
             },
         ];
 
@@ -113,6 +115,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             },
             PortInfo {
                 port: 3001,
@@ -120,6 +123,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             },
             PortInfo {
                 port: 8000,
@@ -127,6 +131,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "0.0.0.0".to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             },
             PortInfo {
                 port: 9000,
@@ -134,6 +139,7 @@ mod tests {
                 protocol: "tcp".to_string(),
                 address: "127.0.0.1".to_string(),
                 state: "listening".to_string(),
+                environment: crate::models::environment::Environment::windows(),
             },
         ];
 
