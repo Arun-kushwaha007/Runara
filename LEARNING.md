@@ -2,9 +2,9 @@
 
 ```
 Project:           DevHub — Local Development Control Center
-Current Milestone: Milestone 7 (Server Profiles & Launch Management)
+Current Milestone: Milestone 9 (Project Groups & Sequential Orchestration)
 Document Purpose:  Comprehensive Engineering Learning and Code-Reading Guide for CS Students & HLD/LLD Interview Preparation
-Document Version:  7.0.0
+Document Version:  9.0.0
 ```
 
 ---
@@ -286,6 +286,64 @@ Document Version:  7.0.0
     - [82.3 Complete Trace: Safe Windows Server Restart Flow](#823-complete-trace-safe-windows-server-restart-flow)
 83. [Milestone 7: Deep Systems Engineering & HLD/LLD Interview Q&A](#83-milestone-7-deep-systems-engineering--hldlld-interview-qa)
 84. [Milestone 7: Complete Repository File Inventory & Architecture Matrix](#84-milestone-7-complete-repository-file-inventory--architecture-matrix)
+85. [Milestone 8: Managed vs. Unmanaged Resources & Resource Adoption](#85-managed-vs-unmanaged-resources--the-resource-adoption-concept)
+    - [85.1 The Dichotomy of Managed vs. Unmanaged Server Processes](#851-the-dichotomy-of-managed-vs-unmanaged-server-processes)
+    - [85.2 What is Resource Adoption?](#852-what-is-resource-adoption)
+86. [Milestone 8: Profile Association Engine & Multi-Signal Heuristics](#86-milestone-8-profile-association-engine--multi-signal-heuristics)
+    - [86.1 Transient Annotation Pipeline: Why Association is Derived](#861-transient-annotation-pipeline-why-association-is-derived)
+    - [86.2 The 3-Tier Multi-Signal Association Priority Hierarchy](#862-the-3-tier-multi-signal-association-priority-hierarchy)
+    - [86.3 Path Normalization across Windows and WSL File Systems](#863-path-normalization-across-windows-and-wsl-file-systems)
+87. [Milestone 8: Adoption Draft Synthesis & Command-Line Extraction Heuristics](#87-milestone-8-adoption-draft-synthesis--command-line-extraction-heuristics)
+    - [87.1 The Reverse Inference Problem: From OS State to Runnable Configuration](#871-the-reverse-inference-problem-from-os-state-to-runnable-configuration)
+    - [87.2 Command-Line Extraction & Argument Normalization](#872-command-line-extraction--argument-normalization)
+    - [87.3 Multi-Port Disambiguation & Fallback Defaults](#873-multi-port-disambiguation--fallback-defaults)
+88. [Milestone 8: Pre-Adoption Duplicate Detection Engine](#88-milestone-8-pre-adoption-duplicate-detection-engine)
+    - [88.1 Multi-Dimensional Equality Criteria](#881-multi-dimensional-equality-criteria)
+    - [88.2 Advisory Conflict UX vs. Hard Enforcement](#882-advisory-conflict-ux-vs-hard-enforcement)
+89. [Milestone 8: Security & Safety Guardrails for Resource Adoption](#89-milestone-8-security--safety-guardrails-for-resource-adoption)
+    - [89.1 Read-Only Environment Invariant (Windows vs. WSL Isolation)](#891-read-only-environment-invariant-windows-vs-wsl-isolation)
+    - [89.2 Human-in-the-Loop Verification](#892-human-in-the-loop-verification)
+    - [89.3 Non-Destructive Invariant: No Automatic Process Restart](#893-non-destructive-invariant-no-automatic-process-restart)
+90. [Milestone 8: Frontend State Architecture & Reactive Adoption Workflows](#90-milestone-8-frontend-state-architecture--reactive-adoption-workflows)
+    - [90.1 Multi-Tab Adoption Modals & Cross-View Synchronization](#901-multi-tab-adoption-modals--cross-view-synchronization)
+    - [90.2 Dynamic Card State Transformation](#902-dynamic-card-state-transformation)
+91. [Milestone 8: Updated High-Level Design (HLD) & Architecture Topology](#91-milestone-8-updated-high-level-design-hld--architecture-topology)
+92. [Milestone 8: Updated Low-Level Design (LLD) & Component Interfaces](#92-milestone-8-updated-low-level-design-lld--component-interfaces)
+93. [Milestone 8: End-to-End Adoption Code Traces](#93-milestone-8-end-to-end-adoption-code-traces)
+94. [Milestone 8: Deep Systems Engineering & HLD/LLD Interview Q&A](#94-milestone-8-deep-systems-engineering--hldlld-interview-qa)
+95. [Milestone 8: Complete Repository File Inventory & Architecture Matrix](#95-milestone-8-complete-repository-file-inventory--architecture-matrix)
+96. [Milestone 9: Project Groups — Engineering Concepts & System Architecture](#96-milestone-9-project-groups--engineering-concepts--system-architecture)
+    - [96.1 From Individual Server Management to Multi-Service Project Orchestration](#961-from-individual-server-management-to-multi-service-project-orchestration)
+    - [96.2 Zero Configuration Duplication: Composition over Duplication Pattern](#962-zero-configuration-duplication-composition-over-duplication-pattern)
+    - [96.3 Single Project Membership Invariant (1:N Relational Constraint) & Atomic Moves](#963-single-project-membership-invariant-1n-relational-constraint--atomic-moves)
+    - [96.4 Relational Database Schema: `projects` and `project_profiles` Junction Table](#964-relational-database-schema-projects-and-project_profiles-junction-table)
+    - [96.5 Foreign Key Constraints & Cascade Semantics (`ON DELETE CASCADE` Safety)](#965-foreign-key-constraints--cascade-semantics-on-delete-cascade-safety)
+97. [Milestone 9: Deterministic Sequential Orchestration & Execution Pipelines](#97-milestone-9-deterministic-sequential-orchestration--execution-pipelines)
+    - [97.1 Execution Order vs. Implicit Dependency Inference](#971-execution-order-vs-implicit-dependency-inference)
+    - [97.2 Deterministic Sequential Startup Pipeline (`start_project`)](#972-deterministic-sequential-startup-pipeline-start_project)
+    - [97.3 Fail-Fast Strategy & Why Automatic Rollback is Unsafe in Local Dev Environments](#973-fail-fast-strategy--why-automatic-rollback-is-unsafe-in-local-dev-environments)
+    - [97.4 Structured Diagnostic Reporting (`ProjectOperationResult`)](#974-structured-diagnostic-reporting-projectoperationresult)
+    - [97.5 Sequential Project Teardown (`stop_project`) & Multi-Environment Handling](#975-sequential-project-teardown-stop_project--multi-environment-handling)
+    - [97.6 Project Restart Pipeline (`restart_project`) & Windows-Only Invariant](#976-project-restart-pipeline-restart_project--windows-only-invariant)
+98. [Milestone 9: State Precedence Machine & Derived Project Health](#98-milestone-9-state-precedence-machine--derived-project-health)
+    - [98.1 Transient vs. Persistent State: Why Project Runtime State is Derived](#981-transient-vs-persistent-state-why-project-runtime-state-is-derived)
+    - [98.2 The 8-Tier Project Runtime State Precedence Hierarchy](#982-the-8-tier-project-runtime-state-precedence-hierarchy)
+    - [98.3 Partial State Semantics: WSL Process Stop Limitations & Mixed Health](#983-partial-state-semantics-wsl-process-stop-limitations--mixed-health)
+    - [98.4 Concurrency Guards: In-Flight Operation Locks & Double-Click Prevention](#984-concurrency-guards-in-flight-operation-locks--double-click-prevention)
+99. [Milestone 9: Updated High-Level Design (HLD) & Architecture Topology](#99-milestone-9-updated-high-level-design-hld--architecture-topology)
+    - [99.1 Milestone 9 Architecture Topology Diagram](#991-milestone-9-architecture-topology-diagram)
+    - [99.2 Layer Responsibility Matrix](#992-layer-responsibility-matrix)
+100. [Milestone 9: Updated Low-Level Design (LLD) & Component Interfaces](#100-milestone-9-updated-low-level-design-lld--component-interfaces)
+     - [100.1 Repository Trait: `ProjectRepository` Interface & SQLite Implementation](#1001-repository-trait-projectrepository-interface--sqlite-implementation)
+     - [100.2 Service & Orchestration Signatures: `ProjectService` & `ProjectOrchestrator`](#1002-service--orchestration-signatures-projectservice--projectorchestrator)
+     - [100.3 Domain Models & Data Transfer Objects (`ProjectView`, `ProjectProfileView`, `ProjectOperationResult`)](#1003-domain-models--data-transfer-objects-projectview-projectprofileview-projectoperationresult)
+     - [100.4 Thin Tauri Command Dispatchers (`commands/project.rs`)](#1004-thin-tauri-command-dispatchers-commandsprojectrs)
+101. [Milestone 9: End-to-End Code Traces](#101-milestone-9-end-to-end-code-traces)
+     - [101.1 Complete Trace: Sequential Fail-Fast Project Startup](#1011-complete-trace-sequential-fail-fast-project-startup)
+     - [101.2 Complete Trace: Project Teardown with WSL Partial State Handling](#1012-complete-trace-project-teardown-with-wsl-partial-state-handling)
+     - [101.3 Complete Trace: Atomic Profile Movement Between Projects](#1013-complete-trace-atomic-profile-movement-between-projects)
+102. [Milestone 9: Deep Systems Engineering & HLD/LLD Interview Q&A](#102-milestone-9-deep-systems-engineering--hldlld-interview-qa)
+103. [Milestone 9: Complete Repository File Inventory & Architecture Matrix](#103-milestone-9-complete-repository-file-inventory--architecture-matrix)
 
 ---
 
@@ -4486,6 +4544,634 @@ For $S$ active servers and $P$ saved profiles, matching runs in $O(S \times P)$ 
 | [`src/components/dashboard/ServerToolbar.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerToolbar.tsx) | Presentation View | Toolbar with Managed / Unmanaged status filter | Toolbar Filter Controls | `Dashboard.tsx`, `Servers.tsx` | - |
 | [`src/pages/Dashboard.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Dashboard.tsx) | Page Container | Main dashboard with profile annotation and adoption wiring | Container Pattern, Reactive Derivation | `App.tsx` | UI Components, `lib/` |
 | [`src/pages/Servers.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.tsx) | Page Container | Servers management page with active tab adoption wiring | Container Pattern | `App.tsx` | UI Components, `lib/` |
+
+---
+
+## 96. Milestone 9: Project Groups — Engineering Concepts & System Architecture
+
+### 96.1 From Individual Server Management to Multi-Service Project Orchestration
+In modern full-stack and microservices development, applications are rarely isolated single processes. A typical local development workflow requires running multiple cooperative services simultaneously:
+- A React / Next.js frontend on port 3000
+- A Node.js / FastAPI backend API gateway on port 8000
+- A Python data processor / Celery worker running background tasks
+- A Redis or database caching proxy on port 6379
+
+Prior to Milestone 9, DevHub managed each `ServerProfile` as an isolated operational entity. While this provided granular process supervision, starting a composite multi-service architecture required manually hunting down and starting 3 to 6 distinct profiles in sequence. Stopping the application required repeating the process in reverse.
+
+**Milestone 9 introduces Project Groups**: an orchestration abstraction that allows developers to compose existing `ServerProfile` definitions into cohesive, unified project topologies and control the entire group as a single operational unit.
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                      PROJECT: "Company Platform"                                  |
+|                                                                                                   |
+|  [Execution Order: 0] ──> Backend API (FastAPI, Port 8000, Windows)                             |
+|                                 │                                                                 |
+|                                 ▼ (Sequential Delay & Port Confirmation)                         |
+|  [Execution Order: 1] ──> Frontend Web (Vite React, Port 3000, Windows)                           |
+|                                 │                                                                 |
+|                                 ▼ (Sequential Delay & Port Confirmation)                         |
+|  [Execution Order: 2] ──> Background Worker (Python Celery, WSL Fedora)                           |
++---------------------------------------------------------------------------------------------------+
+```
+
+### 96.2 Zero Configuration Duplication: Composition over Duplication Pattern
+A critical engineering principle enforced throughout DevHub is **Zero Configuration Duplication**:
+- A `Project` entity never duplicates command strings, working directory paths, port numbers, host bindings, or environment definitions.
+- The `Project` entity persists only its own relational metadata (`id`, `name`, `description`, timestamps) and ordered foreign key references to `ServerProfile` records.
+- All operational execution parameters are read directly from the authoritative `server_profiles` table.
+
+```
+                                  +-------------------+
+                                  |      Project      |
+                                  |-------------------|
+                                  | id: "proj-1"      |
+                                  | name: "Platform"  |
+                                  +-------------------+
+                                            │
+                                            │ 1 : N (Ordered)
+                                            ▼
+                               +-------------------------+
+                               |    project_profiles     |
+                               |-------------------------|
+                               | project_id: "proj-1"    |
+                               | profile_id: "prof-1"    |
+                               | order_index: 0          |
+                               +-------------------------+
+                                            │
+                                            │ References (FK)
+                                            ▼
+                               +-------------------------+
+                               |      ServerProfile      |
+                               |-------------------------|
+                               | id: "prof-1"            |
+                               | name: "Backend API"     |
+                               | command: "python main"  |
+                               | port: 8000              |
+                               | cwd: "C:\Projects\api"  |
+                               +-------------------------+
+```
+
+#### Benefits of Composition over Duplication:
+1. **Single Source of Truth**: If a developer edits the startup command or port of "Backend API" in the Server Profiles view, all Projects referencing that profile automatically inherit the updated configuration with zero sync overhead.
+2. **Preventing Drift**: In duplicated architectures (e.g. copying profile JSON blobs into project structures), updating a port in one place causes stale, broken configurations in another.
+3. **Storage Efficiency**: Normalized relational schema eliminates redundant string storage and index bloat.
+
+### 96.3 Single Project Membership Invariant (1:N Relational Constraint) & Atomic Moves
+For the MVP of Project Groups, DevHub enforces a strict **Single Project Membership Invariant**:
+> *A `ServerProfile` may belong to at most ONE `Project` at any given time.*
+
+This constraint is physically enforced at the database level by placing a `UNIQUE` index on `project_profiles.profile_id`:
+
+```sql
+CREATE TABLE IF NOT EXISTS project_profiles (
+    project_id TEXT NOT NULL,
+    profile_id TEXT NOT NULL UNIQUE,
+    order_index INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (profile_id) REFERENCES server_profiles(id) ON DELETE CASCADE
+);
+```
+
+#### Atomic Movement Semantics:
+When a developer adds a profile to Project $B$ that currently belongs to Project $A$:
+1. DevHub detects the existing membership and warns the developer in the UI: *"Currently in Project A. Moving it will remove it from Project A."*
+2. Upon confirmation, `add_profile_to_project` executes an **atomic database transaction**:
+   - Deletes any existing row where `profile_id = ?` across all projects.
+   - Inserts the new relationship row for the target project.
+   - Re-indexes both the source and target projects so that `order_index` sequences remain contiguous (`0, 1, 2...`) with zero gaps.
+
+### 96.4 Relational Database Schema: `projects` and `project_profiles` Junction Table
+Milestone 9 introduces Versioned Migration `002_create_projects.sql` into the SQLite database engine:
+
+```sql
+-- Projects Table
+CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name);
+
+-- Project Profiles Junction Table
+CREATE TABLE IF NOT EXISTS project_profiles (
+    project_id TEXT NOT NULL,
+    profile_id TEXT NOT NULL UNIQUE,
+    order_index INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (profile_id) REFERENCES server_profiles(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_profiles_project_id ON project_profiles(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_profiles_order ON project_profiles(project_id, order_index);
+```
+
+### 96.5 Foreign Key Constraints & Cascade Semantics (`ON DELETE CASCADE` Safety)
+SQLite supports standard ANSI SQL `ON DELETE CASCADE` constraints when foreign keys are enabled (`PRAGMA foreign_keys = ON;`):
+
+1. **Deleting a Project**:
+   - When `DELETE FROM projects WHERE id = ?` is executed, SQLite automatically deletes all associated rows in `project_profiles`.
+   - **Crucially**, the referenced rows in `server_profiles` remain **completely untouched**. Deleting a project group never destroys the underlying server profile configurations or running processes.
+2. **Deleting a Server Profile**:
+   - When a developer deletes a `ServerProfile` from DevHub, SQLite automatically deletes any junction rows in `project_profiles` referencing that profile ID.
+   - The repository automatically re-indexes the project's remaining profiles to maintain a gapless `0..N-1` order.
+
+---
+
+## 97. Milestone 9: Deterministic Sequential Orchestration & Execution Pipelines
+
+### 97.1 Execution Order vs. Implicit Dependency Inference
+A common pitfall in orchestration tooling is attempting to automatically infer dependency graphs (e.g. attempting to guess which service must start first based on network ports or source code parsing).
+
+DevHub chooses **explicit, deterministic execution ordering**:
+- Developers configure the precise sequence using an ordered integer index (`0, 1, 2...`).
+- The developer can easily reorder services with simple *"Move Up"* and *"Move Down"* controls in the UI.
+- The orchestrator executes the sequence strictly in configured order: $0 \to 1 \to 2 \dots \to N$.
+
+### 97.2 Deterministic Sequential Startup Pipeline (`start_project`)
+When `start_project(project_id)` is invoked:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant UI as Projects UI
+    participant Orch as ProjectOrchestrator
+    participant Repo as ProjectRepository
+    participant StartSvc as ServerStartService
+    participant OS as OS Discovery & Subprocess
+
+    Dev->>UI: Clicks "Start Project"
+    UI->>Orch: start_project(project_id)
+    Note over Orch: Concurrency Lock Acquired (ProjectOperation::Starting)
+    Orch->>Repo: get_project_profiles(project_id)
+    Repo-->>Orch: Ordered Vec<ServerProfile> [Profile 0, Profile 1, Profile 2]
+
+    loop For each Profile in Sequence (0..N)
+        Note over Orch: Check if already Running via live discovery
+        alt Profile is Stopped / Error
+            Orch->>StartSvc: start_profile(profile.id)
+            StartSvc->>OS: Pre-launch port check + Subprocess Spawn + Readiness Poll (20s)
+            OS-->>StartSvc: Success (PID, Port) or StartError
+            StartSvc-->>Orch: Result
+            alt Start Failed (e.g. PORT_ALREADY_IN_USE)
+                Note over Orch: Fail-Fast Triggered! Halt sequence immediately.
+                Orch-->>UI: ProjectOperationResult { status: Error, failedProfile, pendingProfiles }
+            else Start Succeeded
+                Note over Orch: Record in startedProfiles list
+            end
+        else Profile Already Running
+            Note over Orch: Record in startedProfiles list (Idempotent skip)
+        end
+    end
+
+    Note over Orch: Release Concurrency Lock
+    Orch-->>UI: ProjectOperationResult { status: Running, startedProfiles, message }
+```
+
+### 97.3 Fail-Fast Strategy & Why Automatic Rollback is Unsafe in Local Dev Environments
+When launching a project group with 5 services, what should happen if Service 3 fails to start (e.g. because port 8000 is occupied by another process)?
+
+DevHub implements a **Sequential Fail-Fast with No Automatic Rollback** strategy:
+1. **Immediate Sequence Halt**: The orchestrator halts startup immediately. Services 4 and 5 are marked as `pending` and are not started.
+2. **No Automatic Rollback**: Services 1 and 2 (which already started successfully) are **NOT killed**.
+3. **Why Rollback is Antipattern in Local Development**:
+   - In production orchestration (Kubernetes / Terraform), rollback is desirable to maintain clean immutable state.
+   - In local development, developers frequently run hybrid setups where backend databases or auth services were intentionally started earlier. Automatically killing running dependencies destroys developer work, drops active database connections, and clears hot-reload build caches.
+   - By leaving successfully started services running, the developer can fix the specific issue with Service 3 (e.g., stopping the conflicting port owner) and re-click "Start Project". The orchestrator will safely skip the already-running services and start only the remaining services!
+
+### 97.4 Structured Diagnostic Reporting (`ProjectOperationResult`)
+The result of any project operation is returned as a structured domain model:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectOperationResult {
+    pub project_id: String,
+    pub operation_type: String, // "start" | "stop" | "restart"
+    pub status: ProjectRuntimeStatus,
+    pub started_profiles: Vec<String>,
+    pub stopped_profiles: Vec<String>,
+    pub failed_profile: Option<String>,
+    pub pending_profiles: Vec<String>,
+    pub unsupported_profiles: Vec<String>,
+    pub message: String,
+}
+```
+
+This model powers the `ProjectOperationProgressModal` on the frontend, giving developers a crystal-clear visual breakdown of every step in the pipeline.
+
+### 97.5 Sequential Project Teardown (`stop_project`) & Multi-Environment Handling
+When stopping a project:
+1. The orchestrator iterates through all member profiles.
+2. For **Windows Profiles**:
+   - Finds the active PID from the discovery snapshot.
+   - Dispatches a safe termination target to `ProcessControlService`.
+   - Polls for process exit and verifies listening port release.
+   - Adds the profile name to `stopped_profiles`.
+3. For **WSL Profiles**:
+   - As established in Milestones 6–8, Win32 `TerminateProcess` cannot safely terminate Linux kernel processes inside WSL.
+   - The orchestrator **does not attempt unsafe termination**.
+   - It records the WSL profile in `unsupported_profiles`.
+   - The project transitions to status `Partial` with an explicit diagnostic note:
+     > *"Stopped 2 Windows services. WSL Worker remained running because WSL process control is not supported in this version."*
+
+### 97.6 Project Restart Pipeline (`restart_project`) & Windows-Only Invariant
+When restarting a project:
+1. **WSL Guardrail**: The orchestrator checks if any member profile has `environment.is_wsl()`. If found, restart is rejected immediately with `ProjectErrorCode::UnsupportedOperation`.
+2. **Windows Pipeline**:
+   - Iterates through all member profiles and executes process stop for any active instances.
+   - Verifies all ports are released.
+   - Waits a 500ms quiescence delay.
+   - Executes the sequential fail-fast startup loop.
+
+---
+
+## 98. Milestone 9: State Precedence Machine & Derived Project Health
+
+### 98.1 Transient vs. Persistent State: Why Project Runtime State is Derived
+Just like `ServerProfile` runtime state, a `Project`'s runtime state is **strictly derived and never persisted in SQLite**:
+- Database stores: Project Name, Description, and Ordered Profile IDs.
+- OS Kernel provides: Live Process PIDs, Listening Ports, and CPU/Memory Telemetry.
+- State Machine calculates: Real-time aggregated health (`Running`, `Partial`, `Stopped`, `Starting`, `Stopping`, `Error`, `Unknown`).
+
+If a developer kills a Node process from their terminal window, upon the next 2.5-second polling interval, the Project status dynamically transitions from `Running` to `Partial` without requiring any database mutation!
+
+### 98.2 The 8-Tier Project Runtime State Precedence Hierarchy
+When deriving the operational status of a Project, DevHub evaluates child profiles against an 8-tier precedence machine:
+
+```
+[ Tier 1 ] Active In-Flight Operation Lock?
+           ├── Start / Restart in progress ──> Starting
+           └── Stop in progress            ──> Stopping
+
+[ Tier 2 ] Project has 0 Member Profiles?
+           └── Total Services == 0         ──> Stopped
+
+[ Tier 3 ] Any Child Profile is Starting?
+           └── Any child == Starting       ──> Starting
+
+[ Tier 4 ] Any Child Profile in Error State?
+           └── Any child == Error          ──> Error
+
+[ Tier 5 ] All Child Profiles Running?
+           └── Running count == Total      ──> Running
+
+[ Tier 6 ] All Child Profiles Stopped?
+           └── Stopped count == Total      ──> Stopped
+
+[ Tier 7 ] Mixed States (Running + Stopped/Unsupported)?
+           └── Running > 0 && Stopped > 0  ──> Partial
+
+[ Tier 8 ] Fallback Condition
+           └── Default Fallback            ──> Unknown
+```
+
+### 98.3 Partial State Semantics: WSL Process Stop Limitations & Mixed Health
+The `Partial` state (rendered as an amber badge) provides critical observability in composite systems:
+- A project where the backend is running but the frontend crashed.
+- A project stopped on Windows while WSL background workers remain running.
+- A project where fail-fast halted startup midway through the execution order.
+
+### 98.4 Concurrency Guards: In-Flight Operation Locks & Double-Click Prevention
+To prevent race conditions, port collisions, and duplicate subprocess launches:
+- `ProjectOrchestrator` maintains an in-memory thread-safe `Arc<Mutex<HashMap<String, ProjectOperation>>>`.
+- If an operation is already in flight for a project UUID, any subsequent `start_project`, `stop_project`, or `restart_project` invocation is rejected immediately with:
+  > `ProjectErrorCode::OperationAlreadyInProgress: "An operation is already in progress for this project."`
+- The frontend disables action buttons while operations are in flight.
+
+---
+
+## 99. Milestone 9: Updated High-Level Design (HLD) & Architecture Topology
+
+### 99.1 Milestone 9 Architecture Topology Diagram
+
+```mermaid
+graph TD
+    subgraph Presentation Layer (Chromium/WebView2)
+        ProjectsPage[Projects Page: Projects.tsx]
+        ProjectCard[ProjectCard.tsx]
+        DetailsModal[ProjectDetailsModal.tsx]
+        FormModal[ProjectFormModal.tsx]
+        ProgressModal[ProjectOperationProgressModal.tsx]
+        ProjectAPI[Frontend Project API: commands.ts]
+
+        ProjectsPage --> ProjectCard
+        ProjectsPage --> DetailsModal
+        ProjectsPage --> FormModal
+        ProjectsPage --> ProgressModal
+        ProjectsPage --> ProjectAPI
+    end
+
+    subgraph IPC Boundary
+        ProjectAPI -->|Tauri Invoke| TauriIPC[Tauri Command Handlers: commands/project.rs]
+    end
+
+    subgraph Native Application Layer (Rust)
+        TauriIPC --> ProjectService[ProjectService: CRUD, Validation, Status Precedence]
+        TauriIPC --> ProjectOrch[ProjectOrchestrator: Sequential Start, Stop, Restart]
+        ProjectOrch --> StartService[ServerStartService: Subprocess Launch, Port Polling]
+        ProjectOrch --> ControlService[ProcessControlService: Win32 Process Termination]
+        ProjectService --> UnifiedDiscovery[UnifiedDiscoveryService: Windows & WSL Telemetry]
+        ProjectOrch --> UnifiedDiscovery
+    end
+
+    subgraph Persistence Layer
+        ProjectService --> ProjectRepo[SqliteServerProfileRepository (ProjectRepository)]
+        ProjectOrch --> ProjectRepo
+        ProjectRepo --> SQLite[(SQLite devhub.db: projects & project_profiles)]
+    end
+
+    subgraph OS Execution Layer
+        StartService --> WinLauncher[Windows Subprocess Launcher]
+        StartService --> WslLauncher[WSL Subprocess Launcher]
+        ControlService --> Win32API[Win32 TerminateProcess]
+    end
+```
+
+### 99.2 Layer Responsibility Matrix
+
+| Layer | Component | Core Responsibilities |
+| :--- | :--- | :--- |
+| **Presentation (UI)** | `Projects.tsx`, `ProjectCard.tsx`, Modals | Renders project cards, status pills, reordering arrows, execution breakdown modal. |
+| **IPC Bridge** | `commands/project.rs` | Thin validation and parameter marshaling between TypeScript and Rust. |
+| **Orchestration** | `ProjectOrchestrator` | Sequential startup loop, fail-fast execution, teardown, restart, in-flight concurrency locking. |
+| **Domain Service** | `ProjectService` | Project input validation, membership association, 8-tier status precedence derivation. |
+| **Persistence** | `ProjectRepository` / SQLite | Relational schema, `0..N-1` gapless re-indexing, cascade deletions, atomic profile moves. |
+| **Infrastructure** | `ServerStartService`, `ProcessControlService` | Subprocess spawning, port readiness polling, Win32 process termination. |
+
+---
+
+## 100. Milestone 9: Updated Low-Level Design (LLD) & Component Interfaces
+
+### 100.1 Repository Trait: `ProjectRepository` Interface & SQLite Implementation
+Located in `src-tauri/src/db/repository.rs`:
+
+```rust
+pub trait ProjectRepository: Send + Sync {
+    fn create_project(&self, name: &str, description: Option<&str>) -> Result<Project, DatabaseError>;
+    fn get_project_by_id(&self, id: &str) -> Result<Option<Project>, DatabaseError>;
+    fn list_projects(&self) -> Result<Vec<Project>, DatabaseError>;
+    fn update_project(&self, id: &str, name: &str, description: Option<&str>) -> Result<Project, DatabaseError>;
+    fn delete_project(&self, id: &str) -> Result<bool, DatabaseError>;
+    fn add_profile_to_project(&self, project_id: &str, profile_id: &str, order_index: Option<i32>) -> Result<(), DatabaseError>;
+    fn remove_profile_from_project(&self, project_id: &str, profile_id: &str) -> Result<bool, DatabaseError>;
+    fn get_project_profiles(&self, project_id: &str) -> Result<Vec<ServerProfile>, DatabaseError>;
+    fn reorder_project_profiles(&self, project_id: &str, profile_ids: &[String]) -> Result<(), DatabaseError>;
+    fn get_project_for_profile(&self, profile_id: &str) -> Result<Option<Project>, DatabaseError>;
+    fn count_projects(&self) -> Result<usize, DatabaseError>;
+}
+```
+
+### 100.2 Service & Orchestration Signatures: `ProjectService` & `ProjectOrchestrator`
+Located in `src-tauri/src/project/service.rs` and `src-tauri/src/project/orchestrator.rs`:
+
+```rust
+impl ProjectService {
+    pub fn new(repository: Arc<dyn ProjectRepository>) -> Self;
+    pub fn create_project(&self, request: CreateProjectRequest) -> Result<Project, ProjectError>;
+    pub fn update_project(&self, request: UpdateProjectRequest) -> Result<Project, ProjectError>;
+    pub fn delete_project(&self, id: &str) -> Result<bool, ProjectError>;
+    pub fn list_projects(&self) -> Result<Vec<Project>, ProjectError>;
+    pub fn get_project(&self, id: &str) -> Result<Option<Project>, ProjectError>;
+    pub fn add_profile_to_project(&self, request: AddProfileToProjectRequest) -> Result<(), ProjectError>;
+    pub fn remove_profile_from_project(&self, project_id: &str, profile_id: &str) -> Result<bool, ProjectError>;
+    pub fn reorder_project_profiles(&self, request: ReorderProjectProfilesRequest) -> Result<(), ProjectError>;
+    pub fn get_project_for_profile(&self, profile_id: &str) -> Result<Option<Project>, ProjectError>;
+    pub fn derive_project_views(
+        &self,
+        projects: &[Project],
+        profile_views: &[ServerProfileView],
+        active_operations: &HashMap<String, ProjectOperation>,
+    ) -> Result<Vec<ProjectView>, ProjectError>;
+}
+
+impl ProjectOrchestrator {
+    pub fn new(
+        project_repo: Arc<dyn ProjectRepository>,
+        profile_repo: Arc<dyn ServerProfileRepository>,
+        start_service: Arc<ServerStartService>,
+        control_service: Arc<ProcessControlService>,
+        discovery_service: Arc<UnifiedDiscoveryService>,
+    ) -> Self;
+    pub fn start_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError>;
+    pub fn stop_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError>;
+    pub fn restart_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError>;
+}
+```
+
+### 100.3 Domain Models & Data Transfer Objects (`ProjectView`, `ProjectProfileView`, `ProjectOperationResult`)
+Located in `src-tauri/src/models/project.rs` and `src/types/project.ts`:
+
+```typescript
+export interface Project {
+  id: string;
+  name: string;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectProfileView {
+  profile: ServerProfile;
+  orderIndex: number;
+  status: ProfileRuntimeStatus;
+  activePid?: number | null;
+  activePort?: number | null;
+  errorMessage?: string | null;
+}
+
+export interface ProjectView {
+  project: Project;
+  status: ProjectRuntimeStatus;
+  profiles: ProjectProfileView[];
+  totalServices: number;
+  runningServices: number;
+  stoppedServices: number;
+  diagnosticMessage?: string | null;
+}
+```
+
+### 100.4 Thin Tauri Command Dispatchers (`commands/project.rs`)
+Commands registered in `src-tauri/src/commands/project.rs`:
+- `get_projects`, `get_project`, `create_project`, `update_project`, `delete_project`
+- `add_profile_to_project`, `remove_profile_from_project`, `reorder_project_profiles`, `get_project_for_profile`
+- `get_project_views`, `start_project`, `stop_project`, `restart_project`
+
+---
+
+## 101. Milestone 9: End-to-End Code Traces
+
+### 101.1 Complete Trace: Sequential Fail-Fast Project Startup
+
+```
+[1. User Initiates Start]
+User clicks "Start" on ProjectCard for "Company Platform" (proj-1)
+handleStartProject("proj-1") executes in Projects.tsx
+
+[2. Tauri IPC Dispatch]
+projectApi.startProject("proj-1") dispatches invoke('start_project', { id: "proj-1" })
+
+[3. Orchestrator Concurrency Lock]
+ProjectOrchestrator acquires operation lock: active_operations.insert("proj-1", ProjectOperation::Starting)
+
+[4. Profile Sequence Loading]
+ProjectRepository::get_project_profiles("proj-1") returns:
+  0: Backend API (prof-1, Windows, Port 8000)
+  1: Frontend App (prof-2, Windows, Port 3000)
+
+[5. Step 0: Backend API Startup]
+Discovery check: Backend API is Stopped -> invokes ServerStartService::start_profile("prof-1")
+Pre-launch port check: Port 8000 is free
+Windows launcher spawns cmd.exe /D /C python main.py
+Readiness poller detects PID 19200 listening on port 8000 within 1.2s -> Success!
+recorded: startedProfiles.push("Backend API")
+
+[6. Step 1: Frontend App Startup]
+Discovery check: Frontend App is Stopped -> invokes ServerStartService::start_profile("prof-2")
+Pre-launch port check: Port 3000 is OCCUPIED by rogue process PID 9999!
+ServerStartService returns StartError { code: PORT_ALREADY_IN_USE }
+
+[7. Fail-Fast Execution]
+ProjectOrchestrator catches error on profile prof-2
+Halts sequence immediately!
+Backend API (PID 19200) is NOT killed (no rollback)
+result.failedProfile = "Frontend App"
+result.status = ProjectRuntimeStatus::Error
+
+[8. Lock Release & Response]
+active_operations.remove("proj-1")
+Returns ProjectOperationResult to WebView
+
+[9. Modal Feedback]
+Projects.tsx opens ProjectOperationProgressModal:
+  • "Backend API": ✓ Started / Running
+  • "Frontend App": ✕ Failed (PORT_ALREADY_IN_USE)
+  • Project Status: Error
+```
+
+### 101.2 Complete Trace: Project Teardown with WSL Partial State Handling
+
+```
+[1. User Initiates Stop]
+User clicks "Stop Project" on ProjectCard for "Mixed Project" (proj-2)
+Member Profiles:
+  • API Gateway (prof-1, Windows, Port 8080, Running PID 1200)
+  • Background Worker (prof-3, WSL Fedora, Running PID 450)
+
+[2. Windows Profile Termination]
+Orchestrator matches API Gateway as Windows:
+  • Dispatches ProcessControlService::stop_server(target: PID 1200)
+  • Win32 TerminateProcess succeeds
+  • Port 8080 verified released
+  • stoppedProfiles.push("API Gateway")
+
+[3. WSL Profile Boundary Guard]
+Orchestrator matches Background Worker as WSL:
+  • Refuses Win32 TerminateProcess call
+  • unsupportedProfiles.push("Background Worker")
+
+[4. Diagnostic Resolution]
+Result computed:
+  • status: ProjectRuntimeStatus::Partial
+  • message: "Stopped 1 Windows services. Background Worker remained active because WSL process control is not available."
+
+[5. Reactive UI Presentation]
+Progress modal displays amber Partial banner with detailed diagnostic rationale.
+Project card badge updates to "Partial (1/2)".
+```
+
+### 101.3 Complete Trace: Atomic Profile Movement Between Projects
+
+```
+[1. Target Project Selection]
+Developer opens "Add Server to Project" modal on "Microservices Core"
+Selects "Payment Service" (which currently belongs to "Legacy Monolith")
+
+[2. Ownership Detection]
+AddProfileModal renders warning:
+  "This server profile already belongs to 'Legacy Monolith'. Adding it here will move it to 'Microservices Core'."
+
+[3. Developer Confirms Move]
+User clicks "Move to Project" -> dispatches add_profile_to_project({ projectId: "proj-core", profileId: "prof-pay" })
+
+[4. Atomic SQLite Transaction]
+SqliteServerProfileRepository begins transaction:
+  a. DELETE FROM project_profiles WHERE profile_id = 'prof-pay';
+  b. INSERT INTO project_profiles (project_id, profile_id, order_index) VALUES ('proj-core', 'prof-pay', next_index);
+  c. Re-index 'Legacy Monolith' profiles: 0..N-1
+  d. Re-index 'Microservices Core' profiles: 0..M-1
+Transaction committed.
+
+[5. UI Refresh]
+"Payment Service" immediately appears in "Microservices Core" with order index 3.
+"Payment Service" disappears from "Legacy Monolith", and subsequent services in "Legacy Monolith" shift up.
+```
+
+---
+
+## 102. Milestone 9: Deep Systems Engineering & HLD/LLD Interview Q&A
+
+### Q1: Why does DevHub use a separate junction table (`project_profiles`) rather than adding a `project_id` foreign key directly to `server_profiles`?
+**Answer**:
+Using a dedicated junction table provides architectural decoupling and future extensibility. While MVP enforces a single-project invariant via `UNIQUE(profile_id)`, the junction table cleanly separates project-specific ordering (`order_index`) and membership timestamps from server profile execution properties (`command`, `working_directory`, `port`). Furthermore, if future product requirements support multi-project profile sharing (N:M relationship), migrating only requires dropping the `UNIQUE` index without touching the `server_profiles` schema.
+
+### Q2: Why is sequential startup preferred over parallel startup for local development server groups?
+**Answer**:
+1. **Implicit Startup Dependencies**: Local microservices typically depend on infrastructure services (e.g. backend API must initialize its database connections and bind port 8000 before the frontend attempts to proxy API calls or execute Server-Side Rendering).
+2. **Deterministic Port Binding**: Parallel spawning causes CPU contention and non-deterministic port binding races where two services competing for resources can trigger false-positive startup timeouts.
+3. **Actionable Diagnostics**: When services start sequentially, if Service 2 fails, the failure reason is isolated and immediately identifiable, rather than having 4 simultaneous failure logs mixed together.
+
+### Q3: Why does DevHub NOT automatically rollback (kill) previously started services when a sequential startup sequence fails?
+**Answer**:
+In local development environments, automatic rollback is dangerous and destructive. A developer might already be running long-lived local Docker containers, background cache proxies, or databases. If Service 3 fails because of an invalid environment variable or port collision, killing Services 1 and 2 forces the developer to endure another full build/boot cycle. By leaving working services running, the developer fixes the root cause on Service 3 and re-triggers startup; DevHub's idempotent startup check skips already-running services and completes the remaining sequence.
+
+### Q4: How is a Project's runtime state computed, and why is it not stored in SQLite?
+**Answer**:
+A Project's runtime state is ephemeral and derived dynamically using an 8-tier precedence machine evaluating live child process telemetry from the OS kernel alongside active in-flight operation locks. If project state were written to SQLite, external process crashes or terminal exits would cause the database to hold stale, conflicting state. Deriving health dynamically guarantees zero cache invalidation bugs.
+
+### Q5: What happens when a Project containing WSL services is stopped?
+**Answer**:
+Win32 `TerminateProcess` operates strictly on Windows NT kernel process handles. Calling it on Linux PIDs inside WSL is invalid and unsafe. When stopping a project with WSL members, DevHub safely terminates all Windows processes, records WSL members in `unsupported_profiles`, and derives the project state as `Partial` with an explicit diagnostic explanation to the developer.
+
+### Q6: How does DevHub prevent race conditions and duplicate subprocess launches during project operations?
+**Answer**:
+`ProjectOrchestrator` maintains an in-memory thread-safe `Arc<Mutex<HashMap<String, ProjectOperation>>>`. When an operation begins, an entry is locked. Any duplicate concurrent IPC call for the same project UUID is rejected immediately with `ProjectErrorCode::OperationAlreadyInProgress`. The lock is released in a `finally`/RAII pattern upon completion or failure.
+
+### Q7: What is the computational time complexity of deriving project views?
+**Answer**:
+For $N$ projects and $M$ total profile views:
+1. Building a lookup map of `profileId -> ServerProfileView` takes $O(M)$ time.
+2. Deriving views iterates through $N$ projects, querying the map in $O(1)$ time for each member profile.
+Total time complexity is $O(N + M)$. For a typical workstation with $<20$ projects and $<100$ profiles, this calculation executes in **under 0.5 milliseconds**.
+
+---
+
+## 103. Milestone 9: Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/models/project.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/project.rs) | Rust Domain Models | `Project`, `ProjectView`, `ProjectProfileView`, `ProjectOperationResult`, `ProjectError` | Domain Modeling, Serde `camelCase` Contracts | `project::`, `commands::project` | `serde` |
+| [`src-tauri/src/db/migration.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/db/migration.rs) | Database Schema | Versioned Migration 2: `projects` and `project_profiles` tables | Relational DDL, Foreign Keys, `ON DELETE CASCADE` | `db::initialize_database` | `rusqlite` |
+| [`src-tauri/src/db/repository.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/db/repository.rs) | Data Access Layer | `ProjectRepository` trait & SQLite CRUD implementation with gapless re-indexing | Repository Pattern, Gapless Re-indexing, Atomic Moves | `project::service`, `project::orchestrator` | `rusqlite` |
+| [`src-tauri/src/project/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/project/service.rs) | Domain Service | Project validation, relational CRUD, 8-tier status precedence machine | Input Validation, Status Precedence, View Assembly | `commands::project`, `orchestrator` | `ProjectRepository` |
+| [`src-tauri/src/project/orchestrator.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/project/orchestrator.rs) | Orchestration Engine | Sequential fail-fast startup, multi-environment stop, restart, in-flight locks | Sequential Orchestration, Fail-Fast, Concurrency Guards | `commands::project` | `ServerStartService`, `ProcessControlService` |
+| [`src-tauri/src/commands/project.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/project.rs) | Presentation / IPC | Tauri command controllers for project management and orchestration | Thin Controller Pattern, Tauri IPC | Tauri Core Dispatcher | `ProjectService`, `ProjectOrchestrator` |
+| [`src/types/project.ts`](file:///d:/ak/project/devhub/DevHub/src/types/project.ts) | Frontend Types | TypeScript interfaces for `Project`, `ProjectView`, `ProjectOperationResult` | Cross-Language Type Safety | UI Components, `commands.ts` | - |
+| [`src/lib/commands.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/commands.ts) | Frontend API Gateway | `projectApi` client wrapper over Tauri `invoke()` calls | API Facade Pattern | `Projects.tsx`, Modals | `@tauri-apps/api/core` |
+| [`src/components/projects/ProjectCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectCard.tsx) | Presentation View | Project summary card with service chips and unit controls | Presentational Component | `Projects.tsx` | - |
+| [`src/components/projects/ProjectDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectDetailsModal.tsx) | Presentation View | Detailed inspection modal with execution reordering and unit actions | Modal Dialog, Reordering Controls | `Projects.tsx` | - |
+| [`src/components/projects/ProjectFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectFormModal.tsx) | Presentation View | Create and edit project name/description form modal | Form State Management, Validation | `Projects.tsx` | - |
+| [`src/components/projects/AddProfileModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/AddProfileModal.tsx) | Presentation View | Modal for adding/moving server profiles to projects | Ownership Detection, Search Filter | `Projects.tsx` | - |
+| [`src/components/projects/DeleteProjectModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/DeleteProjectModal.tsx) | Presentation View | Safety confirmation dialog for project deletion | Safety Guardrails | `Projects.tsx` | - |
+| [`src/components/projects/RemoveProfileModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/RemoveProfileModal.tsx) | Presentation View | Safety confirmation dialog for profile removal | Safety Guardrails | `Projects.tsx` | - |
+| [`src/components/projects/ProjectOperationProgressModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectOperationProgressModal.tsx) | Presentation View | Step-by-step progress and breakdown modal for project operations | Progress Observability | `Projects.tsx` | - |
+| [`src/pages/Projects.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Projects.tsx) | Page Container | Main Projects management page with summary metrics, filters, and modals | Container Pattern, Polling Lifecycle | `App.tsx` | UI Components, `lib/` |
+| [`src/pages/Projects.test.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Projects.test.tsx) | Testing | Unit and component tests for project management and orchestration | Component Testing, Mock Verification | Vitest Runner | `Projects.tsx` |
 
 
 

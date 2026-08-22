@@ -15,6 +15,13 @@ import type {
   StartProfileResult,
   Environment,
   DuplicateProfileResult,
+  Project,
+  ProjectView,
+  CreateProjectRequest,
+  UpdateProjectRequest,
+  AddProfileToProjectRequest,
+  ReorderProjectProfilesRequest,
+  ProjectOperationResult,
 } from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
@@ -104,6 +111,59 @@ export async function findDuplicateServerProfiles(
   return { hasDuplicates: duplicates.length > 0, duplicates };
 }
 
+// Project API commands
+export async function getProjects(): Promise<Project[]> {
+  return invoke<Project[]>('get_projects');
+}
+
+export async function getProject(id: string): Promise<Project | null> {
+  return invoke<Project | null>('get_project', { id });
+}
+
+export async function createProject(request: CreateProjectRequest): Promise<Project> {
+  return invoke<Project>('create_project', { request });
+}
+
+export async function updateProject(request: UpdateProjectRequest): Promise<Project> {
+  return invoke<Project>('update_project', { request });
+}
+
+export async function deleteProject(id: string): Promise<boolean> {
+  return invoke<boolean>('delete_project', { id });
+}
+
+export async function addProfileToProject(request: AddProfileToProjectRequest): Promise<void> {
+  return invoke<void>('add_profile_to_project', { request });
+}
+
+export async function removeProfileFromProject(projectId: string, profileId: string): Promise<boolean> {
+  return invoke<boolean>('remove_profile_from_project', { projectId, profileId });
+}
+
+export async function reorderProjectProfiles(request: ReorderProjectProfilesRequest): Promise<void> {
+  return invoke<void>('reorder_project_profiles', { request });
+}
+
+export async function getProjectForProfile(profileId: string): Promise<Project | null> {
+  return invoke<Project | null>('get_project_for_profile', { profileId });
+}
+
+export async function getProjectViews(): Promise<ProjectView[]> {
+  return invoke<ProjectView[]>('get_project_views');
+}
+
+export async function startProject(id: string): Promise<ProjectOperationResult> {
+  return invoke<ProjectOperationResult>('start_project', { id });
+}
+
+export async function stopProject(id: string): Promise<ProjectOperationResult> {
+  return invoke<ProjectOperationResult>('stop_project', { id });
+}
+
+export async function restartProject(id: string): Promise<ProjectOperationResult> {
+  return invoke<ProjectOperationResult>('restart_project', { id });
+}
+
 export const processApi = {
   getProcesses,
 };
@@ -145,6 +205,23 @@ export const profileApi = {
   restartProfile: restartServerProfile,
   findDuplicates: findDuplicateServerProfiles,
 };
+
+export const projectApi = {
+  getProjects,
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  addProfileToProject,
+  removeProfileFromProject,
+  reorderProjectProfiles,
+  getProjectForProfile,
+  getProjectViews,
+  startProject,
+  stopProject,
+  restartProject,
+};
+
 
 
 

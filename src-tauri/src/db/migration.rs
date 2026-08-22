@@ -35,6 +35,35 @@ pub const MIGRATIONS: &[Migration] = &[
                 ON server_profiles(environment_type, distribution);
         "#,
     },
+    Migration {
+        version: 2,
+        name: "002_create_projects",
+        sql: r#"
+            CREATE TABLE IF NOT EXISTS projects (
+                id TEXT PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_projects_name 
+                ON projects(name COLLATE NOCASE);
+
+            CREATE TABLE IF NOT EXISTS project_profiles (
+                project_id TEXT NOT NULL,
+                profile_id TEXT NOT NULL UNIQUE,
+                order_index INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (project_id, profile_id),
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (profile_id) REFERENCES server_profiles(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_project_profiles_project_order 
+                ON project_profiles(project_id, order_index);
+        "#,
+    },
 ];
 
 /// Migration engine responsible for creating the migration tracking table
@@ -119,8 +148,8 @@ mod tests {
         let result = MigrationRunner::run_migrations(&mut conn);
         assert!(result.is_ok(), "Migration runner should succeed on fresh db");
 
-        // Verify table exists by checking columns
-        let table_exists: bool = conn
+        // Verify tables exist by checking columns
+        let profiles_table_exists: bool = conn
             .query_row(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='server_profiles'",
                 [],
@@ -128,12 +157,27 @@ mod tests {
             )
             .map(|c| c > 0)
             .expect("Should query table existence");
-        assert!(table_exists);
+        assert!(profiles_table_exists);
 
-        let count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM server_profiles", [], |r| r.get(0))
-            .expect("Should query server_profiles count");
-        assert_eq!(count, 0);
+        let projects_table_exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='projects'",
+                [],
+                |r| r.get::<_, i64>(0),
+            )
+            .map(|c| c > 0)
+            .expect("Should query projects table existence");
+        assert!(projects_table_exists);
+
+        let project_profiles_table_exists: bool = conn
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='project_profiles'",
+                [],
+                |r| r.get::<_, i64>(0),
+            )
+            .map(|c| c > 0)
+            .expect("Should query project_profiles table existence");
+        assert!(project_profiles_table_exists);
 
         // Verify migration tracking
         let applied: Vec<i64> = conn
@@ -143,7 +187,7 @@ mod tests {
             .unwrap()
             .map(|r| r.unwrap())
             .collect();
-        assert_eq!(applied, vec![1]);
+        assert_eq!(applied, vec![1, 2]);
     }
 
     #[test]
@@ -156,7 +200,54 @@ mod tests {
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM schema_migrations", [], |r| r.get(0))
             .expect("Should query schema_migrations");
-        assert_eq!(count, 1);
+        assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn test_migration_upgrades_existing_database_with_profiles() {
+        let mut conn = Connection::open_in_memory().expect("Failed to open in-memory db");
+
+        // Manually apply migration 1 only
+        conn.execute_batch(
+            r#"
+            CREATE TABLE schema_migrations (
+                version INTEGER PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                applied_at TEXT NOT NULL
+            );
+            "#,
+        ).unwrap();
+        {
+            let tx = conn.transaction().unwrap();
+            MigrationRunner::apply_migration(&tx, &MIGRATIONS[0]).unwrap();
+            tx.commit().unwrap();
+        }
+
+        // Insert a profile in migration 1 schema
+        conn.execute(
+            r#"
+            INSERT INTO server_profiles (
+                id, name, description, environment_type, distribution,
+                working_directory, command, expected_port, expected_host,
+                enabled, created_at, updated_at
+            ) VALUES ('prof-1', 'Existing Profile', 'Desc', 'windows', NULL, 'C:\app', 'npm start', 3000, '127.0.0.1', 1, '2026-08-22T00:00:00Z', '2026-08-22T00:00:00Z')
+            "#,
+            [],
+        ).unwrap();
+
+        // Run full migrations (should apply migration 2 without touching existing profile)
+        let result = MigrationRunner::run_migrations(&mut conn);
+        assert!(result.is_ok());
+
+        let profile_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM server_profiles WHERE id = 'prof-1'", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(profile_count, 1);
+
+        let projects_count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM projects", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(projects_count, 0);
     }
 }
 

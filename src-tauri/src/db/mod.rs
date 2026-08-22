@@ -2,7 +2,7 @@ pub mod migration;
 pub mod repository;
 
 pub use migration::MigrationRunner;
-pub use repository::{ServerProfileRepository, SqliteServerProfileRepository};
+pub use repository::{ProjectRepository, ServerProfileRepository, SqliteServerProfileRepository};
 
 use rusqlite::Connection;
 use std::fs;
