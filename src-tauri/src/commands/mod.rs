@@ -1,3 +1,4 @@
+pub mod adoption;
 pub mod control;
 pub mod identity;
 pub mod ports;

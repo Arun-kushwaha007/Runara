@@ -63,7 +63,8 @@ pub fn run() {
             commands::profiles::delete_server_profile,
             commands::profiles::get_server_profiles_with_status,
             commands::profiles::start_server_profile,
-            commands::profiles::restart_server_profile
+            commands::profiles::restart_server_profile,
+            commands::adoption::find_duplicate_server_profiles
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

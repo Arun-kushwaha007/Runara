@@ -13,6 +13,8 @@ import type {
   CreateProfileRequest,
   UpdateProfileRequest,
   StartProfileResult,
+  Environment,
+  DuplicateProfileResult,
 } from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
@@ -83,6 +85,25 @@ export async function restartServerProfile(id: string): Promise<StartProfileResu
   return invoke<StartProfileResult>('restart_server_profile', { id });
 }
 
+/**
+ * Finds saved profiles that would be potential duplicates of the proposed adoption.
+ * Advisory only — does not prevent profile creation.
+ */
+export async function findDuplicateServerProfiles(
+  environment: Environment,
+  workingDirectory: string,
+  command: string,
+  expectedPort?: number | null
+): Promise<DuplicateProfileResult> {
+  const duplicates = await invoke<ServerProfile[]>('find_duplicate_server_profiles', {
+    environment,
+    workingDirectory,
+    command,
+    expectedPort: expectedPort ?? null,
+  });
+  return { hasDuplicates: duplicates.length > 0, duplicates };
+}
+
 export const processApi = {
   getProcesses,
 };
@@ -122,6 +143,7 @@ export const profileApi = {
   getProfilesWithStatus: getServerProfilesWithStatus,
   startProfile: startServerProfile,
   restartProfile: restartServerProfile,
+  findDuplicates: findDuplicateServerProfiles,
 };
 
 
