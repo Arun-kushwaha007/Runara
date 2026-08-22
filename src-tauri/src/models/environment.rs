@@ -103,7 +103,7 @@ pub struct EnvironmentInfo {
 }
 
 /// Complete multi-environment discovery snapshot combining Windows and WSL telemetry.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnifiedSnapshot {
     pub processes: Vec<ProcessInfo>,
@@ -112,6 +112,7 @@ pub struct UnifiedSnapshot {
     pub distributions: Vec<WslDistribution>,
     pub diagnostics: Vec<DiscoveryDiagnostic>,
 }
+
 
 #[cfg(test)]
 mod tests {

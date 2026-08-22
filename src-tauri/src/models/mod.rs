@@ -3,6 +3,7 @@ pub mod environment;
 pub mod identity;
 pub mod port;
 pub mod process;
+pub mod profile;
 
 pub use control::{
     ControlResult, ControlStatus, ProcessControlError, ProcessControlErrorCode, ProcessTarget,
@@ -17,3 +18,8 @@ pub use identity::{
 };
 pub use port::PortInfo;
 pub use process::{ProcessInfo, ProcessStatus};
+pub use profile::{
+    CreateProfileRequest, ProfileRuntimeStatus, ServerProfile, ServerProfileView, StartError,
+    StartErrorCode, StartProfileResult, UpdateProfileRequest,
+};
+
