@@ -130,7 +130,21 @@ DevHub provides a unified control layer over local development processes without
   - Full suite of 87 Rust unit/integration tests and 32 React frontend tests passing (100% test pass rate)
   - Chapters 74–84 added to `LEARNING.md` covering persistence architecture, WAL mode, process launching, startup polling, and systems interview preparation
 
-*Next Milestone: Milestone 8 — Project Workspaces & Multi-Server Groups*
+- **Milestone 8: Adopt Unknown Servers (Complete)**
+  - Dynamic, deterministic multi-signal profile association (`annotateWithProfiles`) matching live discovered servers with saved `ServerProfile` records
+  - Zero-guessing ambiguity handling treating multiple candidate matches as unmanaged
+  - Transient `AdoptionDraft` synthesis prefilling server name, working directory, startup command heuristics, and expected ports
+  - Read-only environment enforcement preventing cross-environment configuration mismatch during adoption
+  - Multi-port selection UI enabling explicit primary port selection for multi-socket server processes
+  - Native Rust duplicate detection command (`find_duplicate_server_profiles`) providing advisory warnings before creation
+  - Dedicated `AdoptionFormModal` dialog with process context summary, detected command disclaimer, and full input validation
+  - Visual Managed (`✓ Managed`) and Unmanaged (`Unmanaged`) badges across Dashboard and Active Servers list cards
+  - Direct "Adopt" button triggers in server card headers and server inspection details modal
+  - Server Toolbar filtering by profile management state ("All Servers", "Managed Only", "Unmanaged Only")
+  - Full suite of 97 Rust unit/integration tests and 88 React frontend tests passing (100% test pass rate)
+  - Chapters 85–96 added to `LEARNING.md` covering resource adoption theory, transient draft models, and systems interview preparation
+
+*Next Milestone: Milestone 9 — Project Workspaces & Multi-Server Groups*
 
 ---
 
@@ -171,11 +185,11 @@ npm run dev
 ### Running Tests
 
 ```bash
-# Run Rust backend unit and integration tests (87 tests)
+# Run Rust backend unit and integration tests (97 tests)
 cd src-tauri
 cargo test
 
-# Run frontend unit and component tests (32 tests)
+# Run frontend unit and component tests (88 tests)
 npm test -- --run
 
 # Run frontend build and typecheck
@@ -197,6 +211,7 @@ npm run tauri build
 DevHub/
 ├── src/                      # React Frontend
 │   ├── components/           # Reusable UI components
+│   │   ├── adoption/         # AdoptionFormModal, DuplicateProfileWarning
 │   │   ├── common/           # CopyButton, EmptyState, LoadingState, ErrorState
 │   │   ├── dashboard/        # ServerCard, ServerList, ServerToolbar, SummaryCards, 
 │   │   │                     # ServerDetailsModal, StopConfirmationModal, ProcessTree
@@ -207,21 +222,21 @@ DevHub/
 │   │   ├── Header.tsx        # Top header
 │   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── types/                # TypeScript interfaces (control.ts, environment.ts, identity.ts, port.ts, process.ts, profile.ts, server.ts)
-│   ├── lib/                  # Commands API client (commands.ts) & View Pipeline (serverUtils.ts)
+│   ├── types/                # TypeScript interfaces (adoption.ts, control.ts, environment.ts, identity.ts, port.ts, process.ts, profile.ts, server.ts)
+│   ├── lib/                  # Commands API (commands.ts), Pipeline (serverUtils.ts), Adoption (adoptionDraft.ts, profileAssociation.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (control.rs, identity.rs, ports.rs, processes.rs, profiles.rs, system.rs, wsl.rs)
+│   │   ├── commands/         # Tauri IPC commands (adoption.rs, control.rs, identity.rs, ports.rs, processes.rs, profiles.rs, system.rs, wsl.rs)
 │   │   ├── db/               # Persistence layer (mod.rs, migration.rs, repository.rs)
 │   │   ├── discovery/        # Discovery services (port.rs, process.rs, unified.rs)
 │   │   ├── identity/         # Process identity engine (detector.rs, service.rs, tree.rs)
 │   │   ├── launcher/         # Cross-environment process launchers (mod.rs, windows.rs, wsl.rs)
 │   │   ├── models/           # Domain models (control.rs, environment.rs, identity.rs, port.rs, process.rs, profile.rs)
 │   │   ├── process/          # Process control domain service (service.rs)
-│   │   ├── profile/          # Profile domain services (mod.rs, service.rs, start_service.rs)
+│   │   ├── profile/          # Profile domain services (mod.rs, adoption.rs, service.rs, start_service.rs)
 │   │   ├── windows/          # Windows Win32 FFI (networking.rs, process.rs)
 │   │   ├── wsl/              # WSL infrastructure (distro.rs, executor.rs, port.rs, process.rs)
 │   │   ├── lib.rs            # Tauri application entry point & handler registry

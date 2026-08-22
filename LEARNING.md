@@ -4132,6 +4132,362 @@ If a command contains a syntax error, missing environment variable, or invalid p
 | [`src/pages/Servers.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.tsx) | Page Container | Server profile management page with tabs, search, filtering, and modals | Container Pattern, Orchestration | `App.tsx` | Profile & Server Components, APIs |
 | [`src/pages/Servers.test.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.test.tsx) | Testing | Vitest test suite for Servers & Profiles UI and actions | Component Integration Testing | Vitest Test Runner | `Servers.tsx` |
 
+---
+
+# MILESTONE 8: ADOPT UNKNOWN SERVERS
+
+---
+
+## 85. Managed vs. Unmanaged Resources & The Resource Adoption Concept
+
+### 85.1 The Dichotomy of Managed vs. Unmanaged Server Processes
+In systems engineering and infrastructure management (such as Terraform, Kubernetes, or AWS CloudFormation), resources operating in a runtime environment exist in one of two fundamental classifications:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    OPERATING SYSTEM PROCESS SPACE                               │
+│                                                                                                 │
+│  ┌──────────────────────────────────────────────┐  ┌──────────────────────────────────────────┐ │
+│  │             MANAGED SERVERS                  │  │            UNMANAGED SERVERS             │ │
+│  │                                              │  │                                          │ │
+│  │  • Has matching saved ServerProfile in DB   │  │  • No matching ServerProfile in DB       │ │
+│  │  • Known startup command & parameters        │  │  • Discovered alive via OS kernel scan   │ │
+│  │  • Reproducible lifecycle (Start / Restart)  │  │  • Ephemeral; started outside DevHub     │ │
+│  │  • User-customized metadata & descriptions   │  │  • Can be Adopted into managed state     │ │
+│  └──────────────────────────────────────────────┘  └──────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Managed Servers**:
+   - A server process that corresponds 1-to-1 with an authoritative, persistent `ServerProfile` stored in SQLite.
+   - DevHub knows the authoritative startup command, working directory, target execution environment, and expected port.
+   - DevHub can deterministically restart, stop, or re-launch this server across workstation reboots.
+2. **Unmanaged Servers**:
+   - A server process discovered dynamically via OS-level process and port inspection (e.g. started externally from VS Code, PowerShell, bash, or an IDE terminal).
+   - DevHub detects its active telemetry (PID, listening sockets, memory, process ancestry, working directory), but holds **no configuration record** in SQLite.
+   - It cannot be started or restarted once terminated because DevHub does not yet possess authoritative startup metadata.
+
+### 85.2 What is Resource Adoption?
+**Resource Adoption** is the architectural pattern of transitioning an unmanaged, externally created runtime resource into a managed entity by synthesizing its observed operational state into a structured, persistent configuration model.
+
+Instead of requiring developers to manually re-type project directories, port numbers, commands, and WSL distribution details into a blank profile form, DevHub's adoption engine observes the live process, extracts its attributes, generates a prefilled transient **AdoptionDraft**, and presents it for developer validation.
+
+---
+
+## 86. Observed vs. Inferred Configuration & The Transient AdoptionDraft
+
+### 86.1 Observed Telemetry vs. Inferred Configuration
+When adopting a running process, the system must clearly differentiate between **observed factual data** and **inferred heuristic data**:
+
+| Property | Classification | Source | Mutability during Adoption |
+| :--- | :--- | :--- | :--- |
+| **Execution Environment** | Observed Fact | OS Kernel (`toolhelp32` / `wsl.exe`) | **Read-Only** (WSL Fedora cannot become Windows Host) |
+| **WSL Distribution** | Observed Fact | WSL Dispatcher (`wsl.exe -l -v`) | **Read-Only** (Preserves exact Linux distribution) |
+| **Bound TCP Ports** | Observed Fact | TCP Table (`GetExtendedTcpTable` / `ss`) | **User-Selected** (Select primary port if multi-port) |
+| **Working Directory** | Observed Fact | PEB / `/proc/<pid>/cwd` | **User-Editable** (Default from process CWD) |
+| **Process Command Line** | Observed Fact | PEB / `/proc/<pid>/cmdline` | **Observed Baseline** (e.g. `node.exe dist/index.js`) |
+| **Profile Display Name** | Inferred Heuristic | Folder Basename / Runtime | **User-Editable** (Generated candidate name) |
+| **Startup Command** | Inferred Heuristic | Command Line Heuristics | **User-Editable** (Stripped shell wrappers, user overrides) |
+
+### 86.2 The Transient `AdoptionDraft` Model
+The `AdoptionDraft` is an in-memory, transient view model. It is **never** persisted to SQLite. It lives exclusively in frontend React state during the lifetime of the adoption dialog.
+
+```typescript
+export interface AdoptionDraft {
+  sourceServerId: string;
+  name: string;
+  environment: Environment; // Read-only
+  workingDirectory: string;
+  command: string;
+  expectedPort?: number | null;
+  expectedHost?: string;
+  allDetectedPorts: number[];
+  description?: string;
+}
+```
+
+---
+
+## 87. Deterministic Multi-Signal Profile Association Algorithm
+
+### 87.1 Why Single-Signal Matching Fails
+Naive association implementations often attempt to link processes to profiles using a single attribute (such as Port Number or PID). In real-world software engineering, single-signal matching causes severe bugs:
+
+1. **PID Matching Fails**: Operating system Process IDs are ephemeral and recycled upon termination. Storing a PID in a profile breaks across restarts.
+2. **Port-Only Matching Fails**: Port 3000 may be used by Project A today and Project B tomorrow. If DevHub only matched on Port 3000, Project B would be incorrectly labeled as Project A.
+3. **Directory-Only Matching Fails**: A microservice repository may host multiple servers from the same root (e.g. Frontend on 3000, Mock API on 3001, Storybook on 6006).
+
+### 87.2 The Multi-Signal Matching Hierarchy
+DevHub implements a **conservative, deterministic multi-signal matching algorithm**:
+
+```
+                       ┌────────────────────────┐
+                       │    DashboardServer     │
+                       └───────────┬────────────┘
+                                   │
+                                   ▼
+                       ┌────────────────────────┐
+                       │   Candidate Profile    │
+                       └───────────┬────────────┘
+                                   │
+          ┌────────────────────────┴────────────────────────┐
+          │                                                 │
+          ▼ [Signal 1: Environment Type & WSL Distro]       │
+     Environment Match?                                     │
+     (Windows == Windows, WSL Fedora == WSL Fedora)         │
+          │                                                 │
+     YES  ▼                                            NO   ▼
+ ┌───────────────────────────────────────┐             ┌──────────────┐
+ │ [Signal 2: Expected TCP Port]         │             │  NO MATCH    │
+ │ Profile has expectedPort?             │             └──────────────┘
+ └────┬─────────────────────────────┬────┘
+      │ YES                         │ NO
+      ▼                             ▼
+ Port in server.allPorts?      [Signal 3: Working Directory]
+      │                        Normalized CWD matches?
+  YES ▼          NO ▼               │
+┌──────────────┐ ┌──────────────┐   │ YES         NO ▼
+│ Signal 3:    │ │  NO MATCH    │   ▼           ┌──────────────┐
+│ Directory    │ └──────────────┘ ┌───────────┐ │  NO MATCH    │
+│ Match?       │                  │ WEAK      │ └──────────────┘
+└─────┬────────┘                  │ MATCH     │
+  YES │ NO ▼                      └───────────┘
+      │ ┌──────────────┐
+      ▼ │  NO MATCH    │
+┌──────────────┐ └──────────────┘
+│ STRONG MATCH │
+└──────────────┘
+```
+
+### 87.3 Path Normalization Rules
+To ensure cross-platform compatibility across Windows and POSIX path conventions, all filesystem paths are normalized before comparison:
+1. Replace all backslashes (`\`) with forward slashes (`/`).
+2. Strip trailing slashes (`/`).
+3. Convert ASCII casing to lowercase (`to_lowercase()`).
+
+---
+
+## 88. Ambiguity Handling & Conservative Conflict Resolution
+
+### 88.1 The Ambiguity Scenario
+If a developer creates two profiles with identical working directories and no specific port constraints, both profiles match a discovered server with equal confidence.
+
+### 88.2 The Conservative Resolution Rule
+DevHub enforces a strict **Zero-Guessing Principle**:
+- If exactly **1 profile** matches $\rightarrow$ Server is **Managed** (`profileId = match.id`).
+- If **0 profiles** match $\rightarrow$ Server is **Unmanaged** (`managed = false`).
+- If **$\ge 2$ profiles** match $\rightarrow$ Marked as **Ambiguous** and kept as **Unmanaged** (`managed = false, ambiguous = true, candidateIds = [...]`).
+
+DevHub never silently assigns an ambiguous server to an arbitrary profile.
+
+---
+
+## 89. Human-in-the-Loop Configuration Pattern & Process Command vs. Startup Command
+
+### 89.1 The Process Command $\neq$ Startup Command Distinction
+Operating systems execute processes with expanded binaries and resolved flags, whereas developers start projects using high-level package manager scripts:
+
+```
+Developer Startup Command:
+  npm run dev
+
+Operating System Process Command (Discovered in PEB):
+  "C:\Program Files\nodejs\node.exe" "C:\Projects\frontend\node_modules\vite\bin\vite.js" --port 3000
+```
+
+### 89.2 Command Extraction Heuristics
+DevHub applies layered heuristics during adoption draft creation:
+1. **Shell Wrapper Stripping**: Strips `cmd.exe /c`, `powershell.exe -Command`, and `bash -lc` wrappers to extract the inner developer command.
+2. **Dev Tool Preservation**: Identifies known developer invocations (`npm run`, `pnpm dev`, `cargo run`, `python -m uvicorn`, `go run`, `dotnet run`) and preserves them verbatim.
+3. **Transparent Disclaimer**: When raw process binaries are detected (e.g. `node.exe server.js`), DevHub presents the command in the adoption form alongside an explicit UI banner: *"Detected process command — edit to original dev command if needed"*.
+
+---
+
+## 90. Dynamic Profile Association vs. Database Persistence
+
+### 90.1 Why Managed State is Never Persisted in SQLite
+A common anti-pattern is storing an `is_managed: boolean` or `profile_id` column in a discovered processes table. DevHub strictly avoids this for three architectural reasons:
+
+1. **Temporal Decay**: An unmanaged server process can exit at any moment. If managed status were written to disk, stale associations would persist across app sessions.
+2. **Dynamic Profiling**: When a developer creates, edits, or deletes a profile, live servers must immediately transition between Managed and Unmanaged states **without requiring database writes or cache invalidation cycles**.
+3. **Pure Function Derivation**: By computing `annotateWithProfiles(servers, profiles)` at render time, the UI guarantees $O(P \times S)$ deterministic synchronization with zero possibility of stale database drift.
+
+---
+
+## 91. Advisory Duplicate Profile Detection
+
+### 91.1 Conservative Duplicate Criteria
+Before saving an adopted profile, DevHub executes a fast Rust command (`find_duplicate_server_profiles`) that checks for collisions across four dimensions:
+1. **Environment Type & WSL Distro**: Exact match.
+2. **Working Directory**: Normalized path match.
+3. **Startup Command**: Trimmed string match.
+4. **Expected Port**: Port equality (`None == None`, `Some(3000) == Some(3000)`).
+
+### 91.2 Non-Blocking Developer Autonomy
+DevHub displays an advisory warning modal with three options:
+1. **Use Existing Profile**: Dismisses adoption and navigates to the existing profile.
+2. **Create Anyway**: Bypasses the advisory warning and creates a secondary profile.
+3. **Cancel**: Closes the dialog without creating duplicate records.
+
+---
+
+## 92. Milestone 8 Updated High-Level Design (HLD) & Architecture Topology
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           REACT 19 FRONTEND LAYER                                       │
+│                                                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                              DASHBOARD & SERVERS PAGE CONTAINERS                                  │  │
+│  │                                                                                                   │  │
+│  │   ┌────────────────────┐   ┌───────────────────────────┐   ┌───────────────────────────────────┐  │  │
+│  │   │    SUMMARY CARDS   │   │       SERVER TOOLBAR      │   │            SERVER LIST            │  │  │
+│  │   │  (Active Counts,   │   │  (Managed Filter, Search, │   │   (Managed / Unmanaged Badges,    │  │  │
+│  │   │   Profiles, Ports) │   │   Distro / Env Filters)   │   │    Inspect / Adopt / Stop Actions)│  │  │
+│  │   └────────────────────┘   └───────────────────────────┘   └─────────────────┬─────────────────┘  │  │
+│  │                                                                              │                    │  │
+│  │   ┌──────────────────────────────────────────────────────────────────────────┼─────────────────┐  │  │
+│  │   │ ADOPTION SYSTEM                                                          │                 │  │  │
+│  │   │  • buildAdoptionDraft(server) ──────────────────────────────────────────►▼                 │  │  │
+│  │   │  • AdoptionFormModal (Prefilled, Read-Only Env, Port Selector, Command)                    │  │  │
+│  │   │  • DuplicateProfileWarning (Advisory Warning Banner)                                       │  │  │
+│  │   │  • annotateWithProfiles() (Deterministic Runtime Multi-Signal Join)                       │  │  │
+│  │   └────────────────────────────────────────────────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────┘  │
+│                                                     │                                                   │
+│                                                     ▼ (profileApi.createProfile / findDuplicates)       │
+├─────────────────────────────────────────────────────┼───────────────────────────────────────────────────┤
+│                                        TAURI 2 RUST CORE BACKEND                                        │
+│                                                                                                         │
+│  ┌──────────────────────────────────────────────────▼────────────────────────────────────────────────┐  │
+│  │                                        TAURI COMMAND LAYER                                        │  │
+│  │       create_server_profile()  •  find_duplicate_server_profiles()  •  get_unified_snapshot()         │  │
+│  └──────────────────────┬───────────────────────────────────────────────────┬────────────────────────┘  │
+│                         │                                                   │                           │
+│                         ▼                                                   ▼                           │
+│  ┌──────────────────────────────────────────────┐   ┌────────────────────────────────────────────────┐  │
+│  │          SERVER PROFILE SUBSYSTEM            │   │          UNIFIED DISCOVERY SUBSYSTEM           │  │
+│  │                                              │   │                                                │  │
+│  │  • ServerProfileService (Validation, UUID)   │   │  • UnifiedDiscoveryService (Windows + WSL)     │  │
+│  │  • find_duplicate_profiles() (Adoption Match)│   │  • WindowsProcessDiscovery (Toolhelp32)        │  │
+│  │  • SQLite Repository (devhub.db / WAL Mode)  │   │  • WindowsPortDiscovery (iphlpapi.dll)         │  │
+│  └──────────────────────────────────────────────┘   └────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 93. Low-Level Design (LLD) & Component Specifications
+
+### 93.1 New & Modified File Topology
+1. **[`src/types/adoption.ts`](file:///d:/ak/project/devhub/DevHub/src/types/adoption.ts)**: Defines `AdoptionDraft`, `ProfileAssociation`, and `DuplicateProfileResult`.
+2. **[`src/lib/profileAssociation.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/profileAssociation.ts)**: Pure TypeScript implementation of `isProfileMatch`, `associateServerWithProfile`, and `normalizePath`.
+3. **[`src/lib/adoptionDraft.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/adoptionDraft.ts)**: Implements `buildAdoptionDraft`, `inferStartCommand`, `inferExpectedPort`, and `inferExpectedHost`.
+4. **[`src/components/adoption/AdoptionFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/AdoptionFormModal.tsx)**: Modal dialog for server adoption with detected process context, read-only environment, command disclaimer, port selector, and validation.
+5. **[`src/components/adoption/DuplicateProfileWarning.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/DuplicateProfileWarning.tsx)**: Reusable advisory duplicate warning component.
+6. **[`src-tauri/src/profile/adoption.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/profile/adoption.rs)**: Rust duplicate detection algorithm and unit test suite.
+7. **[`src-tauri/src/commands/adoption.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/adoption.rs)**: Tauri IPC command wrapper `find_duplicate_server_profiles`.
+
+---
+
+## 94. End-to-End Code Trace Walkthrough: Unknown Server Discovery $\rightarrow$ Adoption $\rightarrow$ Managed Profile
+
+```
+[1. External Server Launch]
+Developer runs `npm run dev` in `C:\Projects\my-app` (PID: 18240, Port: 5173)
+
+[2. Discovery Snapshot]
+UnifiedDiscoveryService enumerates PID 18240 and Port 5173
+deriveDashboardServers() constructs DashboardServer { id: "win-18240-5173", managed: false }
+
+[3. Profile Association]
+annotateWithProfiles(servers, profiles) executes associateServerWithProfile()
+0 profiles match -> server.managed = false
+
+[4. Dashboard UI Presentation]
+ServerCard renders "Unmanaged" amber badge + "Adopt" button
+
+[5. Adoption Modal Trigger]
+User clicks "Adopt" -> buildAdoptionDraft(server) builds prefilled AdoptionDraft:
+  • name: "my-app" (from CWD)
+  • environment: Windows (Read-Only)
+  • workingDirectory: "C:\Projects\my-app"
+  • command: "npm run dev" (inferred)
+  • expectedPort: 5173
+AdoptionFormModal opens with prefilled fields
+
+[6. Duplicate Pre-flight Check]
+profileApi.findDuplicates() invokes find_duplicate_server_profiles -> returns []
+
+[7. User Submission & Persistence]
+User clicks "Save Profile" -> profileApi.createProfile(req)
+ServerProfileService validates inputs, generates UUID v4, inserts into SQLite devhub.db
+
+[8. Reactive Recalculation]
+refreshAll() re-fetches profiles and discovery snapshot
+annotateWithProfiles() runs -> matches newly saved profile!
+server.managed = true, server.profileId = "<uuid>"
+ServerCard dynamically updates to "Managed" emerald badge; Adopt button disappears!
+```
+
+---
+
+## 95. Milestone 8: Deep Systems Engineering & HLD/LLD Interview Q&A
+
+### Q1: Why is profile association computed dynamically on the frontend rather than stored in the database?
+**Answer**:
+Operating system processes are ephemeral. If managed status were written to a database table, any external process exit or restart would cause the database to hold stale, invalid state. By executing `annotateWithProfiles` dynamically during each refresh cycle, DevHub guarantees 100% real-time synchronization between persistent configuration (SQLite) and runtime reality (OS kernel) without cache invalidation complexity.
+
+### Q2: Why is the execution environment (Windows Host / WSL Distro) strictly read-only during adoption?
+**Answer**:
+A running process is physically bound to the kernel namespace in which it was spawned. A process running inside WSL Ubuntu cannot execute Windows Win32 API calls or access Windows host paths identically. Allowing a developer to change a WSL process's environment to Windows Host during adoption would create an invalid profile whose startup command and paths would fail immediately upon execution.
+
+### Q3: How does DevHub handle adoption when a process binds to multiple TCP ports?
+**Answer**:
+When multiple ports are detected (e.g. `[3000, 3001, 8080]`), `inferExpectedPort` leaves `expectedPort` as `undefined`. The adoption UI renders explicit port selection chips for each detected port plus an option for *"None / Match by dir"*. This forces deliberate developer choice rather than making an arbitrary, silent guess of the first port.
+
+### Q4: What happens if the source process disappears while the adoption modal is open?
+**Answer**:
+The configuration is still valid. DevHub does not block profile creation if the source process terminates during form editing. The profile is saved normally to SQLite, and upon the next refresh cycle, it simply appears in the `Stopped` state ready for one-click startup.
+
+### Q5: How does DevHub prevent duplicate profile creation during adoption?
+**Answer**:
+DevHub executes an advisory check via `find_duplicate_server_profiles` matching on Environment, Normalized Working Directory, Command, and Expected Port. If a match is found, an advisory banner offers the developer options to *Use Existing Profile* or *Create Anyway*.
+
+### Q6: Why does DevHub never automatically start an adopted profile?
+**Answer**:
+The process being adopted is **already running**. Spawning a second instance would immediately trigger a port conflict error (`PORT_ALREADY_IN_USE`) or process collision.
+
+### Q7: Why are backslashes and casing normalized before path comparison?
+**Answer**:
+Windows paths are case-insensitive and can use either forward or backward slashes (e.g. `C:\Projects\App` vs `c:/projects/app/`). Normalizing all paths to lowercase forward slashes with stripped trailing slashes ensures deterministic equality matching across all OS APIs.
+
+### Q8: What is the computational complexity of the profile association algorithm?
+**Answer**:
+For $S$ active servers and $P$ saved profiles, matching runs in $O(S \times P)$ time. Since developer workstations typically run $<50$ servers and $<100$ profiles, $S \times P < 5000$ string comparisons, executing in under 2 milliseconds on modern CPUs.
+
+---
+
+## 96. Milestone 8: Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src/types/adoption.ts`](file:///d:/ak/project/devhub/DevHub/src/types/adoption.ts) | Frontend Types | `AdoptionDraft`, `ProfileAssociation`, `DuplicateProfileResult` | Transient View Models, Contract Modeling | UI Components, `lib/` | - |
+| [`src/lib/profileAssociation.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/profileAssociation.ts) | Domain Logic | Deterministic multi-signal profile association algorithm & path normalization | Multi-Signal Matching, Path Normalization | `serverUtils.ts` | `src/types` |
+| [`src/lib/profileAssociation.test.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/profileAssociation.test.ts) | Testing | Unit tests for profile association & edge cases | Deterministic Test Fixtures | Vitest Runner | `profileAssociation.ts` |
+| [`src/lib/adoptionDraft.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/adoptionDraft.ts) | Domain Logic | AdoptionDraft synthesis, command heuristics, port extraction | Heuristic Extraction, Draft Synthesis | `AdoptionFormModal.tsx` | `serverUtils.ts` |
+| [`src/lib/adoptionDraft.test.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/adoptionDraft.test.ts) | Testing | Unit tests for command line heuristics and port inference | Boundary Value Testing | Vitest Runner | `adoptionDraft.ts` |
+| [`src/components/adoption/AdoptionFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/AdoptionFormModal.tsx) | Presentation View | Server adoption modal with detected context and input validation | Form State Management, Human-in-the-Loop | `Dashboard.tsx`, `Servers.tsx` | `DuplicateProfileWarning.tsx` |
+| [`src/components/adoption/DuplicateProfileWarning.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/DuplicateProfileWarning.tsx) | Presentation View | Advisory warning banner for duplicate profile detection | Advisory Conflict Notification | `AdoptionFormModal.tsx` | - |
+| [`src-tauri/src/profile/adoption.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/profile/adoption.rs) | Rust Domain | Duplicate profile detection logic & test suite | Domain Modeling, Normalization | `commands::adoption` | `models::profile` |
+| [`src-tauri/src/commands/adoption.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/adoption.rs) | Presentation / IPC | Tauri command `find_duplicate_server_profiles` | Thin Controller Pattern, Tauri IPC | Tauri Core Dispatcher | `profile::adoption` |
+| [`src/components/dashboard/ServerCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerCard.tsx) | Presentation View | Server card with Managed/Unmanaged badges & Adopt button | Presentational Component | `ServerList.tsx` | `CopyButton.tsx` |
+| [`src/components/dashboard/ServerDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerDetailsModal.tsx) | Presentation View | Server inspect modal with Adopt action trigger | Modal Detail View | `Dashboard.tsx`, `Servers.tsx` | `ProcessTree.tsx` |
+| [`src/components/dashboard/ServerToolbar.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerToolbar.tsx) | Presentation View | Toolbar with Managed / Unmanaged status filter | Toolbar Filter Controls | `Dashboard.tsx`, `Servers.tsx` | - |
+| [`src/pages/Dashboard.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Dashboard.tsx) | Page Container | Main dashboard with profile annotation and adoption wiring | Container Pattern, Reactive Derivation | `App.tsx` | UI Components, `lib/` |
+| [`src/pages/Servers.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.tsx) | Page Container | Servers management page with active tab adoption wiring | Container Pattern | `App.tsx` | UI Components, `lib/` |
+
+
 
 
 

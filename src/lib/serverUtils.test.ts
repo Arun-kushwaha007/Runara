@@ -5,10 +5,11 @@ import {
   deriveDashboardServers,
   filterServers,
   sortServers,
+  annotateWithProfiles,
   getProcessEnvironmentKey,
   formatEnvironmentLabel,
 } from './serverUtils';
-import type { PortInfo, ProcessIdentity, DashboardServer } from '../types';
+import type { PortInfo, ProcessIdentity, DashboardServer, ServerProfile } from '../types';
 
 describe('serverUtils', () => {
   describe('environment helpers', () => {
@@ -310,6 +311,7 @@ describe('serverUtils', () => {
         environment: { type: 'windows' },
         environmentLabel: 'Windows',
         wslDistro: null,
+        managed: false,
       },
       {
         id: 'wsl-Ubuntu-200-8000',
@@ -331,6 +333,7 @@ describe('serverUtils', () => {
         environment: { type: 'wsl', distro: 'Ubuntu' },
         environmentLabel: 'WSL / Ubuntu',
         wslDistro: 'Ubuntu',
+        managed: false,
       },
       {
         id: 'wsl-Fedora-300-9000',
@@ -352,6 +355,7 @@ describe('serverUtils', () => {
         environment: { type: 'wsl', distro: 'Fedora' },
         environmentLabel: 'WSL / Fedora',
         wslDistro: 'Fedora',
+        managed: false,
       },
     ];
 
@@ -387,6 +391,41 @@ describe('serverUtils', () => {
       expect(filterServers(servers, '', { environment: 'all', runtime: 'Rust', status: 'all' })).toHaveLength(0);
     });
 
+    it('filters by managedStatus filter (all, managed, unmanaged)', () => {
+      const mixedServers: DashboardServer[] = [
+        { ...servers[0], managed: true, profileId: 'prof-1' },
+        { ...servers[1], managed: false },
+        { ...servers[2], managed: false },
+      ];
+
+      expect(
+        filterServers(mixedServers, '', {
+          environment: 'all',
+          runtime: 'all',
+          status: 'all',
+          managedStatus: 'all',
+        })
+      ).toHaveLength(3);
+
+      expect(
+        filterServers(mixedServers, '', {
+          environment: 'all',
+          runtime: 'all',
+          status: 'all',
+          managedStatus: 'managed',
+        })
+      ).toHaveLength(1);
+
+      expect(
+        filterServers(mixedServers, '', {
+          environment: 'all',
+          runtime: 'all',
+          status: 'all',
+          managedStatus: 'unmanaged',
+        })
+      ).toHaveLength(2);
+    });
+
     it('sorts correctly by port, pid, name, runtime, and environment in both directions', () => {
       const sortedByPortDesc = sortServers(servers, 'port', 'desc');
       expect(sortedByPortDesc[0].primaryPort).toBe(9000);
@@ -401,6 +440,86 @@ describe('serverUtils', () => {
       expect(sortedByEnvAsc[0].environmentLabel).toBe('Windows');
       expect(sortedByEnvAsc[1].environmentLabel).toBe('WSL / Fedora');
       expect(sortedByEnvAsc[2].environmentLabel).toBe('WSL / Ubuntu');
+    });
+  });
+
+  describe('annotateWithProfiles', () => {
+    it('annotates servers with matching profile ids and sets managed true', () => {
+      const rawServers: DashboardServer[] = [
+        {
+          id: 'win-100-3000',
+          name: 'Alpha Frontend',
+          status: 'running',
+          primaryPort: 3000,
+          allPorts: [3000],
+          address: '127.0.0.1',
+          protocol: 'tcp',
+          pid: 100,
+          processName: 'node.exe',
+          executablePath: null,
+          commandLine: 'npm run dev',
+          workingDirectory: 'C:\\Projects\\alpha',
+          runtime: 'Node.js',
+          packageManager: 'npm',
+          parent: null,
+          processTree: [],
+          environment: { type: 'windows' },
+          environmentLabel: 'Windows',
+          wslDistro: null,
+          managed: false,
+        },
+      ];
+
+      const profiles: ServerProfile[] = [
+        {
+          id: 'prof-alpha',
+          name: 'Alpha Profile',
+          description: null,
+          environment: { type: 'windows' },
+          workingDirectory: 'C:\\Projects\\alpha',
+          command: 'npm run dev',
+          expectedPort: 3000,
+          expectedHost: null,
+          enabled: true,
+          createdAt: '2026-08-22T20:00:00Z',
+          updatedAt: '2026-08-22T20:00:00Z',
+        },
+      ];
+
+      const annotated = annotateWithProfiles(rawServers, profiles);
+      expect(annotated[0].managed).toBe(true);
+      expect(annotated[0].profileId).toBe('prof-alpha');
+    });
+
+    it('leaves unmanaged servers with managed false and undefined profileId', () => {
+      const rawServers: DashboardServer[] = [
+        {
+          id: 'win-100-3000',
+          name: 'Alpha Frontend',
+          status: 'running',
+          primaryPort: 3000,
+          allPorts: [3000],
+          address: '127.0.0.1',
+          protocol: 'tcp',
+          pid: 100,
+          processName: 'node.exe',
+          executablePath: null,
+          commandLine: 'npm run dev',
+          workingDirectory: 'C:\\Projects\\alpha',
+          runtime: 'Node.js',
+          packageManager: 'npm',
+          parent: null,
+          processTree: [],
+          environment: { type: 'windows' },
+          environmentLabel: 'Windows',
+          wslDistro: null,
+          managed: false,
+        },
+      ];
+
+      const annotated = annotateWithProfiles(rawServers, []);
+      expect(annotated[0].managed).toBe(false);
+      expect(annotated[0].profileId).toBeUndefined();
     });
   });
 });

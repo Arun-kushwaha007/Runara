@@ -294,7 +294,9 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                     <polyline points="4 17 10 11 4 5" />
                     <line x1="12" y1="19" x2="20" y2="19" />
                   </svg>
-                  <span className="font-medium">WSL / {draft.environment.distro}</span>
+                  <span className="font-medium">
+                    WSL / {draft.environment.type === 'wsl' ? draft.environment.distro : 'Linux'}
+                  </span>
                   <span className="text-[10px] text-zinc-500 uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800/80">
                     Linux Distro
                   </span>

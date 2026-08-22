@@ -1,5 +1,4 @@
 import type { DashboardServer } from '../types/server';
-import type { ServerProfile } from '../types/profile';
 import type { AdoptionDraft } from '../types/adoption';
 import { deriveServerName } from './serverUtils';
 
