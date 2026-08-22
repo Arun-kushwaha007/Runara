@@ -2,9 +2,9 @@
 
 ```
 Project:           DevHub — Local Development Control Center
-Current Milestone: Milestone 9 (Project Groups & Sequential Orchestration)
+Current Milestone: Milestone 12 (Native Folder Picker and Server Creation UX)
 Document Purpose:  Comprehensive Engineering Learning and Code-Reading Guide for CS Students & HLD/LLD Interview Preparation
-Document Version:  9.0.0
+Document Version:  12.0.0
 ```
 
 ---
@@ -344,6 +344,48 @@ Document Version:  9.0.0
      - [101.3 Complete Trace: Atomic Profile Movement Between Projects](#1013-complete-trace-atomic-profile-movement-between-projects)
 102. [Milestone 9: Deep Systems Engineering & HLD/LLD Interview Q&A](#102-milestone-9-deep-systems-engineering--hldlld-interview-qa)
 103. [Milestone 9: Complete Repository File Inventory & Architecture Matrix](#103-milestone-9-complete-repository-file-inventory--architecture-matrix)
+130. [Milestone 12: Native Desktop Integration & Native File Dialogs](#130-milestone-12-native-desktop-integration--native-file-dialogs)
+     - [130.1 Why Native Desktop Applications Require OS-Level File Dialogs](#1301-why-native-desktop-applications-require-os-level-file-dialogs)
+     - [130.2 Browser Sandboxing vs. Desktop Native Capabilities](#1302-browser-sandboxing-vs-desktop-native-capabilities)
+     - [130.3 Tauri 2 Dialog Architecture: IPC Security & Plugin Subsystems](#1303-tauri-2-dialog-architecture-ipc-security--plugin-subsystems)
+     - [130.4 The End-to-End Dialog Invocation Flow](#1304-the-end-to-end-dialog-invocation-flow)
+131. [Milestone 12: Environment-Aware Filesystem Abstractions](#131-milestone-12-environment-aware-filesystem-abstractions)
+     - [131.1 Operating System Filesystems: NTFS vs. POSIX/ext4](#1311-operating-system-filesystems-ntfs-vs-posixext4)
+     - [131.2 Path Semantics: Drive Letters, Backslashes, Root Slashes, and Case Sensitivity](#1312-path-semantics-drive-letters-backslashes-root-slashes-and-case-sensitivity)
+     - [131.3 The "Universal Path" Anti-Pattern: Why Silent Translation Fails](#1313-the-universal-path-anti-pattern-why-silent-translation-fails)
+     - [131.4 The Environment × FilesystemProvider × Path Architecture Pattern](#1314-the-environment--filesystemprovider--path-architecture-pattern)
+132. [Milestone 12: WSL Guest Filesystem Architecture & Real-Time Directory Navigation](#132-milestone-12-wsl-guest-filesystem-architecture--real-time-directory-navigation)
+     - [132.1 Inside the WSL 2 Virtual Machine: VHDX, 9P / Plan 9 Protocols, and Guest File Trees](#1321-inside-the-wsl-2-virtual-machine-vhdx-9p--plan-9-protocols-and-guest-file-trees)
+     - [132.2 Single-Directory Navigation Mechanics: Bounded O(N) Traversal vs. Recursive Scanning](#1322-single-directory-navigation-mechanics-bounded-on-traversal-vs-recursive-scanning)
+     - [132.3 Parent Path Computation, Root (/) Handling, and Alphanumeric Directory Sorting](#1323-parent-path-computation-root--handling-and-alphanumeric-directory-sorting)
+     - [132.4 Handling Stopped Distributions: Liveness Verification Before VM Waking](#1324-handling-stopped-distributions-liveness-verification-before-vm-waking)
+133. [Milestone 12: Path Validation Strategies & Keystroke Optimization](#133-milestone-12-path-validation-strategies--keystroke-optimization)
+     - [133.1 The 4 Dimensions of Path Validation](#1331-the-4-dimensions-of-path-validation)
+     - [133.2 The Performance Problem: Why Keystroke-Level IPC Is an Anti-Pattern](#1332-the-performance-problem-why-keystroke-level-ipc-is-an-anti-pattern)
+     - [133.3 Three-Stage Validation Lifecycle: Local Formatting, On-Blur OS Verification, Pre-Save Invariant Gate](#1333-three-stage-validation-lifecycle-local-formatting-on-blur-os-verification-pre-save-invariant-gate)
+134. [Milestone 12: IPC Security & Shell Injection Defense](#134-milestone-12-ipc-security--shell-injection-defense)
+     - [134.1 Why Filesystem Paths Are Dangerous in Shell Contexts](#1341-why-filesystem-paths-are-dangerous-in-shell-contexts)
+     - [134.2 Direct Argument Vector Passing (execve) vs. Shell Interpolation](#1342-direct-argument-vector-passing-execve-vs-shell-interpolation)
+     - [134.3 Sanitizing Directory Parsing and Bounding Guest Command Execution Timeouts](#1343-sanitizing-directory-parsing-and-bounding-guest-command-execution-timeouts)
+     - [134.4 Privilege and Error Sanitization: Preventing Kernel Stack Leaks](#1344-privilege-and-error-sanitization-preventing-kernel-stack-leaks)
+135. [Milestone 12: Reusable Form Components & UI State Management](#135-milestone-12-reusable-form-components--ui-state-management)
+     - [135.1 Component Composition: WorkingDirectoryField, WslDirectoryBrowserModal, TruncatedPath](#1351-component-composition-workingdirectoryfield-wsldirectorybrowsermodal-truncatedpath)
+     - [135.2 Controlled React Inputs with Progressive Disclosure](#1352-controlled-react-inputs-with-progressive-disclosure)
+     - [135.3 Desktop Accessibility: Focus Trapping, Modal ARIA Roles, and Keyboard Acceleration](#1353-desktop-accessibility-focus-trapping-modal-aria-roles-and-keyboard-acceleration)
+     - [135.4 Design Token Compliance: Dual-Theme Architecture (#101010 Dark / #F9F9F9 Light)](#1354-design-token-compliance-dual-theme-architecture-101010-dark--f9f9f9-light)
+136. [Milestone 12: Updated High-Level Design (HLD)](#136-milestone-12-updated-high-level-design-hld)
+     - [136.1 Full System Architecture Diagram (Filesystem Layer Integration)](#1361-full-system-architecture-diagram-filesystem-layer-integration)
+     - [136.2 Decoupling Filesystem Browsing from Server Process Execution](#1362-decoupling-filesystem-browsing-from-server-process-execution)
+137. [Milestone 12: Updated Low-Level Design (LLD)](#137-milestone-12-updated-low-level-design-lld)
+     - [137.1 FilesystemService and Domain Providers](#1371-filesystemservice-and-domain-providers)
+     - [137.2 DirectoryEntry, DirectoryListing, and PathValidationResult Domain Models](#1372-directoryentry-directorylisting-and-pathvalidationresult-domain-models)
+     - [137.3 React Component Hierarchies and Hook State Machines](#1373-react-component-hierarchies-and-hook-state-machines)
+138. [Milestone 12: End-to-End Execution Code Traces](#138-milestone-12-end-to-end-execution-code-traces)
+     - [138.1 Trace 1: Windows Native Folder Selection in Server Profile Creation](#1381-trace-1-windows-native-folder-selection-in-server-profile-creation)
+     - [138.2 Trace 2: WSL Directory Browser Navigation and Folder Selection](#1382-trace-2-wsl-directory-browser-navigation-and-folder-selection)
+     - [138.3 Trace 3: Adoption Flow Working Directory Correction and Validation](#1383-trace-3-adoption-flow-working-directory-correction-and-validation)
+139. [Milestone 12: Deep Systems Engineering & HLD/LLD Interview Q&A](#139-milestone-12-deep-systems-engineering--hldlld-interview-qa)
+140. [Milestone 12: Complete Repository File Inventory & Architecture Matrix](#140-milestone-12-complete-repository-file-inventory--architecture-matrix)
 
 ---
 
@@ -6010,6 +6052,441 @@ The Windows kernel and WSL runtime pass the argument vector directly to the Linu
 | [`src/pages/Projects.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Projects.tsx) | Page Container | Multi-service project groups with start, stop, and restart across Windows and WSL | Project Orchestration | `App.tsx` | Project Components |
 | [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | 129-chapter cumulative engineering master guide | Systems Engineering Master Blueprint | Developers, Interviewees | - |
 | [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | Project overview detailing Windows and WSL process discovery, start, stop, and restart | Project Showcase | GitHub, Community | - |
+
+---
+
+## 130. Milestone 12: Native Desktop Integration & Native File Dialogs
+
+### 130.1 Why Native Desktop Applications Require OS-Level File Dialogs
+A defining hallmark of a professional native desktop developer tool is seamless integration with operating system conventions. When developers configure workspaces, repositories, or services, manual entry of deep filesystem paths (such as `C:\Users\developer\workspace\company\frontend\apps\web-client` or `/home/developer/projects/infrastructure/api`) introduces high friction and human error. Typographical mistakes, trailing backslash anomalies, and capitalization discrepancies lead to invalid configurations and broken server startups.
+
+Native operating system folder choosers (such as the Win32 `IFileDialog` / `SHBrowseForFolder` on Windows) provide:
+1. **Visual Filesystem Exploration**: Quick visual navigation through pinned shortcuts, recent directories, mounted network drives, and breadcrumbs.
+2. **OS Access Token & Permission Context**: The file chooser executes under the user's interactive desktop security context, automatically resolving virtualized paths and symbolic links.
+3. **Zero Cognitive Friction**: Matches the mental model developers expect from tools like VS Code, IntelliJ, Visual Studio, and Windows Explorer.
+
+### 130.2 Browser Sandboxing vs. Desktop Native Capabilities
+Standard web applications running in modern browsers operate inside strict security sandboxes. An HTML `<input type="file" webkitdirectory />`:
+- Does not expose the absolute filesystem path on disk (browsers sanitize it to a relative pseudo-path like `web-client/` or empty string to prevent client fingerprinting and filesystem reconnaissance).
+- Only streams file byte blobs into browser memory rather than configuring a persistent server execution working directory.
+
+In contrast, DevHub is a native desktop application powered by Tauri 2. The React 19 WebView communicates with the native Rust Core via a secure, asynchronous IPC bridge. The Core process has full Win32 OS privileges, allowing it to invoke the platform file dialog, receive the absolute canonical path selected by the user, and pass that path as structured data to the frontend state and SQLite storage layer.
+
+### 130.3 Tauri 2 Dialog Architecture: IPC Security & Plugin Subsystems
+In Tauri 2, dialog functionality is decoupled into the official `tauri-plugin-dialog` subsystem. This architecture adheres strictly to the principle of least privilege:
+- **Capability Scoping (`capabilities/default.json`)**: WebView windows cannot execute arbitrary filesystem modifications or unprompted dialogs unless granted explicit capabilities (e.g. `"dialog:default"`).
+- **Thread Safety & Non-Blocking WebViews**: Win32 modal dialogs run in synchronous blocking event loops inside the OS windowing system. In Tauri, calling dialog APIs asynchronously from commands prevents locking the Chromium/WebView2 renderer message pump.
+
+### 130.4 The End-to-End Dialog Invocation Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant UI as WorkingDirectoryField (React)
+    participant API as commands.ts (Frontend Gateway)
+    participant IPC as Tauri 2 IPC Channel
+    participant CMD as commands/filesystem.rs
+    participant RFD as Win32 IFileDialog (Kernel/OS)
+
+    Dev->>UI: Clicks "[ Browse... ]"
+    UI->>API: filesystemApi.pickFolder(currentPath)
+    API->>IPC: invoke('pick_folder', { defaultPath })
+    IPC->>CMD: pick_folder(app, default_path)
+    CMD->>RFD: app.dialog().file().blocking_pick_folder()
+    Note over RFD: User selects "C:\Projects\frontend" in Win32 Picker
+    RFD-->>CMD: Some("C:\Projects\frontend")
+    CMD-->>IPC: Ok(Some("C:\Projects\frontend"))
+    IPC-->>API: "C:\Projects\frontend"
+    API-->>UI: Sets form value & triggers validation
+    UI->>Dev: Displays selected path & enables Clear action
+```
+
+---
+
+## 131. Milestone 12: Environment-Aware Filesystem Abstractions
+
+### 131.1 Operating System Filesystems: NTFS vs. POSIX/ext4
+Modern cross-platform developer tools on Windows operate across two radically different filesystem paradigms:
+1. **Windows NTFS (Host Filesystem)**:
+   - Volume-rooted hierarchical trees (`C:\`, `D:\`, `Z:\`).
+   - Slashes: Backslash (`\`) directory separator.
+   - Case-Insensitivity: `C:\Projects\Api` and `c:\projects\api` identify the identical inode/MFT entry.
+   - Drive letter mappings and Win32 UNC namespace (`\\?\`, `\\.\`).
+2. **Linux ext4 / POSIX (WSL 2 Guest Filesystem)**:
+   - Single root hierarchy (`/`).
+   - Slashes: Forward slash (`/`) directory separator.
+   - Case-Sensitivity: `/home/dev/api` and `/home/dev/API` are completely distinct directories.
+   - Special virtual filesystems (`/proc`, `/sys`, `/dev`, `/run`).
+
+### 131.2 Path Semantics: Drive Letters, Backslashes, Root Slashes, and Case Sensitivity
+Treating paths as generic strings leads to catastrophic failure when launching servers. A command configured to run in `/home/developer/api` inside WSL will fail immediately if passed to a Windows `cmd.exe` launcher. Conversely, passing `C:\Projects\api` to a Linux `bash` launcher inside a WSL distribution fails unless translated through 9P `/mnt/c/` bridges (which introduce severe I/O performance penalties and permission masking).
+
+### 131.3 The "Universal Path" Anti-Pattern: Why Silent Translation Fails
+A common engineering anti-pattern in developer tools is attempting to "magically" convert paths between environments without developer intent:
+- Translating `/home/developer/projects` to `\\wsl$\Fedora\home\developer\projects` (UNC host path) allows Windows Explorer to see files, but if stored as a profile working directory for WSL, Linux runtimes (`node`, `python`) cannot natively execute against `\\wsl$\` syntax.
+- Translating `C:\Projects\app` to `/mnt/c/Projects/app` silently causes severe filesystem latency (WSL 2 accesses Windows drives via 9P virtualization protocols, which are up to $10\times$ slower than native ext4 virtual disks).
+- Paths in different environments may point to completely different codebases or repositories.
+
+**DevHub Invariant**: DevHub strictly maintains paths in their native, environment-specific representation:
+- Windows profiles store native Windows paths: `C:\Projects\frontend`.
+- WSL profiles store native Linux guest paths: `/home/developer/projects/api`.
+
+### 131.4 The $Environment \times FilesystemProvider \times Path$ Architecture Pattern
+To model this cleanly, DevHub implements a pluggable provider pattern:
+
+$$\text{Filesystem Operation} = f(\text{Target Environment}, \text{Filesystem Provider}, \text{Structured Path})$$
+
+```
+                  ┌──────────────────────────────┐
+                  │      FilesystemService       │
+                  └──────────────┬───────────────┘
+                                 │
+                 ┌───────────────┴───────────────┐
+                 ▼                               ▼
+  ┌─────────────────────────────┐ ┌─────────────────────────────┐
+  │  WindowsFilesystemProvider  │ │    WslFilesystemProvider    │
+  ├─────────────────────────────┤ ├─────────────────────────────┤
+  │ • std::path::Path           │ │ • WslExecutor (wsl.exe)     │
+  │ • std::fs::read_dir         │ │ • WslDistroDiscovery        │
+  │ • Win32 IFileDialog         │ │ • Structured Vector Exec    │
+  │ • Local ACL Checks          │ │ • Bounded POSIX find / test │
+  └─────────────────────────────┘ └─────────────────────────────┘
+```
+
+---
+
+## 132. Milestone 12: WSL Guest Filesystem Architecture & Real-Time Directory Navigation
+
+### 132.1 Inside the WSL 2 Virtual Machine: VHDX, 9P / Plan 9 Protocols, and Guest File Trees
+In WSL 2, every Linux distribution runs inside a lightweight Hyper-V utility virtual machine backed by its own virtual hard disk file (`ext4.vhdx`). The native Windows desktop cannot directly execute Win32 filesystem enumeration APIs against the guest ext4 inode structure without crossing virtualization boundaries.
+
+To browse real Linux guest folders, DevHub communicates with the target running distribution via `wsl.exe -d <distro> -- <command>`.
+
+### 132.2 Single-Directory Navigation Mechanics: Bounded $O(N)$ Traversal vs. Recursive Scanning
+A critical engineering pitfall when browsing filesystems is recursive scanning (`find /` or `dir /s`). Large developer workspaces (e.g. `node_modules/`, Python virtual environments `.venv/`, Cargo build directories `target/`) contain hundreds of thousands of nested folders. Recursive scanning freezes the UI, exhausts memory, and spams the host CPU.
+
+**DevHub Mechanics**:
+1. DevHub executes **single-level directory enumeration**:
+   ```bash
+   find <target_dir> -maxdepth 1 -mindepth 1 ( -type d -o -xtype d )
+   ```
+2. Complexity is strictly bounded: $O(N)$ where $N$ is the number of immediate child subdirectories in the currently viewed folder.
+3. Memory consumption is limited to a small array of `DirectoryEntry` objects for the active folder.
+4. Transitions between folders occur on-demand when the developer clicks or double-clicks.
+
+### 132.3 Parent Path Computation, Root (`/`) Handling, and Alphanumeric Directory Sorting
+The navigation engine handles standard POSIX path transitions deterministically:
+- If current path is `/`, `parent_path` is `None`, and the `[ Parent ]` UI button is disabled.
+- If current path is `/home/developer`, `parent_path` is `/home`.
+- If current path is `/home`, `parent_path` is `/`.
+- Trailing slashes are stripped to ensure canonical path equality (`/home/developer/` normalizes to `/home/developer`).
+- Output directory entries are sorted alphabetically (case-insensitive) for intuitive developer scanning, with hidden directories (e.g. `.config`, `.git`, `.cache`) clearly indicated with subtle tags.
+
+### 132.4 Handling Stopped Distributions: Liveness Verification Before VM Waking
+If a developer chooses a WSL distribution that is in the `Stopped` state (such as `Ubuntu`), executing arbitrary commands against it causes `wsl.exe` to boot the entire Linux virtual machine kernel in the background. This introduces unexpected system resource spikes, battery drain, and multi-second startup latency.
+
+DevHub enforces a strict pre-flight distribution check via `WslDistroDiscovery::enumerate()`. If the target distribution is `Stopped`:
+- DevHub immediately halts execution and returns a descriptive error:
+  `"WSL distribution 'Ubuntu' is stopped. Start the distribution before browsing."`
+- The directory browser displays an informative stopped state and guides the developer without silently waking the guest VM.
+
+---
+
+## 133. Milestone 12: Path Validation Strategies & Keystroke Optimization
+
+### 133.1 The 4 Dimensions of Path Validation
+A valid server working directory must satisfy four strict invariants:
+1. **Existence**: The path must exist on disk in the target filesystem.
+2. **Directory Type**: The path must be a directory (`inode S_ISDIR` or Win32 `FILE_ATTRIBUTE_DIRECTORY`), not a regular file, pipe, or socket.
+3. **Accessibility**: The current execution identity must have permission to read/traverse the directory.
+4. **Environment Match**: A Windows path must not be assigned to a WSL server profile, and a Linux POSIX path must not be assigned to a Windows profile.
+
+### 133.2 The Performance Problem: Why Keystroke-Level IPC Is an Anti-Pattern
+Invoking OS filesystem checks on every keystroke (`onChange`) in React creates severe performance degradation:
+- Windows: Spams Win32 file metadata queries across disk subsystem buffers.
+- WSL: Spams `wsl.exe` process spawns (spawning 10 `wsl.exe` processes per second while typing causes severe CPU spikes and sluggish typing latency).
+
+### 133.3 Three-Stage Validation Lifecycle: Local Formatting, On-Blur OS Verification, Pre-Save Invariant Gate
+DevHub implements a high-performance 3-stage validation model:
+1. **Stage 1 (On Keystroke - Instant $O(1)$)**: Fast local React state update and basic formatting check (clearing stale error banners). Zero IPC and zero subprocess spawns.
+2. **Stage 2 (On Blur / On Folder Select - $O(1)$ IPC)**: When the input field loses focus or a folder is selected via the native/WSL picker, DevHub dispatches `filesystemApi.validateDirectory(env, path)` to perform native OS verification.
+3. **Stage 3 (Pre-Save Gate - Strict Invariant)**: When the user submits the form, `ServerProfileService` or `ServerStartService` validates the working directory before persisting to SQLite or spawning processes.
+
+---
+
+## 134. Milestone 12: IPC Security & Shell Injection Defense
+
+### 134.1 Why Filesystem Paths Are Dangerous in Shell Contexts
+Working directories frequently contain spaces, unicode characters, and shell metacharacters:
+- Spaces: `C:\My Projects\Next App`
+- Special symbols: `C:\Projects\c++_tests\lib&service`
+- Malicious payloads: `/home/dev/repo; rm -rf /;` or `/home/dev/`$(whoami)``
+
+If paths are naively concatenated into shell strings:
+```rust
+// CRITICAL SECURITY FLAW - NEVER DO THIS:
+let bad_cmd = format!("wsl.exe -d {} -- cd {} && npm start", distro, working_dir);
+```
+An unescaped quote or semicolon in `working_dir` allows arbitrary command execution.
+
+### 134.2 Direct Argument Vector Passing (`execve`) vs. Shell Interpolation
+DevHub eliminates shell interpolation by passing argument vectors directly:
+```rust
+let mut cmd = Command::new("wsl.exe");
+cmd.args(["-d", distro, "--", "find", target_path, "-maxdepth", "1", "-mindepth", "1", "(", "-type", "d", "-o", "-xtype", "d", ")"]);
+```
+The Windows kernel and WSL subsystem pass the argument slice directly to the Linux guest `execve` syscall. Characters like `;`, `&`, `|`, and `$` are treated strictly as literal character bytes in the filename rather than shell control syntax.
+
+### 134.3 Sanitizing Directory Parsing and Bounding Guest Command Execution Timeouts
+- **Bounded Timeouts**: All guest directory listing operations are capped at 4000ms (`WSL_FS_TIMEOUT_MS`). If a network mount inside WSL hangs, DevHub terminates the command safely without freezing the desktop UI.
+- **Error Sanitization**: Guest `stderr` is parsed for known POSIX error strings (`Permission denied`, `No such file or directory`) and transformed into human-friendly messages, preventing kernel stack dumps from reaching the developer interface.
+
+---
+
+## 135. Milestone 12: Reusable Form Components & UI State Management
+
+### 135.1 Component Composition: `WorkingDirectoryField`, `WslDirectoryBrowserModal`, `TruncatedPath`
+To eliminate duplication across profile creation, profile editing, and adoption flows, DevHub encapsulates path management into cohesive, single-responsibility components:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        WorkingDirectoryField                           │
+│ ┌───────────────────────────────────────────────────────────┬────────┐ │
+│ │ Path Input (with visual middle truncation & copy button)  │ Clear  │ │
+│ └───────────────────────────────────────────────────────────┴────────┘ │
+│ [ Browse... / Browse WSL... ] (Environment-Aware Trigger Button)        │
+│ ┌────────────────────────────────────────────────────────────────────┐ │
+│ │ ⚠️ Inline Validation Error Banner (Live on-blur / pre-save)       │ │
+│ └────────────────────────────────────────────────────────────────────┘ │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (If WSL clicked)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                      WslDirectoryBrowserModal                          │
+│ ┌────────────────────────────────────────────────────────────────────┐ │
+│ │ Header: Distribution Badge (Fedora) + Path Breadcrumb              │ │
+│ ├────────────────────────────────────────────────────────────────────┤ │
+│ │ Navigation: [ ← Parent ] | Filter Search Input                     │ │
+│ ├────────────────────────────────────────────────────────────────────┤ │
+│ │ Scrollable Directory List (Keyboard-Navigable, Enter / DoubleClick)│ │
+│ ├────────────────────────────────────────────────────────────────────┤ │
+│ │ Footer: [ Cancel ] | [ Select Folder ]                             │ │
+│ └────────────────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 135.2 Controlled React Inputs with Progressive Disclosure
+`WorkingDirectoryField` implements standard React controlled input semantics (`value`, `onChange`). Developers can freely edit the path manually or click the Browse action. When a value is present, a `[ Clear ]` button and an inline `[ Copy ]` trigger dynamically appear via progressive disclosure.
+
+### 135.3 Desktop Accessibility: Focus Trapping, Modal ARIA Roles, and Keyboard Acceleration
+The directory browser and path field adhere to desktop accessibility standards:
+- **ARIA Dialog Compliance**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="wsl-browser-modal-title"`.
+- **Keyboard Shortcuts**:
+  - `Escape`: Instantly cancels and closes the browser modal.
+  - `ArrowUp` / `ArrowDown`: Navigates directory selection smoothly in the list.
+  - `Enter`: Enters highlighted directory or commits folder selection.
+  - `Backspace`: Navigates to parent folder when focus is not inside an input.
+
+### 135.4 Design Token Compliance: Dual-Theme Architecture (#101010 Dark / #F9F9F9 Light)
+All Milestone 12 components strictly utilize DevHub's theme tokens, preventing hardcoded color bugs:
+- Dark Mode: Surface `#101010` / `zinc-900`, text `zinc-100` / `#CCCCCC`, borders `zinc-700/80`.
+- Light Mode: Surface `#F9F9F9`, text `zinc-900` / `#101010`, borders `zinc-300`.
+
+---
+
+## 136. Milestone 12: Updated High-Level Design (HLD)
+
+### 136.1 Full System Architecture Diagram (Filesystem Layer Integration)
+
+```mermaid
+graph TD
+    subgraph UI Layer (React 19 + TypeScript)
+        PFM[ProfileFormModal.tsx] --> WDF[WorkingDirectoryField.tsx]
+        AFM[AdoptionFormModal.tsx] --> WDF
+        WDF -->|WSL Browse| WBM[WslDirectoryBrowserModal.tsx]
+        WDF --> TP[TruncatedPath.tsx]
+        WDF --> CB[CopyButton.tsx]
+        WDF --> FSA[filesystemApi in commands.ts]
+        WBM --> FSA
+    end
+
+    subgraph Tauri IPC Boundary
+        FSA -->|JSON-RPC IPC| TCC[Tauri Commands: commands/filesystem.rs]
+    end
+
+    subgraph Native Backend Layer (Rust)
+        TCC --> FS[FilesystemService]
+        FS --> WFP[WindowsFilesystemProvider]
+        FS --> WSLP[WslFilesystemProvider]
+        
+        WFP --> WinOS[std::path & Win32 IFileDialog Plugin]
+        WSLP --> WEX[WslExecutor & Distro Discovery]
+        WEX --> WSLKernel[wsl.exe Subsystem]
+    end
+
+    subgraph Storage & Launch Layer
+        PFM -->|Create/Update Profile| SPS[ServerProfileService]
+        SPS --> SQLite[(SQLite devhub.db)]
+        SPS --> SSS[ServerStartService]
+    end
+```
+
+### 136.2 Decoupling Filesystem Browsing from Server Process Execution
+A fundamental architectural strength of DevHub is the strict separation between **Filesystem Services** and **Process Execution Launchers**:
+- `FilesystemService` and its providers are solely responsible for inspecting paths, browsing folders, and performing validation.
+- `WindowsLauncher` and `WslLauncher` are solely responsible for process lifecycle, standard I/O redirection, and process group isolation.
+- This boundary ensures that browsing directories never triggers accidental process execution or side effects.
+
+---
+
+## 137. Milestone 12: Updated Low-Level Design (LLD)
+
+### 137.1 `FilesystemService` and Domain Providers
+- **`FilesystemService`**: Facade service managing `WindowsFilesystemProvider` and `WslFilesystemProvider`.
+- **`WindowsFilesystemProvider`**: Validates Windows paths via `std::path::Path` and `std::fs::read_dir`.
+- **`WslFilesystemProvider`**: Validates distribution liveness, resolves `$HOME`, executes `find -maxdepth 1` single-level directory listing, and parses output into `DirectoryListing`.
+
+### 137.2 `DirectoryEntry`, `DirectoryListing`, and `PathValidationResult` Domain Models
+```rust
+pub struct DirectoryEntry {
+    pub name: String,
+    pub path: String,
+    pub is_directory: bool,
+    pub is_hidden: bool,
+}
+
+pub struct DirectoryListing {
+    pub current_path: String,
+    pub parent_path: Option<String>,
+    pub entries: Vec<DirectoryEntry>,
+}
+
+pub struct PathValidationResult {
+    pub is_valid: bool,
+    pub error: Option<String>,
+    pub resolved_path: Option<String>,
+}
+```
+
+### 137.3 React Component Hierarchies and Hook State Machines
+- `WorkingDirectoryField`: Manages internal validation state, debounced blur checks, and modal dialog toggles.
+- `WslDirectoryBrowserModal`: Implements active index tracking, filtered entry memoization, parent path navigation, and keyboard event handlers.
+
+---
+
+## 138. Milestone 12: End-to-End Execution Code Traces
+
+### 138.1 Trace 1: Windows Native Folder Selection in Server Profile Creation
+```
+1. USER ACTION: Developer opens "Create Server" modal and clicks "[ Browse... ]" on Working Directory.
+2. REACT: WorkingDirectoryField dispatches `filesystemApi.pickFolder(currentValue)`.
+3. FRONTEND IPC: `invoke('pick_folder', { defaultPath: null })` is sent across the Tauri bridge.
+4. RUST COMMAND: `commands::filesystem::pick_folder` receives invocation.
+5. TAURI DIALOG: Invokes `app.dialog().file().blocking_pick_folder()`.
+6. WIN32 OS: Native Win32 File Chooser dialog renders over the desktop window.
+7. USER SELECTION: Developer chooses `C:\Projects\company-frontend` and clicks "Select Folder".
+8. RUST RETURN: `pick_folder` returns `Ok(Some("C:\\Projects\\company-frontend"))`.
+9. REACT STATE: `WorkingDirectoryField` invokes `onChange("C:\\Projects\\company-frontend")`.
+10. ON-BLUR VALIDATION: `filesystemApi.validateDirectory({ type: 'windows' }, "C:\\Projects\\company-frontend")` executes.
+11. RUST VERIFICATION: `WindowsFilesystemProvider` verifies path exists and is a directory; returns `isValid: true`.
+12. FORM READY: Profile form displays validated path with green/blue border and enabled Save button.
+```
+
+### 138.2 Trace 2: WSL Directory Browser Navigation and Folder Selection
+```
+1. USER ACTION: Developer selects "WSL" -> "Fedora", then clicks "[ Browse WSL... ]".
+2. REACT: `WslDirectoryBrowserModal` mounts with `isOpen=true`, `distro="Fedora"`.
+3. INITIAL DIRECTORY: Modal requests `filesystemApi.listWslDirectories("Fedora", undefined)`.
+4. RUST DISCOVERY: `WslFilesystemProvider::validate_distribution("Fedora")` verifies distribution is `Running`.
+5. DEFAULT HOME: `WslFilesystemProvider::get_default_directory("Fedora")` runs `printenv HOME`, receiving `/home/ArunKushwaha`.
+6. GUEST FIND: Executes `wsl.exe -d Fedora -- find /home/ArunKushwaha -maxdepth 1 -mindepth 1 ( -type d -o -xtype d )`.
+7. PARSE & SORT: Parses stdout, sorts alphabetically, identifies hidden folders, returns `DirectoryListing`.
+8. UI RENDER: Modal displays `/home/ArunKushwaha`, `[ Parent ]` enabled (pointing to `/home`), and directory items (`work`, `projects`, `.config`).
+9. NAVIGATION: Developer double-clicks `projects`. Modal calls `listWslDirectories("Fedora", "/home/ArunKushwaha/projects")`.
+10. SELECTION: Developer clicks "[ Select Folder ]".
+11. FORM COMMIT: Modal closes; `WorkingDirectoryField` sets `/home/ArunKushwaha/projects`; validation confirms path is valid.
+```
+
+### 138.3 Trace 3: Adoption Flow Working Directory Correction and Validation
+```
+1. DISCOVERY: DevHub discovers unmanaged PID 18240 (`node.exe`) listening on port 3000 in `C:\Projects\app\dist`.
+2. USER ACTION: Developer clicks "Adopt" on the server card.
+3. ADOPTION DRAFT: `AdoptionFormModal` mounts pre-populated with `workingDirectory: "C:\\Projects\\app\\dist"`.
+4. CORRECTION: Developer needs the root project directory instead of `dist`. Clicks "[ Browse... ]".
+5. WINDOWS DIALOG: Developer selects root directory `C:\Projects\app`.
+6. STATE UPDATE: Input updates to `C:\Projects\app`.
+7. DUPLICATE CHECK: `profileApi.findDuplicates` confirms no conflict.
+8. SAVE: Developer clicks "Save Profile". Server profile is created with exact corrected path.
+```
+
+---
+
+## 139. Milestone 12: Deep Systems Engineering & HLD/LLD Interview Q&A
+
+### Q1: Why should desktop applications use OS-native folder pickers instead of custom UI implementations on Windows?
+**Answer**:
+1. **Familiarity & Conventions**: Developers expect standard OS navigation paradigms (pinned quick-access folders, mapped network drives, breadcrumbs, search indexing).
+2. **Access Control & Shell Integration**: The native Win32 `IFileDialog` automatically handles special Windows shell namespaces, OneDrive virtualized files, and localized folder names (`C:\Users` vs localized display aliases).
+3. **Accessibility & DPI Scaling**: Native OS dialogs automatically inherit user accessibility settings, high-contrast themes, and per-monitor DPI scaling without bespoke styling maintenance.
+
+### Q2: How do you design an environment-aware filesystem abstraction that supports Windows, WSL, and future remote targets?
+**Answer**:
+By decoupling the environment representation from the filesystem implementation via the Strategy and Provider patterns:
+1. Define domain models (`DirectoryListing`, `DirectoryEntry`, `PathValidationResult`) that represent directory hierarchies independently of the underlying OS.
+2. Implement specific providers (`WindowsFilesystemProvider`, `WslFilesystemProvider`, and future `SshFilesystemProvider` / `NativeLinuxFilesystemProvider`).
+3. Maintain a coordinator service (`FilesystemService`) that dispatches calls based on the runtime `Environment` tag.
+4. Keep filesystem inspection strictly isolated from process execution engines.
+
+### Q3: Why is silent path translation between Windows and WSL considered an anti-pattern in developer tooling?
+**Answer**:
+1. **Performance Disparities**: Translating Windows paths to 9P mounts (`/mnt/c/...`) causes extreme file I/O latency ($10\times$ slower than native Linux ext4 VHDX).
+2. **Permission & Symlink Mismatches**: Windows NTFS permissions do not map 1:1 with POSIX `chmod`/`chown` modes, leading to subtle build failures in tools like Docker, Git, or Webpack.
+3. **Loss of Developer Intent**: A developer working in WSL expects their service to reside in the Linux guest filesystem. Silently re-routing paths obscures the execution context and creates confusion.
+
+### Q4: How does DevHub prevent command and shell injection vulnerabilities when navigating arbitrary user paths in WSL?
+**Answer**:
+DevHub enforces strict argument vector passing through `std::process::Command` without invoking intermediate shell interpreters (`sh -c` or `bash -c`):
+```rust
+Command::new("wsl.exe")
+    .arg("-d")
+    .arg(distro)
+    .arg("--")
+    .arg("find")
+    .arg(target_path)
+    .args(["-maxdepth", "1", "-mindepth", "1", "(", "-type", "d", "-o", "-xtype", "d", ")"]);
+```
+The arguments are passed directly to the Linux guest `execve` syscall. Semicolons, pipes, backticks, and shell expansions are treated strictly as string literals, preventing arbitrary command injection.
+
+### Q5: Why should filesystem validation be throttled/debounced to on-blur instead of firing on every keystroke?
+**Answer**:
+1. **Subprocess Overhead**: Validating a WSL path requires invoking `wsl.exe` across the virtualization boundary. Spawning 10-20 processes per second while typing creates CPU throttling and UI lag.
+2. **Intermediate Incomplete States**: As a user types `C:\Projects\my-app`, intermediate substrings like `C:\Pro` or `C:\Projects\m` are naturally invalid until typing completes. Firing OS checks on every keypress generates unnecessary error noise.
+3. **Optimal UX**: Fast local $O(1)$ formatting validation on change coupled with authoritative OS verification on blur provides instant responsiveness with zero wasted system resources.
+
+### Q6: What happens if a user tries to browse a stopped WSL distribution, and why shouldn't the app silently start it?
+**Answer**:
+Executing commands against a stopped WSL distribution causes Windows to automatically boot the guest Linux VM in the background. This consumes hundreds of megabytes of RAM and introduces battery drain. DevHub queries distribution states first; if stopped, it halts execution and presents an explicit warning, requiring intentional developer action before starting the VM.
+
+---
+
+## 140. Milestone 12 Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/models/filesystem.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/filesystem.rs) | Domain Models | `DirectoryEntry`, `DirectoryListing`, and `PathValidationResult` structs | Data Transfer Objects, Serde `camelCase` | IPC, Filesystem Service | - |
+| [`src-tauri/src/filesystem/windows.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/filesystem/windows.rs) | Infrastructure | `WindowsFilesystemProvider` for Win32 path validation and accessibility checks | `std::path::Path`, `fs::read_dir`, Access Control | `FilesystemService` | Win32 OS |
+| [`src-tauri/src/filesystem/wsl.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/filesystem/wsl.rs) | Infrastructure | `WslFilesystemProvider` for single-level Linux guest directory listing and path validation | Bounded $O(N)$ `find`, Vector Args, POSIX Path Resolution | `FilesystemService` | `WslExecutor`, `WslDistroDiscovery` |
+| [`src-tauri/src/filesystem/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/filesystem/service.rs) | Application Domain | `FilesystemService` coordinating environment-specific providers | Pluggable Provider Architecture, Strategy Pattern | `commands/filesystem.rs` | `WindowsFilesystemProvider`, `WslFilesystemProvider` |
+| [`src-tauri/src/commands/filesystem.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/filesystem.rs) | Controller | Tauri command handlers (`pick_folder`, `list_wsl_directories`, `validate_directory`) | Thin Controllers, `tauri-plugin-dialog` Integration | Frontend IPC | `FilesystemService`, `tauri_plugin_dialog` |
+| [`src/types/filesystem.ts`](file:///d:/ak/project/devhub/DevHub/src/types/filesystem.ts) | TypeScript Domain | TypeScript interfaces for `DirectoryEntry`, `DirectoryListing`, `PathValidationResult` | Type Synchronization, Cross-Language Contracts | Frontend API, React Components | - |
+| [`src/lib/commands.ts`](file:///d:/ak/project/devhub/DevHub/src/lib/commands.ts) | Frontend API | `filesystemApi` gateway functions (`pickFolder`, `listWslDirectories`, `validateDirectory`) | Typed IPC Bridge, Error Normalization | React Components | Tauri IPC |
+| [`src/components/common/TruncatedPath.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/common/TruncatedPath.tsx) | Presentation | Visual middle-truncation helper with full-path tooltip and copy trigger | Visual Truncation, Monospace Styling | Dashboard, Profiles, Projects | `CopyButton.tsx` |
+| [`src/components/common/WslDirectoryBrowserModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/common/WslDirectoryBrowserModal.tsx) | Presentation | Interactive modal for exploring Linux guest directory structures in WSL | Keyboard Navigation, ARIA Roles, Bounded Navigation | `WorkingDirectoryField.tsx` | `filesystemApi` |
+| [`src/components/common/WorkingDirectoryField.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/common/WorkingDirectoryField.tsx) | Presentation | Reusable environment-aware working directory input with Browse/Clear/Copy | Controlled Inputs, Progressive Disclosure, Validation | `ProfileFormModal.tsx`, `AdoptionFormModal.tsx` | `WslDirectoryBrowserModal.tsx`, `filesystemApi` |
+| [`src/components/profiles/ProfileFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/ProfileFormModal.tsx) | Presentation | Server profile creation and editing modal integrated with `WorkingDirectoryField` | Profile UX, Environment Awareness | `Profiles.tsx`, `Servers.tsx` | `WorkingDirectoryField.tsx` |
+| [`src/components/adoption/AdoptionFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/AdoptionFormModal.tsx) | Presentation | Server adoption modal with editable/browsable working directory | Adoption Flow, Pre-Filled Paths | `Dashboard.tsx`, `Servers.tsx` | `WorkingDirectoryField.tsx` |
+| [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | 140-chapter cumulative engineering master learning guide | Systems Engineering Blueprint | Developers, Interviewees | - |
+| [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | DevHub project overview highlighting native and WSL folder browsing | Product Overview | GitHub, Community | - |
 
 
 

@@ -50,8 +50,9 @@ This leads to constant friction:
 * **9-Dimensional Process Identity**: Classifies runtimes (`Node.js`, `Python`, `Rust`, `.NET`, `Go`, `Java`) and package managers (`npm`, `pnpm`, `yarn`, `bun`, `cargo`), resolving human-friendly workspace folder names.
 * **Process Ancestry Tree Visualization**: Reconstructs hierarchical process lineages with cycle protection ($D \le 32$) to disambiguate child servers from parent wrappers.
 * **Safe Win32 & WSL Linux Process Control**: Eliminates PID reuse and TOCTOU vulnerabilities with a multi-environment validation gate. Ancestor protection guarantees shells (`pwsh.exe`, `cmd.exe`, `bash`) and IDEs (`Code.exe`, IDE server) are never terminated. Supports graceful `SIGTERM` and forceful `SIGKILL` on Linux.
+* **Native Windows & WSL Folder Browsing**: Environment-aware directory selection replacing manual path typing. Features native Win32 folder chooser dialog for Windows profiles and a live, interactive Linux guest directory browser for WSL distributions.
 * **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution, non-blocking readiness polling, and live restart.
-* **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment.
+* **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment with visual path adjustment.
 * **Project Groups & Sequential Orchestration**: Groups related microservices into logical projects with deterministic sequential startup, reverse-order teardown, concurrency locks, and aggregate health derivation across Windows and WSL.
 * **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
 
