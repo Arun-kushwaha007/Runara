@@ -364,16 +364,6 @@ impl ServerStartService {
                 current_owner: None,
             })?;
 
-        // Guard: Reject WSL restart (WSL stop is not supported in Milestone 7)
-        if profile.environment.is_wsl() {
-            return Err(StartError {
-                code: StartErrorCode::UnsupportedOperation,
-                message: "Server restart is currently supported for Windows environments only. WSL process termination is restricted.".to_string(),
-                profile_id: Some(profile_id.to_string()),
-                current_owner: None,
-            });
-        }
-
         // Check if profile is currently running
         let snapshot = self.discovery.discover_all().unwrap_or_default();
         if let Some((proc, _port)) = ServerProfileService::find_matching_process(
@@ -541,7 +531,7 @@ mod tests {
     }
 
     #[test]
-    fn test_wsl_restart_is_rejected() {
+    fn test_wsl_restart_is_supported() {
         let mut conn = Connection::open_in_memory().unwrap();
         MigrationRunner::run_migrations(&mut conn).unwrap();
         let repo = Arc::new(SqliteServerProfileRepository::new(Arc::new(Mutex::new(conn))));
@@ -574,8 +564,10 @@ mod tests {
         let unified_discovery = Arc::new(UnifiedDiscoveryService::new());
         let start_svc = ServerStartService::new(repo, unified_discovery, control_svc);
 
-        let err = start_svc.restart_profile("wsl-prof").unwrap_err();
-        assert_eq!(err.code, StartErrorCode::UnsupportedOperation);
-        assert!(err.message.contains("WSL process termination is restricted"));
+        let res = start_svc.restart_profile("wsl-prof");
+        // Result will either be Err(WslCommandFailed / DirectoryNotFound) or Ok, but MUST NOT be UnsupportedOperation
+        if let Err(e) = res {
+            assert_ne!(e.code, StartErrorCode::UnsupportedOperation);
+        }
     }
 }

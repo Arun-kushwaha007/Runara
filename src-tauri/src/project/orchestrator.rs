@@ -1,7 +1,6 @@
 use crate::db::{ProjectRepository, ServerProfileRepository};
 use crate::discovery::{UnifiedDiscovery, UnifiedDiscoveryService};
 use crate::models::control::ProcessTarget;
-use crate::models::environment::Environment;
 use crate::models::project::{
     ProjectError, ProjectErrorCode, ProjectOperationResult, ProjectRuntimeStatus,
 };
@@ -277,7 +276,7 @@ impl ProjectOrchestrator {
 
         let snapshot = self.discovery.discover_all().unwrap_or_default();
         let mut stopped = Vec::new();
-        let mut unsupported = Vec::new();
+        let unsupported = Vec::new();
         let mut failed_name = None;
         let mut failed_msg = String::new();
 
@@ -288,31 +287,23 @@ impl ProjectOrchestrator {
                 &snapshot.processes,
                 &snapshot.ports,
             ) {
-                match &profile.environment {
-                    Environment::Windows => {
-                        let target = ProcessTarget {
-                            pid: proc.pid,
-                            process_name: proc.name.clone(),
-                            executable_path: proc.executable_path.clone(),
-                            working_directory: proc.working_directory.clone(),
-                            expected_ports: profile.expected_port.into_iter().collect(),
-                            force: false,
-                            environment: Some(profile.environment.clone()),
-                        };
+                let target = ProcessTarget {
+                    pid: proc.pid,
+                    process_name: proc.name.clone(),
+                    executable_path: proc.executable_path.clone(),
+                    working_directory: proc.working_directory.clone(),
+                    expected_ports: profile.expected_port.into_iter().collect(),
+                    force: false,
+                    environment: Some(profile.environment.clone()),
+                };
 
-                        match self.process_control.stop_server(&target) {
-                            Ok(_) => {
-                                stopped.push(profile.name.clone());
-                            }
-                            Err(e) => {
-                                failed_name = Some(profile.name.clone());
-                                failed_msg = e.message;
-                            }
-                        }
+                match self.process_control.stop_server(&target) {
+                    Ok(_) => {
+                        stopped.push(profile.name.clone());
                     }
-                    Environment::Wsl { distro } => {
-                        // WSL stop is unsupported in Milestone 6/7/8/9
-                        unsupported.push(format!("{} (WSL / {})", profile.name, distro));
+                    Err(e) => {
+                        failed_name = Some(profile.name.clone());
+                        failed_msg = e.message;
                     }
                 }
             } else {
@@ -338,21 +329,6 @@ impl ProjectOrchestrator {
                 unsupported_profiles: unsupported,
                 message: format!("Failed to stop '{}': {}", failed_prof, failed_msg),
             })
-        } else if !unsupported.is_empty() {
-            Ok(ProjectOperationResult {
-                project_id: project_id.to_string(),
-                operation_type: "stop".to_string(),
-                status: ProjectRuntimeStatus::Partial,
-                started_profiles: vec![],
-                stopped_profiles: stopped,
-                failed_profile: None,
-                pending_profiles: vec![],
-                unsupported_profiles: unsupported.clone(),
-                message: format!(
-                    "Windows services stopped. The following WSL services remain active because WSL process control is not available yet: {}.",
-                    unsupported.join(", ")
-                ),
-            })
         } else {
             Ok(ProjectOperationResult {
                 project_id: project_id.to_string(),
@@ -369,9 +345,22 @@ impl ProjectOrchestrator {
     }
 
     /// Restarts a project by stopping running services, waiting for port release,
-    /// and starting services again in order.
-    /// Strictly rejects projects containing WSL services with a clear error.
+    /// and starting services again in order across Windows and WSL.
     pub fn restart_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError> {
+        let project = self
+            .project_repository
+            .get_project_by_id(project_id)
+            .map_err(|e| ProjectError {
+                code: ProjectErrorCode::DatabaseError,
+                message: format!("Failed to read project: {}", e),
+                project_id: Some(project_id.to_string()),
+            })?
+            .ok_or_else(|| ProjectError {
+                code: ProjectErrorCode::ProjectNotFound,
+                message: format!("Project with ID '{}' was not found.", project_id),
+                project_id: Some(project_id.to_string()),
+            })?;
+
         let member_tuples = self
             .project_repository
             .get_project_profiles(project_id)
@@ -389,16 +378,6 @@ impl ProjectOrchestrator {
             });
         }
 
-        // Guard: Check for WSL services
-        let has_wsl = member_tuples.iter().any(|(p, _)| p.environment.is_wsl());
-        if has_wsl {
-            return Err(ProjectError {
-                code: ProjectErrorCode::UnsupportedOperation,
-                message: "Restart is unavailable for this project because one or more services run in WSL where process termination is restricted.".to_string(),
-                project_id: Some(project_id.to_string()),
-            });
-        }
-
         // Step 1: Stop running services
         let stop_result = self.stop_project(project_id)?;
         if stop_result.status == ProjectRuntimeStatus::Error {
@@ -408,8 +387,20 @@ impl ProjectOrchestrator {
         // Settle delay for OS socket release
         sleep(Duration::from_millis(500));
 
-        // Step 2: Start services in configured order
-        self.start_project(project_id)
+        // Step 2: Start services in defined order
+        let start_result = self.start_project(project_id)?;
+
+        Ok(ProjectOperationResult {
+            project_id: project_id.to_string(),
+            operation_type: "restart".to_string(),
+            status: start_result.status,
+            started_profiles: start_result.started_profiles,
+            stopped_profiles: stop_result.stopped_profiles,
+            failed_profile: start_result.failed_profile,
+            pending_profiles: start_result.pending_profiles,
+            unsupported_profiles: vec![],
+            message: format!("Project '{}' restarted successfully.", project.name),
+        })
     }
 }
 
@@ -419,7 +410,7 @@ mod tests {
     use crate::db::repository::SqliteServerProfileRepository;
     use crate::db::MigrationRunner;
     use crate::discovery::{PortDiscovery, ProcessDiscovery};
-    use crate::models::{PortInfo, ProcessInfo, ServerProfile};
+    use crate::models::{Environment, PortInfo, ProcessInfo, ServerProfile};
     use crate::windows::{ProcessController, ProcessHandle};
     use rusqlite::Connection;
     use std::sync::Mutex;
@@ -526,7 +517,7 @@ mod tests {
     }
 
     #[test]
-    fn test_restart_with_wsl_is_rejected() {
+    fn test_restart_with_wsl_is_supported() {
         let (orch, repo) = setup_test_orchestrator();
 
         let proj = crate::models::project::Project {
@@ -554,8 +545,10 @@ mod tests {
         repo.create(&wsl_profile).unwrap();
         repo.add_profile_to_project("mixed-proj", "wsl-worker", None).unwrap();
 
-        let err = orch.restart_project("mixed-proj").unwrap_err();
-        assert_eq!(err.code, ProjectErrorCode::UnsupportedOperation);
-        assert!(err.message.contains("WSL where process termination is restricted"));
+        let res = orch.restart_project("mixed-proj");
+        // Result will either be Err(DirectoryNotFound / WslCommandFailed / StartupTimeout) or Ok, but MUST NOT be UnsupportedOperation
+        if let Err(e) = res {
+            assert_ne!(e.code, ProjectErrorCode::UnsupportedOperation);
+        }
     }
 }

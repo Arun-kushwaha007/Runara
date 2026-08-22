@@ -94,6 +94,14 @@ pub enum ProcessControlErrorCode {
     AlreadyStopped,
     #[serde(rename = "UNSAFE_TARGET")]
     UnsafeTarget,
+    #[serde(rename = "WSL_DISTRIBUTION_NOT_FOUND")]
+    WslDistributionNotFound,
+    #[serde(rename = "WSL_DISTRIBUTION_STOPPED")]
+    WslDistributionStopped,
+    #[serde(rename = "WSL_ERROR")]
+    WslError,
+    #[serde(rename = "OPERATION_IN_PROGRESS")]
+    OperationInProgress,
     #[serde(rename = "UNKNOWN_ERROR")]
     UnknownError,
 }
@@ -112,6 +120,10 @@ impl std::fmt::Display for ProcessControlErrorCode {
             Self::InvalidTarget => write!(f, "INVALID_TARGET"),
             Self::AlreadyStopped => write!(f, "ALREADY_STOPPED"),
             Self::UnsafeTarget => write!(f, "UNSAFE_TARGET"),
+            Self::WslDistributionNotFound => write!(f, "WSL_DISTRIBUTION_NOT_FOUND"),
+            Self::WslDistributionStopped => write!(f, "WSL_DISTRIBUTION_STOPPED"),
+            Self::WslError => write!(f, "WSL_ERROR"),
+            Self::OperationInProgress => write!(f, "OPERATION_IN_PROGRESS"),
             Self::UnknownError => write!(f, "UNKNOWN_ERROR"),
         }
     }
