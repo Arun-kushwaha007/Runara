@@ -108,9 +108,29 @@ DevHub provides a unified control layer over local development processes without
   - Strict read-only safety boundary for WSL processes preserving Milestone 5 Windows process control guarantees
   - Unified Dashboard UI with environment badge chips, WSL distro filters, WSL distribution summary metrics, and diagnostic warning notices
   - 68 Rust unit/integration tests and 25 React frontend tests passing (100% test pass rate)
-  - Chapters 62–73 added to `LEARNING.md` covering WSL architecture, UTF-16 decoding, multi-environment domain modeling, and interview Q&A
+- **Milestone 7: Server Profiles & Launch Management (Complete)**
+  - Embedded SQLite database engine (`rusqlite`) configured with Write-Ahead Logging (WAL Mode), foreign keys, and synchronous normal durability
+  - Forward-only database migration runner (`MigrationRunner`) with versioned schema tracking (`schema_migrations`)
+  - Normalized `ServerProfile` domain model with UUID v4 persistent identifiers and UTC timestamps
+  - `ServerProfileRepository` trait abstraction with complete SQLite CRUD implementation
+  - Cross-environment process launcher subsystem (`EnvironmentLauncher`):
+    - `WindowsLauncher` executing `cmd.exe /D /C` with `CREATE_NO_WINDOW`
+    - `WslLauncher` executing `wsl.exe -d <distro> --cd <dir> -- sh -c` with `CREATE_NO_WINDOW`
+  - Robust startup orchestration engine (`ServerStartService`):
+    - Non-destructive pre-flight port conflict checking refusing launch if expected port is already occupied
+    - Asynchronous subprocess spawning and non-blocking in-flight tracking
+    - Bounded 20-second readiness polling loop (500 ms intervals) with early process crash detection
+    - Safe Windows server restart flow (Stop &rarr; Bounded Wait &rarr; Port Release Verification &rarr; Fresh Launch)
+  - `ServerProfileService` domain service with multi-signal process association (Port + CWD matching) yielding enriched `ServerProfileView` models
+  - Dedicated **Servers & Profiles** page (`Servers.tsx`) featuring:
+    - View Switcher Tabs ("Server Profiles" and "Live Discovered Servers")
+    - Profile Cards with environment badges, copyable commands, runtime status indicators, and action triggers
+    - Full modal suite: Create/Edit Profile Modal, Delete Profile Modal (with non-destruction notice), and Port Conflict Modal (with live owner inspection)
+    - Safe WSL process control boundary enforcement (read-only action guards)
+  - Full suite of 87 Rust unit/integration tests and 32 React frontend tests passing (100% test pass rate)
+  - Chapters 74–84 added to `LEARNING.md` covering persistence architecture, WAL mode, process launching, startup polling, and systems interview preparation
 
-*Next Milestone: Milestone 7 — Server Management, Configuration & Profiles*
+*Next Milestone: Milestone 8 — Project Workspaces & Multi-Server Groups*
 
 ---
 
@@ -151,12 +171,12 @@ npm run dev
 ### Running Tests
 
 ```bash
-# Run Rust backend unit and integration tests (68 tests)
+# Run Rust backend unit and integration tests (87 tests)
 cd src-tauri
 cargo test
 
-# Run frontend unit and component tests (25 tests)
-npm test
+# Run frontend unit and component tests (32 tests)
+npm test -- --run
 
 # Run frontend build and typecheck
 npm run build
@@ -180,24 +200,28 @@ DevHub/
 │   │   ├── common/           # CopyButton, EmptyState, LoadingState, ErrorState
 │   │   ├── dashboard/        # ServerCard, ServerList, ServerToolbar, SummaryCards, 
 │   │   │                     # ServerDetailsModal, StopConfirmationModal, ProcessTree
+│   │   ├── profiles/         # ProfileCard, ProfileFormModal, DeleteProfileModal, PortConflictModal
 │   │   ├── ports/            # PortTable, PortDetailsModal
 │   │   ├── processes/        # ProcessTable, ProcessDetailsModal
 │   │   ├── Sidebar.tsx       # Navigation sidebar
 │   │   ├── Header.tsx        # Top header
 │   │   └── Layout.tsx        # App layout shell
 │   ├── pages/                # Application views (Dashboard, Servers, Projects, Settings)
-│   ├── types/                # TypeScript interfaces (control.ts, environment.ts, identity.ts, port.ts, process.ts, server.ts)
+│   ├── types/                # TypeScript interfaces (control.ts, environment.ts, identity.ts, port.ts, process.ts, profile.ts, server.ts)
 │   ├── lib/                  # Commands API client (commands.ts) & View Pipeline (serverUtils.ts)
 │   ├── App.tsx               # Main application component
 │   ├── main.tsx              # React DOM entry point
 │   └── index.css             # Tailwind CSS entry & dark theme styles
 ├── src-tauri/                # Rust Native Backend
 │   ├── src/
-│   │   ├── commands/         # Tauri IPC commands (control.rs, identity.rs, ports.rs, processes.rs, system.rs, wsl.rs)
+│   │   ├── commands/         # Tauri IPC commands (control.rs, identity.rs, ports.rs, processes.rs, profiles.rs, system.rs, wsl.rs)
+│   │   ├── db/               # Persistence layer (mod.rs, migration.rs, repository.rs)
 │   │   ├── discovery/        # Discovery services (port.rs, process.rs, unified.rs)
 │   │   ├── identity/         # Process identity engine (detector.rs, service.rs, tree.rs)
-│   │   ├── models/           # Domain models (control.rs, environment.rs, identity.rs, port.rs, process.rs)
+│   │   ├── launcher/         # Cross-environment process launchers (mod.rs, windows.rs, wsl.rs)
+│   │   ├── models/           # Domain models (control.rs, environment.rs, identity.rs, port.rs, process.rs, profile.rs)
 │   │   ├── process/          # Process control domain service (service.rs)
+│   │   ├── profile/          # Profile domain services (mod.rs, service.rs, start_service.rs)
 │   │   ├── windows/          # Windows Win32 FFI (networking.rs, process.rs)
 │   │   ├── wsl/              # WSL infrastructure (distro.rs, executor.rs, port.rs, process.rs)
 │   │   ├── lib.rs            # Tauri application entry point & handler registry
@@ -215,4 +239,5 @@ DevHub/
 ## 📄 License
 
 Private / Proprietary.
+
 

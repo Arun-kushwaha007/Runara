@@ -2,9 +2,9 @@
 
 ```
 Project:           DevHub — Local Development Control Center
-Current Milestone: Milestone 6 (WSL Integration & Multi-Environment Discovery)
+Current Milestone: Milestone 7 (Server Profiles & Launch Management)
 Document Purpose:  Comprehensive Engineering Learning and Code-Reading Guide for CS Students & HLD/LLD Interview Preparation
-Document Version:  6.0.0
+Document Version:  7.0.0
 ```
 
 ---
@@ -243,6 +243,49 @@ Document Version:  6.0.0
     - [71.1 Complete Trace: From Frontend Refresh to Windows + WSL Discovery to Unified Dashboard](#711-complete-trace-from-frontend-refresh-to-windows--wsl-discovery-to-unified-dashboard)
 72. [Milestone 6: Deep Systems Engineering & HLD/LLD Interview Q&A](#72-milestone-6-deep-systems-engineering--hldlld-interview-qa)
 73. [Milestone 6: Complete Repository File Inventory & Architecture Matrix](#73-milestone-6-complete-repository-file-inventory--architecture-matrix)
+74. [Milestone 7: Server Profiles — Persistent Configuration vs. Ephemeral Telemetry](#74-milestone-7-server-profiles--persistent-configuration-vs-ephemeral-telemetry)
+    - [74.1 The Configuration vs. Runtime State Distinction](#741-the-configuration-vs-runtime-state-distinction)
+    - [74.2 The Single Source of Truth Rule: Database vs. OS Kernel](#742-the-single-source-of-truth-rule-database-vs-os-kernel)
+    - [74.3 Why Process State and Port State Must Never Be Persisted as Authoritative](#743-why-process-state-and-port-state-must-never-be-persisted-as-authoritative)
+    - [74.4 The Lifecycle of a Profile: Definition, Validation, Execution, Association, Termination](#744-the-lifecycle-of-a-profile-definition-validation-execution-association-termination)
+75. [Milestone 7: Persistence Architecture — Embedded SQLite, Migrations & Repository Pattern](#75-milestone-7-persistence-architecture--embedded-sqlite-migrations--repository-pattern)
+    - [75.1 Why Embedded SQLite is the Standard for Desktop Developer Tools](#751-why-embedded-sqlite-is-the-standard-for-desktop-developer-tools)
+    - [75.2 Write-Ahead Logging (WAL Mode) & Foreign Key Constraints](#752-write-ahead-logging-wal-mode--foreign-key-constraints)
+    - [75.3 Versioned Database Migrations (`MigrationRunner` & `schema_migrations`)](#753-versioned-database-migrations-migrationrunner--schema_migrations)
+    - [75.4 Repository Pattern: `ServerProfileRepository` Trait & SQLite Implementation](#754-repository-pattern-serverprofilerepository-trait--sqlite-implementation)
+76. [Milestone 7: Multi-Environment Process Launching — Command Execution & Shell Bridging](#76-milestone-7-multi-environment-process-launching--command-execution--shell-bridging)
+    - [76.1 The `EnvironmentLauncher` Abstraction Trait](#761-the-environmentlauncher-abstraction-trait)
+    - [76.2 Windows Launching: Direct Command Execution (`cmd.exe /D /C` & `CREATE_NO_WINDOW`)](#762-windows-launching-direct-command-execution-cmdexe-d-c--create_no_window)
+    - [76.3 WSL Launching: Cross-Boundary Execution (`wsl.exe -d <distro> --cd <dir> -- sh -c <cmd>`)](#763-wsl-launching-cross-boundary-execution-wslexe--d-distro---cd-dir----sh--c-cmd)
+    - [76.4 Preventing Shell Injection & Path Escaping in Multi-Environment Launchers](#764-preventing-shell-injection--path-escaping-in-multi-environment-launchers)
+77. [Milestone 7: Startup Orchestration, Verification & Port Readiness Polling](#77-milestone-7-startup-orchestration-verification--port-readiness-polling)
+    - [77.1 The Asynchronous Process Startup Lifecycle](#771-the-asynchronous-process-startup-lifecycle)
+    - [77.2 Pre-Launch Port Conflict Checking (Safe Refusal Without Termination)](#772-pre-launch-port-conflict-checking-safe-refusal-without-termination)
+    - [77.3 The Correlation Problem: Linking a Spawned Process to OS Discovery Telemetry](#773-the-correlation-problem-linking-a-spawned-process-to-os-discovery-telemetry)
+    - [77.4 Bounded Readiness Polling Loop (20s Timeout, 500ms Intervals, Early Exit Detection)](#774-bounded-readiness-polling-loop-20s-timeout-500ms-intervals-early-exit-detection)
+    - [77.5 Windows Server Restart: Stop, Verification, and Start Sequence](#775-windows-server-restart-stop-verification-and-start-sequence)
+78. [Milestone 7: Domain Service Layer & Runtime Status Derivation](#78-milestone-7-domain-service-layer--runtime-status-derivation)
+    - [78.1 `ServerProfileService`: Profile CRUD & Validation Rules](#781-serverprofileservice-profile-crud--validation-rules)
+    - [78.2 `ServerStartService`: Orchestration & In-Flight Tracking](#782-serverstartservice-orchestration--in-flight-tracking)
+    - [78.3 Multi-Signal Process Association Algorithm (Port + CWD Matching)](#783-multi-signal-process-association-algorithm-port--cwd-matching)
+    - [78.4 Enriched View Models: Merging SQLite Profiles with Live OS Telemetry](#784-enriched-view-models-merging-sqlite-profiles-with-live-os-telemetry)
+79. [Milestone 7: Error Architecture & Safety Guardrails](#79-milestone-7-error-architecture--safety-guardrails)
+    - [79.1 `StartErrorCode` Hierarchy (Port Conflict, Timeout, Directory Not Found, Distro Stopped)](#791-starterrorcode-hierarchy-port-conflict-timeout-directory-not-found-distro-stopped)
+    - [79.2 Safe Port Conflict UX: Informative Owner Diagnostics vs. Aggressive Auto-Killing](#792-safe-port-conflict-ux-informative-owner-diagnostics-vs-aggressive-auto-killing)
+    - [79.3 Profile Deletion Safety: Removing Configuration Without Destroying Running Processes](#793-profile-deletion-safety-removing-configuration-without-destroying-running-processes)
+    - [79.4 WSL Restart & Control Boundaries (Enforcing Non-Destructive Invariant)](#794-wsl-restart--control-boundaries-enforcing-non-destructive-invariant)
+80. [Milestone 7: Updated High-Level Design (HLD) & Architecture Topology](#80-milestone-7-updated-high-level-design-hld--architecture-topology)
+    - [80.1 Milestone 7 Architecture Topology Diagram](#801-milestone-7-architecture-topology-diagram)
+    - [80.2 Layer Responsibility Matrix](#802-layer-responsibility-matrix)
+81. [Milestone 7: Updated Low-Level Design (LLD) & Component Interfaces](#81-milestone-7-updated-low-level-design-lld--component-interfaces)
+    - [81.1 Repository, Launcher & Service Trait Signatures](#811-repository-launcher--service-trait-signatures)
+    - [81.2 Data Transfer Objects & Cross-Language Contracts](#812-data-transfer-objects--cross-language-contracts)
+82. [Milestone 7: End-to-End Code Traces](#82-milestone-7-end-to-end-code-traces)
+    - [82.1 Complete Trace: Profile Creation & SQLite Persistence](#821-complete-trace-profile-creation--sqlite-persistence)
+    - [82.2 Complete Trace: Profile Start, Port Conflict Check, Subprocess Launch & Readiness Polling](#822-complete-trace-profile-start-port-conflict-check-subprocess-launch--readiness-polling)
+    - [82.3 Complete Trace: Safe Windows Server Restart Flow](#823-complete-trace-safe-windows-server-restart-flow)
+83. [Milestone 7: Deep Systems Engineering & HLD/LLD Interview Q&A](#83-milestone-7-deep-systems-engineering--hldlld-interview-qa)
+84. [Milestone 7: Complete Repository File Inventory & Architecture Matrix](#84-milestone-7-complete-repository-file-inventory--architecture-matrix)
 
 ---
 
@@ -3591,6 +3634,504 @@ It implements the **Graceful Degradation / Failure Isolation Pattern**. If a sin
 | [`src/components/dashboard/ServerCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerCard.tsx) | Presentation View | Server card with dynamic Windows/WSL badge & read-only guard | Safe Control Boundary | `ServerList.tsx` | `CopyButton` |
 | [`src/components/dashboard/ServerDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/dashboard/ServerDetailsModal.tsx) | Presentation View | Server details modal with environment details & ancestry | Progressive Disclosure | `Dashboard.tsx`, `Servers.tsx` | `ProcessTree`, `CopyButton` |
 | [`src/pages/Dashboard.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Dashboard.tsx) | Page Container | Main multi-environment development server control center | Unified Single Source of Truth | `App.tsx` | UI Components, APIs |
+
+---
+
+## 74. Milestone 7: Server Profiles — Persistent Configuration vs. Ephemeral Telemetry
+
+### 74.1 The Configuration vs. Runtime State Distinction
+A central architectural principle introduced in Milestone 7 is the absolute separation between **Persistent Configuration** and **Ephemeral Runtime Telemetry**:
+
+```
++-----------------------------------------------------------------------------------------------+
+|                                    ARCHITECTURAL COMPARISON                                   |
++------------------------------+--------------------------------+-------------------------------+
+| Attribute                    | Persistent Server Profile      | Ephemeral Process Telemetry   |
++------------------------------+--------------------------------+-------------------------------+
+| Authoritative Store          | Embedded SQLite (`devhub.db`)  | Operating System Kernel       |
+| Primary Identifier           | UUID v4 (Stable across time)   | Numeric PID (Transient)       |
+| Nature of State              | Declarative Intent (What to run)| Observed Reality (What is run)|
+| Lifecycle Duration           | Survives reboots & app exits   | Destructs on process exit     |
+| Mutability                   | Explicit user CRUD operations  | Non-deterministic OS changes  |
+| Examples                     | Name, CWD, Command, Port       | CPU %, Memory, PID, Socket    |
++------------------------------+--------------------------------+-------------------------------+
+```
+
+### 74.2 The Single Source of Truth Rule: Database vs. OS Kernel
+- **The SQLite Database is authoritative ONLY for configuration**: profile names, environment configurations (Windows vs. WSL distribution), working directories, startup command lines, and expected listening ports.
+- **The Operating System Kernel is authoritative for runtime status**: whether a process is running, which PID it currently occupies, and which TCP ports are actively listening.
+- **Invariant**: The database must never store `is_running = true` or `active_pid = 18240` as persistent database column values. If the computer crashes or reboots while a server was running, persisting runtime state into SQLite would result in stale, corrupted "zombie" states upon app restart.
+
+### 74.3 Why Process State and Port State Must Never Be Persisted as Authoritative
+If an application stores live runtime state inside SQLite:
+1. **Out-of-Band State Divergence**: If the developer closes a terminal window or kills a process via Task Manager, the database remains unaware, showing a stale `Running` status.
+2. **PID Recycling Collisions**: If DevHub persisted PID `18240` and the process died, Windows might later assign PID `18240` to a background audio service. If DevHub trusted the database, it would claim the server is running and display the audio service's CPU and memory!
+3. **Pure Derivation**: Instead, DevHub derives runtime status on-the-fly by joining SQLite profile definitions with real-time OS discovery snapshots (`UnifiedSnapshot`).
+
+### 74.4 The Lifecycle of a Profile: Definition, Validation, Execution, Association, Termination
+The life of a server profile spans five discrete phases:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Defined: 1. User Creates Profile (SQLite INSERT)
+    Defined --> Validated: 2. Pre-Flight Validation (CWD exists, Port free)
+    Validated --> Starting: 3. Launch Subprocess (Spawn cmd/wsl)
+    Starting --> Running: 4. Readiness Verified (Port bound & CWD matched)
+    Starting --> Error: 4b. Timeout or Early Subprocess Exit
+    Running --> Stopping: 5. User Requests Stop / Restart
+    Stopping --> Stopped: 6. OS Verified Process & Port Released
+    Stopped --> Defined: Available for Next Launch
+```
+
+---
+
+## 75. Milestone 7: Persistence Architecture — Embedded SQLite, Migrations & Repository Pattern
+
+### 75.1 Why Embedded SQLite is the Standard for Desktop Developer Tools
+For desktop tools (like VS Code, JetBrains IDEs, and DevHub), an embedded relational database provides immense advantages over flat JSON files:
+1. **ACID Transactions**: Atomic commits guarantee that profile updates never result in half-written or corrupted configuration files on sudden power loss.
+2. **Crash Resilience**: Built-in journaling prevents data corruption during unexpected application crashes.
+3. **Structured Querying & Indexing**: Enables instant searching, sorting, and future relational capabilities (projects, workspaces, environment variables).
+4. **Single-File Portability**: All profile metadata lives in a single, standard `.db` file in the user's application data directory.
+
+### 75.2 Write-Ahead Logging (WAL Mode) & Foreign Key Constraints
+DevHub configures SQLite with high-performance desktop settings upon connection initialization (`src-tauri/src/db/mod.rs`):
+```sql
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA foreign_keys = ON;
+PRAGMA busy_timeout = 5000;
+```
+- **WAL (Write-Ahead Logging)**: Readers do not block writers, and writers do not block readers. This permits concurrent background discovery while the user saves profile edits in the UI.
+- **Synchronous = NORMAL**: Drastically reduces disk I/O latency while maintaining full durability against application crashes.
+- **Foreign Keys = ON**: Enforces relational integrity for future multi-table extensions.
+
+### 75.3 Versioned Database Migrations (`MigrationRunner` & `schema_migrations`)
+DevHub implements a forward-only database migration runner (`src-tauri/src/db/migration.rs`):
+```sql
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version INTEGER PRIMARY KEY,
+    description TEXT NOT NULL,
+    applied_at TEXT NOT NULL
+);
+```
+
+Before accessing data, `MigrationRunner::run()` checks the current version, begins a transaction, applies outstanding migrations sequentially, records the version in `schema_migrations`, and commits atomically:
+
+```sql
+-- Migration 001: Create Server Profiles Table
+CREATE TABLE IF NOT EXISTS server_profiles (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    environment_type TEXT NOT NULL,
+    environment_distro TEXT,
+    working_directory TEXT NOT NULL,
+    command TEXT NOT NULL,
+    expected_port INTEGER,
+    expected_host TEXT,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_server_profiles_env ON server_profiles(environment_type, environment_distro);
+CREATE INDEX IF NOT EXISTS idx_server_profiles_port ON server_profiles(expected_port);
+```
+
+### 75.4 Repository Pattern: `ServerProfileRepository` Trait & SQLite Implementation
+To isolate persistence logic from domain services, DevHub defines a clean Rust trait:
+```rust
+pub trait ServerProfileRepository: Send + Sync {
+    fn create(&self, profile: &ServerProfile) -> Result<(), ProfileRepositoryError>;
+    fn get_by_id(&self, id: &str) -> Result<Option<ServerProfile>, ProfileRepositoryError>;
+    fn list_all(&self) -> Result<Vec<ServerProfile>, ProfileRepositoryError>;
+    fn update(&self, profile: &ServerProfile) -> Result<(), ProfileRepositoryError>;
+    fn delete(&self, id: &str) -> Result<bool, ProfileRepositoryError>;
+}
+```
+`SqliteServerProfileRepository` encapsulates all raw SQL queries, row mapping, parameter binding, and connection mutex locks behind this trait.
+
+---
+
+## 76. Milestone 7: Multi-Environment Process Launching — Command Execution & Shell Bridging
+
+### 76.1 The `EnvironmentLauncher` Abstraction Trait
+Launching development commands across distinct operating systems requires polymorphic execution behavior:
+```rust
+pub trait EnvironmentLauncher: Send + Sync {
+    fn validate_working_directory(&self, path: &str) -> Result<(), StartError>;
+    fn launch(&self, working_dir: &str, command: &str) -> Result<u32, StartError>;
+}
+```
+
+### 76.2 Windows Launching: Direct Command Execution (`cmd.exe /D /C` & `CREATE_NO_WINDOW`)
+On Windows (`src-tauri/src/launcher/windows.rs`), development scripts frequently rely on built-in commands, batch files (`.cmd`, `.bat`), npm shims, and shell path resolution:
+```rust
+let mut cmd = Command::new("cmd.exe");
+cmd.args(["/D", "/C", command])
+   .current_dir(working_dir)
+   .creation_flags(0x08000000); // CREATE_NO_WINDOW
+```
+- `/D`: Disables execution of AutoRun registry commands, preventing malicious or accidental script overrides.
+- `/C`: Executes the specified string command and terminates the command interpreter shell while the spawned child process continues running.
+- `CREATE_NO_WINDOW (0x08000000)`: Prevents black terminal console windows from flashing onto the developer's screen during launch.
+
+### 76.3 WSL Launching: Cross-Boundary Execution (`wsl.exe -d <distro> --cd <dir> -- sh -c <cmd>`)
+On WSL (`src-tauri/src/launcher/wsl.rs`), commands run inside the Linux virtual machine environment:
+```rust
+let mut cmd = Command::new("wsl.exe");
+cmd.args(["-d", distro, "--cd", working_dir, "--", "sh", "-c", command])
+   .creation_flags(0x08000000);
+```
+- `-d <distro>`: Targets the exact configured distribution (e.g. `Ubuntu`, `Debian`, `Fedora`).
+- `--cd <dir>`: Sets the initial working directory inside the Linux POSIX filesystem before launching the shell.
+- `-- sh -c <command>`: Executes the user command string with full POSIX shell PATH resolution and environment variables.
+
+### 76.4 Preventing Shell Injection & Path Escaping in Multi-Environment Launchers
+1. **Pre-flight Validation**: Before spawning, `validate_working_directory` verifies that the target path exists on disk (`std::path::Path::exists()` on Windows, `wsl.exe test -d <dir>` on WSL).
+2. **Argument Array Boundaries**: The executable and top-level flags are passed as distinct array arguments, eliminating Windows shell injection at the `wsl.exe` invocation layer.
+
+---
+
+## 77. Milestone 7: Startup Orchestration, Verification & Port Readiness Polling
+
+### 77.1 The Asynchronous Process Startup Lifecycle
+When a developer launches a server (e.g. `npm run dev`), the command does not immediately listen on a port. It undergoes multiple initialization phases:
+1. `cmd.exe` spawns `npm.cmd`
+2. `npm.cmd` invokes `node.exe`
+3. Node loads `vite.js`, parses `vite.config.ts`, and compiles plugins
+4. Node finally calls `bind()` and `listen()` on port 3000
+
+This startup lag (typically 500ms to 8000ms) means **launching is asynchronous**. Returning immediately after `spawn()` would mislead the UI into reporting an incomplete or dead state.
+
+### 77.2 Pre-Launch Port Conflict Checking (Safe Refusal Without Termination)
+Before executing a profile launch, if `expectedPort` is configured:
+1. `ServerStartService` checks the current OS listening port table.
+2. If the port is already bound, DevHub **immediately refuses to start**:
+   ```rust
+   if let Some(owner) = current_owner {
+       return Err(StartError {
+           code: StartErrorCode::PortAlreadyInUse,
+           message: format!(
+               "Port {} is already in use by {} (PID {}). Stop the existing process before starting this profile.",
+               expected_port, owner.process_name, owner.pid
+           ),
+           profile_id: Some(profile.id.clone()),
+           current_owner: Some(owner),
+       });
+   }
+   ```
+3. **Safety Rule**: DevHub NEVER kills the existing process automatically. It alerts the developer via the Port Conflict Modal.
+
+### 77.3 The Correlation Problem: Linking a Spawned Process to OS Discovery Telemetry
+When `cmd.exe /C npm run dev` is spawned:
+- The spawned PID belongs to `cmd.exe`.
+- Seconds later, `cmd.exe` spawns child processes (`node.exe`), which actually bind the TCP port.
+- The initial `cmd.exe` process might even exit immediately if it delegates execution.
+- **Solution**: DevHub correlates the profile with the live server by matching **Environment + Listening Port + Normalized Working Directory**, rather than naively trusting the short-lived wrapper PID.
+
+### 77.4 Bounded Readiness Polling Loop (20s Timeout, 500ms Intervals, Early Exit Detection)
+`ServerStartService::orchestrate_start` runs a resilient polling loop:
+- **Interval**: 500 milliseconds between discovery snapshots.
+- **Maximum Timeout**: 20 seconds total.
+- **Early Termination Detection**: On Windows, DevHub monitors the initial child PID using Win32 `GetExitCodeProcess`. If the wrapper exits with a non-zero error code (e.g. syntax error or missing package), DevHub immediately aborts polling with `StartErrorCode::ProcessExited`.
+- **Success Criteria**: If `expectedPort` is set, polling succeeds the instant the port is observed in `LISTENING` state. If no port is set, it succeeds once the process is verified alive after an initial stabilization window.
+
+### 77.5 Windows Server Restart: Stop, Verification, and Start Sequence
+A restart must never simply launch a second instance. Doing so produces immediate port conflicts:
+```mermaid
+sequenceDiagram
+    participant User
+    participant Service as ServerStartService
+    participant Control as ProcessControlService
+    participant OS as Windows Kernel
+
+    User->>Service: restart_profile(profile_id)
+    Service->>Control: 1. stop_server(target_pid)
+    Control->>OS: Terminate process tree & release port
+    Service->>OS: 2. Verify port released & PID gone
+    Note over Service,OS: Bounded verification loop ensures clean release
+    Service->>Service: 3. launch_profile(profile)
+    Service-->>User: Server restarted cleanly on same port
+```
+
+---
+
+## 78. Milestone 7: Domain Service Layer & Runtime Status Derivation
+
+### 78.1 `ServerProfileService`: Profile CRUD & Validation Rules
+`ServerProfileService` handles profile business rules:
+- Validates name, working directory, and command non-emptiness.
+- Validates TCP port range ($1$ to $65,535$).
+- Validates WSL distribution presence when `environment.type == "wsl"`.
+- Generates secure UUID v4 persistent identifiers and UTC timestamps.
+
+### 78.2 `ServerStartService`: Orchestration & In-Flight Tracking
+To prevent race conditions and double-launches:
+- Maintains an in-flight `Mutex<HashSet<String>>` of actively starting profile IDs.
+- If a start request arrives for a profile that is already starting, it returns `StartErrorCode::AlreadyRunning`.
+- Guarantees lock cleanup upon success or failure via RAII guards.
+
+### 78.3 Multi-Signal Process Association Algorithm (Port + CWD Matching)
+To associate saved profiles with live OS processes:
+1. **Primary Match (Port Match)**: If profile defines `expected_port`, match against any live server where `port == expected_port` and `environment == profile.environment`.
+2. **Secondary Match (Working Directory Match)**: If port matches or no port is specified, match against processes whose `working_directory` matches `profile.working_directory`.
+3. **Conservative Isolation**: Windows profiles only match Windows processes; WSL profiles only match processes within the identical WSL distribution.
+
+### 78.4 Enriched View Models: Merging SQLite Profiles with Live OS Telemetry
+`derive_profile_views` produces the unified `ServerProfileView`:
+```rust
+pub struct ServerProfileView {
+    pub profile: ServerProfile,
+    pub status: ProfileRuntimeStatus, // Running | Stopped | Starting | Error
+    pub active_pid: Option<u32>,
+    pub active_port: Option<u16>,
+    pub error_message: Option<String>,
+    pub last_started_at: Option<String>,
+    pub dashboard_server_id: Option<String>,
+}
+```
+
+---
+
+## 79. Milestone 7: Error Architecture & Safety Guardrails
+
+### 79.1 `StartErrorCode` Hierarchy (Port Conflict, Timeout, Directory Not Found, Distro Stopped)
+All startup errors return structured machine-readable error codes:
+
+| Error Code | Trigger Condition | Recommended User Remedy |
+| :--- | :--- | :--- |
+| `PORT_ALREADY_IN_USE` | Configured port is already occupied before launch | Inspect existing process or choose different port |
+| `WORKING_DIRECTORY_NOT_FOUND` | Path does not exist on Windows or WSL filesystem | Check folder path in profile edit dialog |
+| `WSL_DISTRO_NOT_FOUND` | Configured WSL distribution is not installed | Select installed distribution |
+| `WSL_DISTRO_STOPPED` | Distribution is stopped and cannot be reached | Start distribution via `wsl -d <name>` |
+| `STARTUP_TIMEOUT` | Process launched but port was not bound within 20s | Check build scripts or server logs |
+| `PROCESS_EXITED` | Subprocess crashed immediately after spawn | Verify node/python installed and scripts valid |
+| `UNSUPPORTED_OPERATION` | Destructive action requested on WSL profile | Use manual terminal controls for WSL |
+
+### 79.2 Safe Port Conflict UX: Informative Owner Diagnostics vs. Aggressive Auto-Killing
+When a conflict occurs:
+- The UI opens the **Port Conflict Modal**.
+- Displays the PID, process name, and port of the current occupant.
+- Provides an **"Inspect Owner Process"** button that navigates directly to the live server details in the dashboard.
+- **Never includes a "Force Kill" button on the conflict dialog**, preventing accidental termination of databases or other developers' microservices.
+
+### 79.3 Profile Deletion Safety: Removing Configuration Without Destroying Running Processes
+Deleting a profile removes configuration from SQLite (`DELETE FROM server_profiles WHERE id = ?`).
+- If the server is currently running, DevHub warns the user: *"Deleting the profile will remove the saved configuration, but will not terminate the running operating system process."*
+- Telemetry continues to appear in the "Live Discovered Servers" tab as an unmanaged server.
+
+### 79.4 WSL Restart & Control Boundaries (Enforcing Non-Destructive Invariant)
+In accordance with Milestone 6 safety rules:
+- `restart_profile` on a WSL profile is rejected with `UNSUPPORTED_OPERATION`.
+- WSL server cards display a *"WSL Control Read-Only"* indicator.
+
+---
+
+## 80. Milestone 7: Updated High-Level Design (HLD) & Architecture Topology
+
+### 80.1 Milestone 7 Architecture Topology Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           REACT 19 FRONTEND LAYER                                       │
+│                                                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                     SERVERS & PROFILES PAGE                                       │  │
+│  │                                                                                                   │  │
+│  │   ┌────────────────────┐   ┌───────────────────────────┐   ┌───────────────────────────────────┐  │  │
+│  │   │  VIEW SWITCHER TABS│   │       SERVER TOOLBAR      │   │       SERVER PROFILES GRID        │  │  │
+│  │   │ (Profiles / Live)  │   │ (Search, Env, Runtime,    │   │ (ProfileCards, Status Badges,     │  │  │
+│  │   │                    │   │  Status, Sort)            │   │  Start / Stop / Restart / Modals) │  │  │
+│  │   └────────────────────┘   └───────────────────────────┘   └───────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────┬────────────────────────────────────────────────┘  │
+│                                                     │                                                   │
+│                                                     ▼ (profileApi.getProfilesWithStatus / startProfile) │
+├─────────────────────────────────────────────────────┼───────────────────────────────────────────────────┤
+│                                        TAURI 2 RUST CORE BACKEND                                        │
+│                                                                                                         │
+│  ┌──────────────────────────────────────────────────▼────────────────────────────────────────────────┐  │
+│  │                                        TAURI COMMAND LAYER                                        │  │
+│  │     get_profiles_with_status  •  create_profile  •  update_profile  •  start_profile  •  restart      │  │
+│  └──────────────────────┬───────────────────────────────────────────────────┬────────────────────────┘  │
+│                         │                                                   │                           │
+│                         ▼                                                   ▼                           │
+│  ┌──────────────────────────────────────────────┐   ┌────────────────────────────────────────────────┐  │
+│  │            SERVER PROFILE SERVICE            │   │              SERVER START SERVICE              │  │
+│  │  • CRUD Profile Management                   │   │  • Pre-Launch Port Conflict Verification       │  │
+│  │  • Input Validation & UUID Generation        │   │  • Subprocess Spawning (cmd / wsl)             │  │
+│  │  • Multi-Signal Process Association Logic    │   │  • Bounded Readiness Polling Loop (20s)        │  │
+│  └──────────────────────┬───────────────────────┘   │  • Windows Safe Restart Orchestration          │  │
+│                         │                           └───────────────────────┬────────────────────────┘  │
+│                         ▼                                                   │                           │
+│  ┌──────────────────────────────────────────────┐                           │                           │
+│  │          SQLITE REPOSITORY LAYER             │                           ▼                           │
+│  │  • SqliteServerProfileRepository             │   ┌────────────────────────────────────────────────┐  │
+│  │  • Versioned Migration Runner (WAL Mode)     │   │         MULTI-ENVIRONMENT LAUNCHERS            │  │
+│  │  • devhub.db in App Data Directory           │   │  • WindowsLauncher (cmd.exe /D /C)             │  │
+│  └──────────────────────────────────────────────┘   │  • WslLauncher (wsl.exe -d --cd)               │  │
+│                                                     └───────────────────────┬────────────────────────┘  │
+│                                                                             │                           │
+│                                                     ┌───────────────────────┴────────────────────────┐  │
+│                                                     │                                                │  │
+│                                                     ▼                                                ▼  │
+│                                        ┌─────────────────────────┐      ┌─────────────────────────┐     │
+│                                        │  WINDOWS HOST OS KERNEL │      │  WSL LINUX UTILITY VM   │     │
+│                                        └─────────────────────────┘      └─────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 80.2 Layer Responsibility Matrix
+
+| Layer | Component | Core Responsibility in Milestone 7 |
+| :--- | :--- | :--- |
+| **Presentation** | `Servers.tsx`, `ProfileCard.tsx`, Modals | Renders Server Profiles and Live Servers tabs, validates modal inputs, renders port conflict alerts, and routes start/stop actions. |
+| **Frontend API** | `commands.ts` (`profileApi`) | Typed gateway wrapping Tauri `invoke` calls for profile CRUD, enriched status, launch, and restart. |
+| **Command Layer** | `commands::profiles` | Thin controller validating IPC payloads, marshalling errors into structured `StartError` JSON objects. |
+| **Domain Services** | `ServerProfileService`, `ServerStartService` | Enforces profile validation rules, performs multi-signal process association, orchestrates pre-flight checks and bounded polling loops. |
+| **Launchers** | `WindowsLauncher`, `WslLauncher` | Handles low-level process spawning for Windows and WSL with `CREATE_NO_WINDOW` and working directory validation. |
+| **Persistence** | `SqliteServerProfileRepository`, `MigrationRunner` | Manages SQLite connection pooling, WAL mode, versioned migrations, and transactional profile CRUD. |
+
+---
+
+## 81. Milestone 7: Updated Low-Level Design (LLD) & Component Interfaces
+
+### 81.1 Repository, Launcher & Service Trait Signatures
+
+```rust
+// Repository Abstraction
+pub trait ServerProfileRepository: Send + Sync {
+    fn create(&self, profile: &ServerProfile) -> Result<(), ProfileRepositoryError>;
+    fn get_by_id(&self, id: &str) -> Result<Option<ServerProfile>, ProfileRepositoryError>;
+    fn list_all(&self) -> Result<Vec<ServerProfile>, ProfileRepositoryError>;
+    fn update(&self, profile: &ServerProfile) -> Result<(), ProfileRepositoryError>;
+    fn delete(&self, id: &str) -> Result<bool, ProfileRepositoryError>;
+}
+
+// Environment Launcher Abstraction
+pub trait EnvironmentLauncher: Send + Sync {
+    fn validate_working_directory(&self, path: &str) -> Result<(), StartError>;
+    fn launch(&self, working_dir: &str, command: &str) -> Result<u32, StartError>;
+}
+```
+
+### 81.2 Data Transfer Objects & Cross-Language Contracts
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerProfile {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub environment: Environment,
+    pub working_directory: String,
+    pub command: String,
+    pub expected_port: Option<u16>,
+    pub expected_host: Option<String>,
+    pub enabled: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerProfileView {
+    pub profile: ServerProfile,
+    pub status: ProfileRuntimeStatus,
+    pub active_pid: Option<u32>,
+    pub active_port: Option<u16>,
+    pub error_message: Option<String>,
+    pub last_started_at: Option<String>,
+    pub dashboard_server_id: Option<String>,
+}
+```
+
+---
+
+## 82. Milestone 7: End-to-End Code Traces
+
+### 82.1 Complete Trace: Profile Creation & SQLite Persistence
+1. **User Action**: User fills out `ProfileFormModal` in the frontend and clicks "Create Profile".
+2. **Frontend API**: `profileApi.createProfile(req)` calls Tauri `invoke('create_profile', { request })`.
+3. **Command Layer**: `commands::profiles::create_profile` passes the request to `ServerProfileService::create_profile`.
+4. **Validation & Generation**:
+   - `ServerProfileService` validates that `name`, `working_directory`, and `command` are non-empty.
+   - Generates UUID v4: `uuid::Uuid::new_v4().to_string()`.
+   - Generates ISO 8601 UTC timestamp: `chrono::Utc::now().to_rfc3339()`.
+5. **Persistence**: `SqliteServerProfileRepository::create` executes `INSERT INTO server_profiles (...) VALUES (...)`.
+6. **Response**: Profile is returned to frontend, toast notification appears, and UI refreshes.
+
+### 82.2 Complete Trace: Profile Start, Port Conflict Check, Subprocess Launch & Readiness Polling
+1. **User Action**: User clicks "Start" on a stopped profile card.
+2. **Frontend API**: `profileApi.startProfile(profileId)` calls Tauri `invoke('start_profile', { profileId })`.
+3. **Service Orchestration** (`ServerStartService::orchestrate_start`):
+   - Fetches profile from repository.
+   - **Pre-flight Port Check**: Queries `UnifiedDiscoveryService`. If `expected_port` is bound, returns `Err(StartError { code: PORT_ALREADY_IN_USE, current_owner })` immediately without spawning.
+   - **Directory Validation**: Validates working directory on Windows or WSL.
+   - **Subprocess Launch**: Spawns `cmd.exe /D /C <command>` or `wsl.exe -d <distro> --cd <dir> -- sh -c <command>` with `CREATE_NO_WINDOW`.
+   - **Readiness Polling**: Enters bounded loop (max 40 iterations $\times$ 500ms = 20s). On each iteration, queries `UnifiedDiscoveryService`.
+   - **Match Confirmation**: When port is observed listening and matching profile environment + directory, loop exits successfully.
+4. **UI Update**: Frontend updates profile status to `Running`, displaying live PID, Port, and active actions.
+
+### 82.3 Complete Trace: Safe Windows Server Restart Flow
+1. **User Action**: User clicks "Restart" on a running Windows profile.
+2. **Frontend API**: `profileApi.restartProfile(profileId)` calls Tauri `invoke('restart_profile', { profileId })`.
+3. **Stop & Verification**:
+   - `ServerStartService` discovers the active PID associated with the profile.
+   - Calls `ProcessControlService::stop_server(target)` with process tree termination.
+   - Enters bounded verification loop until port is released and PID is no longer alive.
+4. **Clean Launch**: Calls `orchestrate_start` to spawn the server afresh and verify readiness.
+
+---
+
+## 83. Milestone 7: Deep Systems Engineering & HLD/LLD Interview Q&A
+
+### Q1: Why must current process state (running status, PID) never be stored as authoritative state in the database?
+**Answer**:
+Operating system state is ephemeral and dynamic. A process can terminate unexpectedly due to an unhandled exception, out-of-memory killer, or manual user kill via Task Manager without informing DevHub. If runtime status were persisted in SQLite, the database would immediately drift out of sync with reality, leading to stale "zombie" server displays and PID recycling bugs upon system restart. The OS kernel is the only authoritative source of process telemetry; the database is authoritative only for user configuration.
+
+### Q2: Why does DevHub refuse to start a server when a port conflict is detected instead of automatically killing the existing process?
+**Answer**:
+Developer safety and the Principle of Least Astonishment. The process occupying the port might be an unrelated critical database (e.g. Postgres on 5432), another microservice, or an IDE background process. Automatically terminating unknown processes can cause data corruption or developer workflow disruption. DevHub informs the user with full diagnostic telemetry (PID, process name, port) and lets them inspect or stop the process deliberately.
+
+### Q3: How does DevHub correlate a spawned `cmd.exe` process with the actual server process listening on a port?
+**Answer**:
+Development tools use wrapper scripts (`npm.cmd`, `yarn.bat`, `cargo run`) that spawn child runtime processes (`node.exe`, `python.exe`). The wrapper PID returned by `Command::spawn()` often exits or does not hold the socket itself. DevHub solves this by correlating via **Environment + Listening Port + Current Working Directory (CWD)** from real-time discovery snapshots, rather than relying on the transient wrapper PID.
+
+### Q4: Why is SQLite WAL (Write-Ahead Logging) mode essential for DevHub?
+**Answer**:
+In standard rollback journal mode, database writes place an exclusive lock on the entire database file, blocking all reads. In desktop applications with background polling threads, a periodic discovery write or profile save would block the UI thread from querying profiles. WAL mode allows concurrent readers and writers to operate simultaneously without locking contention.
+
+### Q5: How does DevHub handle early subprocess crashes during startup polling?
+**Answer**:
+If a command contains a syntax error, missing environment variable, or invalid package script, the subprocess exits immediately. Waiting for the full 20-second port timeout would produce a sluggish, frustrating user experience. On Windows, DevHub queries `GetExitCodeProcess` on the initial process handle during each 500ms polling cycle. If the process has exited with a non-zero exit code, DevHub aborts polling immediately and returns `StartErrorCode::ProcessExited`.
+
+---
+
+## 84. Milestone 7: Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/models/profile.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/profile.rs) | Domain Models | `ServerProfile`, `ServerProfileView`, `StartProfileResult`, `StartError`, `StartErrorCode` | Domain Modeling, Serde DTOs, Error Codes | Profile Services, Commands | `serde`, `uuid`, `chrono` |
+| [`src-tauri/src/db/migration.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/db/migration.rs) | Persistence | Versioned database schema migration runner (`schema_migrations`) | Forward-Only Migrations, Schema Versioning | `db::init_database` | `rusqlite` |
+| [`src-tauri/src/db/repository.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/db/repository.rs) | Persistence | `ServerProfileRepository` trait & SQLite CRUD implementation | Repository Pattern, SQL Row Mapping | `ServerProfileService`, `ServerStartService` | `rusqlite` |
+| [`src-tauri/src/db/mod.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/db/mod.rs) | Persistence | SQLite initialization, WAL mode configuration, path setup | SQLite Pragmas, WAL Mode | `lib.rs` | `rusqlite`, `db::migration` |
+| [`src-tauri/src/launcher/mod.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/launcher/mod.rs) | Subprocess Execution | `EnvironmentLauncher` trait abstraction | Launcher Abstraction | `ServerStartService` | - |
+| [`src-tauri/src/launcher/windows.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/launcher/windows.rs) | Subprocess Execution | Windows `cmd.exe /D /C` launcher with `CREATE_NO_WINDOW` | Direct Command Spawning, Windows Flags | `ServerStartService` | `std::process::Command` |
+| [`src-tauri/src/launcher/wsl.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/launcher/wsl.rs) | Subprocess Execution | WSL `wsl.exe -d <distro> --cd <dir> -- sh -c` launcher | Cross-Boundary Spawning, Linux Paths | `ServerStartService` | `std::process::Command` |
+| [`src-tauri/src/profile/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/profile/service.rs) | Domain Service | Profile CRUD validation and multi-signal process association | Domain Service, Multi-Signal Join | `commands::profiles` | `ServerProfileRepository` |
+| [`src-tauri/src/profile/start_service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/profile/start_service.rs) | Domain Service | Startup orchestration, pre-flight checks, 20s polling loop, restart | Startup Orchestration, Port Conflict Check | `commands::profiles` | `EnvironmentLauncher`, `UnifiedDiscoveryService` |
+| [`src-tauri/src/commands/profiles.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/profiles.rs) | Presentation / IPC | Tauri commands: CRUD, status views, start, restart | Thin Controller Pattern, IPC Dispatch | Tauri Core Dispatcher | `ServerProfileService`, `ServerStartService` |
+| [`src/types/profile.ts`](file:///d:/ak/project/devhub/DevHub/src/types/profile.ts) | Frontend Types | `ServerProfile`, `ServerProfileView`, `StartProfileResult`, `StartError` | TypeScript Profile Contracts | UI Components, Commands | - |
+| [`src/components/profiles/ProfileCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/ProfileCard.tsx) | Presentation View | Server profile card with environment badges, copy command, action buttons | Presentational Component, WSL Read-Only Guard | `Servers.tsx` | `CopyButton` |
+| [`src/components/profiles/ProfileFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/ProfileFormModal.tsx) | Presentation View | Profile create/edit modal with validation and distro selection | Form State Management, Input Validation | `Servers.tsx` | - |
+| [`src/components/profiles/DeleteProfileModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/DeleteProfileModal.tsx) | Presentation View | Delete confirmation modal with running server non-termination warning | Safety Confirmation Modal | `Servers.tsx` | - |
+| [`src/components/profiles/PortConflictModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/PortConflictModal.tsx) | Presentation View | Port conflict dialog displaying current owner details and inspect link | Conflict Diagnostic Dialog | `Servers.tsx` | - |
+| [`src/pages/Servers.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.tsx) | Page Container | Server profile management page with tabs, search, filtering, and modals | Container Pattern, Orchestration | `App.tsx` | Profile & Server Components, APIs |
+| [`src/pages/Servers.test.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Servers.test.tsx) | Testing | Vitest test suite for Servers & Profiles UI and actions | Component Integration Testing | Vitest Test Runner | `Servers.tsx` |
+
 
 
 

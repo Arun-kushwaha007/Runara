@@ -8,6 +8,11 @@ import type {
   ControlResult,
   WslDistribution,
   UnifiedSnapshot,
+  ServerProfile,
+  ServerProfileView,
+  CreateProfileRequest,
+  UpdateProfileRequest,
+  StartProfileResult,
 } from '../types';
 
 export async function getSystemInfo(): Promise<SystemInfo> {
@@ -46,6 +51,38 @@ export async function getUnifiedSnapshot(): Promise<UnifiedSnapshot> {
   return invoke<UnifiedSnapshot>('get_unified_snapshot');
 }
 
+export async function getServerProfiles(): Promise<ServerProfile[]> {
+  return invoke<ServerProfile[]>('get_server_profiles');
+}
+
+export async function getServerProfile(id: string): Promise<ServerProfile | null> {
+  return invoke<ServerProfile | null>('get_server_profile', { id });
+}
+
+export async function createServerProfile(request: CreateProfileRequest): Promise<ServerProfile> {
+  return invoke<ServerProfile>('create_server_profile', { request });
+}
+
+export async function updateServerProfile(request: UpdateProfileRequest): Promise<ServerProfile> {
+  return invoke<ServerProfile>('update_server_profile', { request });
+}
+
+export async function deleteServerProfile(id: string): Promise<boolean> {
+  return invoke<boolean>('delete_server_profile', { id });
+}
+
+export async function getServerProfilesWithStatus(): Promise<ServerProfileView[]> {
+  return invoke<ServerProfileView[]>('get_server_profiles_with_status');
+}
+
+export async function startServerProfile(id: string): Promise<StartProfileResult> {
+  return invoke<StartProfileResult>('start_server_profile', { id });
+}
+
+export async function restartServerProfile(id: string): Promise<StartProfileResult> {
+  return invoke<StartProfileResult>('restart_server_profile', { id });
+}
+
 export const processApi = {
   getProcesses,
 };
@@ -75,5 +112,17 @@ export const wslApi = {
 export const unifiedApi = {
   getUnifiedSnapshot,
 };
+
+export const profileApi = {
+  getProfiles: getServerProfiles,
+  getProfile: getServerProfile,
+  createProfile: createServerProfile,
+  updateProfile: updateServerProfile,
+  deleteProfile: deleteServerProfile,
+  getProfilesWithStatus: getServerProfilesWithStatus,
+  startProfile: startServerProfile,
+  restartProfile: restartServerProfile,
+};
+
 
 
