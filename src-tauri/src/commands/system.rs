@@ -40,7 +40,7 @@ pub struct SystemDiagnostics {
 pub fn get_system_info() -> SystemInfo {
     SystemInfo {
         app: "DevHub".to_string(),
-        version: "0.1.0".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
         backend: "rust".to_string(),
         status: "ok".to_string(),
         platform: std::env::consts::OS.to_string(),
@@ -62,7 +62,7 @@ pub fn get_diagnostics(
 
     Ok(SystemDiagnostics {
         app_name: "DevHub".to_string(),
-        app_version: "0.1.0".to_string(),
+        app_version: env!("CARGO_PKG_VERSION").to_string(),
         backend: "Rust (Win32 FFI + Native Sockets)".to_string(),
         platform: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),

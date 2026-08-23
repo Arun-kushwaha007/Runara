@@ -63,6 +63,18 @@ function App() {
     );
   }
 
+  const handleExit = async () => {
+    try {
+      const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+      const appWindow = getCurrentWebviewWindow();
+      await appWindow.close();
+    } catch {
+      if (typeof window !== 'undefined' && 'close' in window) {
+        window.close();
+      }
+    }
+  };
+
   if (fatalError) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-app-bg text-app-fg p-6">
@@ -86,8 +98,15 @@ function App() {
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-red-500 dark:text-red-400">DevHub Initialization Failure</h2>
-            <p className="text-xs text-app-muted-fg mt-1.5 leading-relaxed">{fatalError}</p>
+            <h2 className="text-lg font-bold text-red-500 dark:text-red-400">DevHub could not initialize local storage</h2>
+            <p className="text-xs text-app-muted-fg mt-1.5 leading-relaxed">
+              Unable to safely load your profiles and projects.
+            </p>
+            {fatalError && (
+              <p className="text-[11px] font-mono text-red-400/80 bg-red-950/30 border border-red-900/40 rounded p-2 mt-2 text-left break-all">
+                {fatalError}
+              </p>
+            )}
           </div>
 
           <div className="pt-2 flex items-center justify-center gap-3">
@@ -96,7 +115,14 @@ function App() {
               onClick={checkBackendHealth}
               className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg shadow-md transition-colors cursor-pointer"
             >
-              Retry Initialization
+              Retry
+            </button>
+            <button
+              type="button"
+              onClick={handleExit}
+              className="px-4 py-2 bg-app-card hover:bg-app-card-hover border border-app-border text-app-fg text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            >
+              Exit
             </button>
           </div>
         </div>

@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-276%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
+[![Tests](https://img.shields.io/badge/Tests-280%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
 
 DevHub is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
@@ -50,7 +50,7 @@ This leads to constant friction:
 * **Dual-Environment Architecture**: Seamlessly discovers and aggregates development processes running on the Windows host and inside active WSL 2 Linux distributions (Ubuntu, Debian, Fedora, Arch).
 * **9-Dimensional Process Identity**: Classifies runtimes (`Node.js`, `Python`, `Rust`, `.NET`, `Go`, `Java`) and package managers (`npm`, `pnpm`, `yarn`, `bun`, `cargo`), resolving human-friendly workspace folder names.
 * **Process Ancestry Tree Visualization**: Reconstructs hierarchical process lineages with cycle protection ($D \le 32$) to disambiguate child servers from parent wrappers.
-* **Safe Win32 & WSL Linux Process Control**: Eliminates PID reuse and TOCTOU vulnerabilities with a multi-environment validation gate. Ancestor protection guarantees shells (`pwsh.exe`, `cmd.exe`, `bash`) and IDEs (`Code.exe`, IDE server) are never terminated. Supports graceful `SIGTERM` and forceful `SIGKILL` on Linux.
+* **Safe Win32 & WSL Linux Process Control**: Eliminates PID reuse and TOCTOU vulnerabilities with a multi-environment validation gate. Ancestor protection guarantees shells (`pwsh.exe`, `cmd.exe`, `bash`, `zsh`) and IDEs (`Code.exe`, IDE server) are never terminated. Supports graceful `SIGTERM` and forceful `SIGKILL` on Linux.
 * **Native Windows & WSL Folder Browsing**: Environment-aware directory selection replacing manual path typing. Features native Win32 folder chooser dialog for Windows profiles and a live, interactive Linux guest directory browser for WSL distributions.
 * **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution, non-blocking readiness polling, and live restart.
 * **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment with visual path adjustment.
@@ -112,15 +112,24 @@ For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)*
 | **Persistence** | Embedded [SQLite 3](https://www.sqlite.org/) with Write-Ahead Logging (WAL) |
 | **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript 5.8](https://www.typescriptlang.org/) |
 | **Bundler & Tooling** | [Vite 7](https://vite.dev/) |
-| **Styling & UI Tokens** | [Tailwind CSS v4](https://tailwindcss.com/) (Dark Mode First) |
-| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (126 tests) & `cargo test` (133 tests) |
+| **Styling & UI Tokens** | [Tailwind CSS v4](https://tailwindcss.com/) (Semantic Tokens, Dark & Light Modes) |
+| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (147 tests) & `cargo test` (133 tests) |
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Installation & Distribution
 
-### Prerequisites
+### Option 1: Windows Installers (Recommended)
 
+Download the latest release from [GitHub Releases](https://github.com/Arun-kushwaha007/DevHub/releases):
+
+* **Standard Setup Installer (NSIS)**: `DevHub_0.1.0_x64-setup.exe` (Self-contained installer with desktop shortcut and Start Menu entry).
+* **Enterprise MSI Package**: `DevHub_0.1.0_x64_en-US.msi` (Standard Windows Installer package for managed deployments).
+* **Standalone Portable Binary**: `DevHub.exe` (Run directly without installation).
+
+### Option 2: Build from Source
+
+#### Prerequisites
 1. **Node.js** (v18+ LTS) & **npm**
 2. **Rust & Cargo** (1.78+ with MSVC toolchain on Windows):
    ```powershell
@@ -129,8 +138,7 @@ For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)*
 3. **Microsoft C++ Build Tools** & **WebView2** (included with Windows 10/11)
 4. **WSL 2** *(Optional)*: If you wish to manage Linux development servers.
 
-### Installation
-
+#### Build & Run
 ```bash
 # Clone the repository
 git clone https://github.com/Arun-kushwaha007/DevHub.git
@@ -138,33 +146,29 @@ cd DevHub
 
 # Install frontend dependencies
 npm install
-```
 
-### Running Locally
-
-```bash
-# Run Tauri desktop app in development mode with HMR
+# Run in development mode with Hot Module Replacement (HMR)
 npm run tauri dev
 
-# Run only Vite frontend in browser
-npm run dev
+# Package production release binaries and installers
+npx tauri build
 ```
 
 ---
 
 ## 🧪 Testing & Verification
 
-DevHub enforces a strict test-driven quality standard with **259 automated tests**:
+DevHub enforces a strict test-driven quality standard with **280 automated tests**:
 
 ```bash
 # Run Rust backend unit & integration tests (133 tests)
 cd src-tauri
 cargo test
 
-# Run frontend unit & component tests (126 tests across 14 suites)
+# Run frontend unit & component tests (147 tests across 17 suites)
 npm test
 
-# Run strict TypeScript typecheck and production build
+# Run strict TypeScript typecheck and production frontend bundle
 npm run build
 ```
 
@@ -190,10 +194,11 @@ DevHub/
 │   │   ├── Header.tsx            # Top header with breadcrumbs and live status
 │   │   └── Layout.tsx            # App shell with global keyboard shortcuts
 │   ├── pages/                    # Main views (Dashboard, Servers, Profiles, Projects, Settings)
+│   ├── context/                  # ThemeContext provider and hooks
 │   ├── types/                    # Strongly-typed cross-language TypeScript contracts
-│   ├── lib/                      # API client (commands.ts), Pipeline (serverUtils.ts), Adoption (profileAssociation.ts)
-│   ├── App.tsx                   # App root with initialization health check
-│   └── index.css                 # Tailwind CSS v4 styling & dark theme tokens
+│   ├── lib/                      # API client (commands.ts), Pipeline (serverUtils.ts), Adoption (profileAssociation.ts), Theme (theme.ts)
+│   ├── App.tsx                   # App root with initialization health check and recovery screens
+│   └── index.css                 # Tailwind CSS v4 styling & dark/light theme tokens
 ├── src-tauri/                    # Rust Native Backend Core
 │   ├── src/
 │   │   ├── commands/             # Tauri IPC controllers (system, control, profiles, project, wsl, ports, processes, filesystem)
@@ -215,7 +220,7 @@ DevHub/
 ├── doc/
 │   └── PRD.md                    # Product Requirements Document
 ├── ARCHITECTURE.md               # Systems Architecture Specification
-├── LEARNING.md                   # Cumulative Engineering Learning Guide (150 Chapters)
+├── LEARNING.md                   # Cumulative Engineering Learning Guide (160+ Chapters)
 ├── RELEASE_CHECKLIST.md          # MVP Release Verification Matrix
 ├── RELEASE_NOTES.md              # Version 0.1.0 Release Notes
 └── README.md                     # Project Presentation & Documentation
@@ -226,10 +231,10 @@ DevHub/
 ## 📚 Engineering Documentation
 
 * **[ARCHITECTURE.md](ARCHITECTURE.md)** — In-depth architectural blueprint covering domain invariants, Win32 FFI, POSIX signals, TOCTOU safety, sequential orchestration, and concurrency locks.
-* **[LEARNING.md](LEARNING.md)** — 150-chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
+* **[LEARNING.md](LEARNING.md)** — 160+ chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
 * **[PRD.md](doc/PRD.md)** — Complete Product Requirements Document.
 * **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** — MVP verification matrix.
-* **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release notes and changelog.
+* **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release notes, SHA-256 checksums, and changelog.
 
 ---
 
