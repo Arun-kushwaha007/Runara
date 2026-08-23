@@ -128,10 +128,10 @@ export const WorkingDirectoryField: React.FC<WorkingDirectoryFieldProps> = ({
     <div className="space-y-1.5">
       {/* Label and Environment Hint */}
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-xs font-medium text-zinc-300">
-          {label} {required && <span className="text-rose-400">*</span>}
+        <label htmlFor={id} className="text-xs font-medium text-app-fg">
+          {label} {required && <span className="text-red-500">*</span>}
         </label>
-        <span className="text-[10px] text-zinc-500 font-mono">
+        <span className="text-[10px] text-app-muted-fg font-mono">
           {isWsl ? `WSL (${distro || 'Linux'})` : 'Windows Host'}
         </span>
       </div>
@@ -153,24 +153,24 @@ export const WorkingDirectoryField: React.FC<WorkingDirectoryFieldProps> = ({
               if (value.trim()) validatePath(value);
             }}
             placeholder={displayedPlaceholder}
-            className={`w-full bg-zinc-950 border rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 transition-colors ${
+            className={`w-full bg-app-input border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 transition-colors ${
               activeError
-                ? 'border-rose-500/80 focus:ring-rose-500'
-                : 'border-zinc-700/80 focus:ring-blue-500'
+                ? 'border-red-500/80 focus:ring-red-500'
+                : 'border-app-border focus:ring-blue-500'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           />
 
           {/* Inline Right Actions (Copy & Validating Spinner) */}
           <div className="absolute right-2 top-2 flex items-center gap-1">
             {isValidating && (
-              <div className="w-3.5 h-3.5 border-2 border-zinc-500/30 border-t-zinc-400 rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-app-muted-fg/30 border-t-blue-500 rounded-full animate-spin" />
             )}
             {value.trim() && (
               <CopyButton
                 textToCopy={value}
                 showIconOnly
                 title="Copy full directory path"
-                className="p-1 text-zinc-400 hover:text-zinc-200"
+                className="p-1 text-app-muted-fg hover:text-app-fg"
               />
             )}
           </div>
@@ -183,7 +183,7 @@ export const WorkingDirectoryField: React.FC<WorkingDirectoryFieldProps> = ({
             onClick={handleClear}
             title="Clear directory path"
             aria-label="Clear path"
-            className="px-2.5 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 border border-zinc-700/80 transition-colors cursor-pointer shrink-0"
+            className="px-2.5 py-2 rounded-lg text-xs font-medium text-app-muted-fg hover:text-red-500 hover:bg-red-500/10 border border-app-border transition-colors cursor-pointer shrink-0"
           >
             Clear
           </button>
@@ -196,8 +196,8 @@ export const WorkingDirectoryField: React.FC<WorkingDirectoryFieldProps> = ({
           onClick={isWsl ? handleWslBrowse : handleWindowsBrowse}
           className={`px-3.5 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all shrink-0 cursor-pointer ${
             isWsl
-              ? 'bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border-amber-500/40 hover:border-amber-500/60 shadow-xs'
-              : 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-500/40 hover:border-blue-500/60 shadow-xs'
+              ? 'bg-amber-600/15 hover:bg-amber-600/25 text-amber-600 dark:text-amber-300 border-amber-500/40 hover:border-amber-500/60 shadow-xs'
+              : 'bg-blue-600/15 hover:bg-blue-600/25 text-blue-600 dark:text-blue-300 border-blue-500/40 hover:border-blue-500/60 shadow-xs'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <svg
@@ -219,7 +219,7 @@ export const WorkingDirectoryField: React.FC<WorkingDirectoryFieldProps> = ({
 
       {/* Validation Error Message */}
       {activeError && (
-        <div className="flex items-start gap-1.5 text-xs text-rose-400 pt-0.5 animate-in fade-in duration-150">
+        <div className="flex items-start gap-1.5 text-xs text-red-500 pt-0.5 animate-in fade-in duration-150">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="13"

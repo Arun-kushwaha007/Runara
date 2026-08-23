@@ -69,11 +69,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
   ];
 
   return (
-    <aside className="w-56 h-full bg-zinc-900 border-r border-zinc-800 flex flex-col shrink-0 select-none">
+    <aside className="w-56 h-full bg-app-surface border-r border-app-border flex flex-col shrink-0 select-none">
       {/* Brand Header */}
-      <div className="h-14 flex items-center px-4 border-b border-zinc-800">
-        <div className="flex items-center gap-2.5 text-zinc-100 font-bold tracking-tight text-base">
-          <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+      <div className="h-14 flex items-center px-4 border-b border-app-border">
+        <div className="flex items-center gap-2.5 text-app-fg font-bold tracking-tight text-base">
+          <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-500 dark:text-blue-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5Z" />
               <path d="M2 17l10 5 10-5" />
@@ -95,17 +95,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-blue-600/15 text-blue-300 border border-blue-500/30 shadow-xs'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent'
+                  ? 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 shadow-xs'
+                  : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover border border-transparent'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className={isActive ? 'text-blue-400' : 'text-zinc-400'}>{item.icon}</span>
+                <span className={isActive ? 'text-blue-500 dark:text-blue-400' : 'text-app-muted-fg'}>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
               <span
                 className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                  isActive ? 'bg-blue-950 text-blue-300' : 'text-zinc-500 opacity-60'
+                  isActive
+                    ? 'bg-blue-600/20 text-blue-600 dark:text-blue-300'
+                    : 'bg-app-muted text-app-muted-fg opacity-80'
                 }`}
                 title={`Ctrl+${item.shortcut}`}
               >
@@ -117,9 +119,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
       </nav>
 
       {/* Footer / Version */}
-      <div className="p-3 border-t border-zinc-800 flex items-center justify-between text-[11px] text-zinc-500">
+      <div className="p-3 border-t border-app-border flex items-center justify-between text-[11px] text-app-muted-fg">
         <span className="font-mono font-medium">v0.1.0 (MVP)</span>
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="DevHub Core Active"></span>
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="DevHub Core Active"></span>
       </div>
     </aside>
   );

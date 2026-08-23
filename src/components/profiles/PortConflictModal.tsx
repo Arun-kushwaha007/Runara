@@ -15,11 +15,11 @@ export const PortConflictModal: React.FC<PortConflictModalProps> = ({
   const { currentOwner } = error;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-zinc-900 border border-amber-600/50 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150 text-app-fg">
+      <div className="bg-app-surface border border-amber-500/40 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl text-app-fg">
         <div className="p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400">
+            <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -37,36 +37,36 @@ export const PortConflictModal: React.FC<PortConflictModalProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-zinc-100">
+              <h3 className="text-base font-semibold text-app-fg">
                 Port Conflict Detected
               </h3>
-              <p className="text-xs text-amber-300/90 font-medium">
+              <p className="text-xs text-amber-600 dark:text-amber-300 font-medium">
                 The expected port is already occupied by another process.
               </p>
             </div>
           </div>
 
-          <p className="text-xs text-zinc-300 leading-relaxed">
+          <p className="text-xs text-app-fg leading-relaxed">
             {error.message}
           </p>
 
           {currentOwner && (
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 space-y-2 text-xs">
-              <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+            <div className="bg-app-bg border border-app-border rounded-xl p-3.5 space-y-2 text-xs">
+              <div className="text-[11px] font-semibold text-app-muted-fg uppercase tracking-wider">
                 Current Port Owner
               </div>
-              <div className="grid grid-cols-2 gap-2 text-zinc-300">
+              <div className="grid grid-cols-2 gap-2 text-app-fg">
                 <div>
-                  <span className="text-zinc-500">Port:</span>{' '}
-                  <strong className="font-mono text-zinc-100">{currentOwner.port}</strong>
+                  <span className="text-app-muted-fg">Port:</span>{' '}
+                  <strong className="font-mono text-app-fg">{currentOwner.port}</strong>
                 </div>
                 <div>
-                  <span className="text-zinc-500">PID:</span>{' '}
-                  <strong className="font-mono text-zinc-100">{currentOwner.pid}</strong>
+                  <span className="text-app-muted-fg">PID:</span>{' '}
+                  <strong className="font-mono text-app-fg">{currentOwner.pid}</strong>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-zinc-500">Process Name:</span>{' '}
-                  <span className="font-mono text-blue-300">{currentOwner.processName}</span>
+                  <span className="text-app-muted-fg">Process Name:</span>{' '}
+                  <span className="font-mono text-blue-500 font-medium">{currentOwner.processName}</span>
                 </div>
               </div>
             </div>
@@ -76,7 +76,7 @@ export const PortConflictModal: React.FC<PortConflictModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="px-4 py-2 bg-app-muted hover:bg-app-surface-hover text-app-fg rounded-lg text-xs font-medium border border-app-border transition-colors cursor-pointer"
             >
               Cancel
             </button>

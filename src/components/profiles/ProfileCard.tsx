@@ -31,19 +31,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const isStartingState = status === 'starting' || isStarting;
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700/80 rounded-xl p-5 transition-all duration-200 shadow-sm flex flex-col justify-between gap-4">
+    <div className="bg-app-surface border border-app-border hover:border-app-border-subtle rounded-xl p-5 transition-all duration-200 shadow-xs flex flex-col justify-between gap-4 text-app-fg">
       {/* Header Section: Title, Environment Badge, Status Dot */}
       <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-zinc-100 truncate tracking-tight">
+              <h3 className="text-sm font-semibold text-app-fg truncate tracking-tight">
                 {profile.name}
               </h3>
 
               {/* Environment Badge */}
               {profile.environment.type === 'wsl' ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-purple-950/80 text-purple-300 border border-purple-800/50">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-purple-600/10 text-purple-600 dark:text-purple-300 border border-purple-500/30">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="10"
@@ -62,7 +62,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   WSL / {profile.environment.distro}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-950/80 text-blue-300 border border-blue-800/50">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-blue-600/10 text-blue-600 dark:text-blue-300 border border-blue-500/30">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="10"
@@ -84,14 +84,14 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
               {/* Expected Port Badge */}
               {profile.expectedPort && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-zinc-800 text-zinc-300 border border-zinc-700/50">
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-app-muted text-app-muted-fg border border-app-border">
                   :{profile.expectedPort}
                 </span>
               )}
             </div>
 
             {profile.description && (
-              <p className="text-xs text-zinc-400 mt-1 line-clamp-1">
+              <p className="text-xs text-app-muted-fg mt-1 line-clamp-1">
                 {profile.description}
               </p>
             )}
@@ -100,9 +100,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           {/* Runtime Status Pill */}
           <div className="shrink-0 flex items-center gap-1.5">
             {isRunning && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 Running
@@ -110,9 +110,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             )}
 
             {isStartingState && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800/60">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30">
                 <svg
-                  className="animate-spin h-2.5 w-2.5 text-amber-400"
+                  className="animate-spin h-2.5 w-2.5 text-amber-500"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -136,15 +136,15 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             )}
 
             {isError && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-rose-950/80 text-rose-300 border border-rose-800/60">
-                <span className="h-2 w-2 rounded-full bg-rose-500"></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-500/15 text-red-600 dark:text-red-300 border border-red-500/30">
+                <span className="h-2 w-2 rounded-full bg-red-500"></span>
                 Error
               </span>
             )}
 
             {!isRunning && !isStartingState && !isError && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-800/80 text-zinc-400 border border-zinc-700/50">
-                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500"></span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-app-muted text-app-muted-fg border border-app-border">
+                <span className="h-1.5 w-1.5 rounded-full bg-app-muted-fg"></span>
                 Stopped
               </span>
             )}
@@ -152,16 +152,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
 
         {/* Command & Directory Details */}
-        <div className="bg-zinc-950/70 border border-zinc-800/80 rounded-lg p-2.5 space-y-1.5 text-xs font-mono">
-          <div className="flex items-center justify-between text-zinc-300 group">
+        <div className="bg-app-bg border border-app-border rounded-lg p-2.5 space-y-1.5 text-xs font-mono">
+          <div className="flex items-center justify-between text-app-fg group">
             <div className="flex items-center gap-1.5 truncate">
-              <span className="text-zinc-500 select-none">$</span>
-              <span className="truncate text-blue-300/90">{profile.command}</span>
+              <span className="text-app-muted-fg select-none">$</span>
+              <span className="truncate text-blue-500 font-medium">{profile.command}</span>
             </div>
             <CopyButton textToCopy={profile.command} label="Copy" showIconOnly />
           </div>
 
-          <div className="flex items-center justify-between text-zinc-400 border-t border-zinc-900 pt-1.5">
+          <div className="flex items-center justify-between text-app-muted-fg border-t border-app-border pt-1.5">
             <div className="flex items-center gap-1.5 truncate">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -173,32 +173,30 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-zinc-500 shrink-0"
+                className="text-app-muted-fg shrink-0"
               >
                 <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.2A2 2 0 0 0 6.07 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
               </svg>
-              <span className="truncate text-[11px]">{profile.workingDirectory}</span>
+              <span className="truncate text-[11px] text-app-muted-fg">{profile.workingDirectory}</span>
             </div>
             <CopyButton textToCopy={profile.workingDirectory} label="Copy" showIconOnly />
           </div>
         </div>
 
-
-
         {/* Live Active Process Info when running */}
         {isRunning && (
-          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-[11px]">
-            <div className="flex items-center gap-3 text-emerald-300">
-              <span>PID: <strong className="font-mono text-zinc-100">{activePid ?? '—'}</strong></span>
+          <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px]">
+            <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-300">
+              <span>PID: <strong className="font-mono text-app-fg">{activePid ?? '—'}</strong></span>
               {activePort && (
-                <span>Port: <strong className="font-mono text-zinc-100">{activePort}</strong></span>
+                <span>Port: <strong className="font-mono text-app-fg">{activePort}</strong></span>
               )}
             </div>
             {onInspect && (
               <button
                 type="button"
                 onClick={() => onInspect(view)}
-                className="text-emerald-400 hover:text-emerald-200 underline font-medium cursor-pointer"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium cursor-pointer"
               >
                 Inspect Server
               </button>
@@ -208,7 +206,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
         {/* Error message banner */}
         {isError && errorMessage && (
-          <div className="p-2.5 rounded-lg bg-rose-950/40 border border-rose-800/50 text-rose-200 text-xs flex items-start gap-2">
+          <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-300 text-xs flex items-start gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="14"
@@ -219,7 +217,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-rose-400 shrink-0 mt-0.5"
+              className="text-red-500 shrink-0 mt-0.5"
             >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
@@ -231,7 +229,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       </div>
 
       {/* Action Buttons Footer */}
-      <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80 gap-2">
+      <div className="flex items-center justify-between pt-3 border-t border-app-border gap-2">
         {/* Left Side: Start / Stop / Restart Controls */}
         <div className="flex items-center gap-2">
           {!isRunning && !isStartingState && (
@@ -290,7 +288,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               type="button"
               onClick={() => onStop(view)}
               disabled={isStopping}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-600 dark:text-red-300 border border-red-500/30 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -310,7 +308,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               type="button"
               onClick={() => onRestart(profile.id)}
               disabled={isStartingState || isStopping}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-app-muted hover:bg-app-surface-hover text-app-fg rounded-lg text-xs font-medium border border-app-border transition-colors cursor-pointer"
               title="Restart Server"
             >
               <svg
@@ -339,7 +337,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <button
             type="button"
             onClick={() => onEdit(view)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover rounded-lg transition-colors cursor-pointer"
             title="Edit Profile Configuration"
           >
             <svg
@@ -361,7 +359,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <button
             type="button"
             onClick={() => onDelete(view)}
-            className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-app-muted-fg hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
             title="Delete Profile"
           >
             <svg

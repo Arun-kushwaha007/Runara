@@ -249,6 +249,7 @@ export const projectApi = {
 export const filesystemApi = {
   pickFolder,
   listWslDirectories,
+  browseWslDirectory: listWslDirectories,
   validateDirectory,
 };
 

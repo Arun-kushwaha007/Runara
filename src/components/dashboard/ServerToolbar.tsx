@@ -45,12 +45,12 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
   const runningWslDistros = wslDistributions.filter((d) => d.state === 'running');
 
   return (
-    <div className="space-y-3 bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4">
+    <div className="space-y-3 bg-app-surface border border-app-border rounded-xl p-4">
       {/* Top row: Search Bar & Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Search Field */}
         <div className="relative flex-1 min-w-[240px]">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-app-muted-fg">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="15"
@@ -71,13 +71,13 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search servers by name, port (e.g. 3000), PID, distro (e.g. Fedora), runtime, command..."
-            className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-blue-500/80 rounded-lg pl-9 pr-8 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+            className="w-full bg-app-input border border-app-border focus:border-blue-500 rounded-lg pl-9 pr-8 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-200"
+              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-app-muted-fg hover:text-app-fg cursor-pointer"
               title="Clear search"
             >
               <svg
@@ -100,16 +100,16 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
 
         {/* Right side controls: Auto-Refresh & Refresh Button */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer bg-zinc-950/60 border border-zinc-800 px-3 py-1.5 rounded-lg hover:bg-zinc-800/50 transition-colors select-none">
+          <label className="flex items-center gap-2 text-xs text-app-muted-fg cursor-pointer bg-app-muted border border-app-border px-3 py-1.5 rounded-lg hover:bg-app-surface-hover transition-colors select-none">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => onToggleAutoRefresh(e.target.checked)}
-              className="rounded bg-zinc-900 border-zinc-700 text-blue-600 focus:ring-0 focus:ring-offset-0"
+              className="rounded bg-app-surface border-app-border text-blue-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
             />
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 text-app-fg">
               {autoRefresh && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
               )}
               <span>Auto-refresh (3s)</span>
             </span>
@@ -119,7 +119,7 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             type="button"
             onClick={onRefresh}
             disabled={loading || refreshing}
-            className="flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg transition-colors shadow-xs cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -144,18 +144,18 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
       </div>
 
       {/* Bottom row: Filter Chips & Sorting */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800/60 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-app-border text-xs">
         {/* Filter controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Environment Filter */}
-          <div className="flex items-center gap-1 bg-zinc-950/60 border border-zinc-800 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-app-muted border border-app-border rounded-lg p-0.5">
             <button
               type="button"
               onClick={() => onFilterChange({ ...filters, environment: 'all' })}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 filters.environment === 'all'
-                  ? 'bg-zinc-800 text-zinc-100 font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-app-surface text-app-fg font-semibold shadow-xs'
+                  : 'text-app-muted-fg hover:text-app-fg'
               }`}
             >
               All Envs
@@ -163,10 +163,10 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             <button
               type="button"
               onClick={() => onFilterChange({ ...filters, environment: 'windows' })}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 filters.environment === 'windows'
-                  ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40 font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-blue-600/20 text-blue-600 dark:text-blue-300 border border-blue-500/40 font-semibold'
+                  : 'text-app-muted-fg hover:text-app-fg'
               }`}
             >
               Windows
@@ -174,15 +174,15 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             <button
               type="button"
               onClick={() => onFilterChange({ ...filters, environment: 'wsl' })}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer ${
                 filters.environment === 'wsl' || filters.environment.startsWith('wsl:')
-                  ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-purple-600/20 text-purple-600 dark:text-purple-300 border border-purple-500/40 font-semibold'
+                  : 'text-app-muted-fg hover:text-app-fg'
               }`}
             >
               <span>WSL</span>
               {runningWslDistros.length > 0 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               )}
             </button>
           </div>
@@ -190,18 +190,18 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
           {/* If WSL filter is active and multiple running distros exist, allow selecting specific distro */}
           {(filters.environment === 'wsl' || filters.environment.startsWith('wsl:')) &&
             runningWslDistros.length > 1 && (
-              <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-purple-800/40 rounded-lg px-2.5 py-1">
-                <span className="text-purple-400 text-[11px] font-medium">Distro:</span>
+              <div className="flex items-center gap-1.5 bg-app-muted border border-purple-500/30 rounded-lg px-2.5 py-1">
+                <span className="text-purple-600 dark:text-purple-400 text-[11px] font-medium">Distro:</span>
                 <select
                   value={filters.environment}
                   onChange={(e) => onFilterChange({ ...filters, environment: e.target.value })}
-                  className="bg-transparent text-xs text-purple-200 focus:outline-hidden cursor-pointer"
+                  className="bg-transparent text-xs text-app-fg focus:outline-hidden cursor-pointer"
                 >
-                  <option value="wsl" className="bg-zinc-900 text-zinc-200">
+                  <option value="wsl" className="bg-app-surface text-app-fg">
                     All WSL ({runningWslDistros.length})
                   </option>
                   {runningWslDistros.map((d) => (
-                    <option key={d.name} value={`wsl:${d.name}`} className="bg-zinc-900 text-zinc-200">
+                    <option key={d.name} value={`wsl:${d.name}`} className="bg-app-surface text-app-fg">
                       {d.name}
                     </option>
                   ))}
@@ -210,27 +210,27 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
             )}
 
           {/* Runtime Dropdown Filter */}
-          <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-zinc-800 rounded-lg px-2.5 py-1">
-            <span className="text-zinc-500 text-[11px] font-medium">Runtime:</span>
+          <div className="flex items-center gap-1.5 bg-app-muted border border-app-border rounded-lg px-2.5 py-1">
+            <span className="text-app-muted-fg text-[11px] font-medium">Runtime:</span>
             <select
               value={filters.runtime}
               onChange={(e) => onFilterChange({ ...filters, runtime: e.target.value })}
-              className="bg-transparent text-xs text-zinc-200 focus:outline-hidden cursor-pointer"
+              className="bg-transparent text-xs text-app-fg focus:outline-hidden cursor-pointer"
             >
-              <option value="all" className="bg-zinc-900 text-zinc-200">
+              <option value="all" className="bg-app-surface text-app-fg">
                 All Runtimes
               </option>
               {availableRuntimes.map((rt) => (
-                <option key={rt} value={rt} className="bg-zinc-900 text-zinc-200">
+                <option key={rt} value={rt} className="bg-app-surface text-app-fg">
                   {rt}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Managed State Filter (Milestone 8) */}
-          <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-zinc-800 rounded-lg px-2.5 py-1">
-            <span className="text-zinc-500 text-[11px] font-medium">Status:</span>
+          {/* Managed State Filter */}
+          <div className="flex items-center gap-1.5 bg-app-muted border border-app-border rounded-lg px-2.5 py-1">
+            <span className="text-app-muted-fg text-[11px] font-medium">Status:</span>
             <select
               value={filters.managedStatus ?? 'all'}
               onChange={(e) =>
@@ -239,15 +239,15 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
                   managedStatus: e.target.value as 'all' | 'managed' | 'unmanaged',
                 })
               }
-              className="bg-transparent text-xs text-zinc-200 focus:outline-hidden cursor-pointer"
+              className="bg-transparent text-xs text-app-fg focus:outline-hidden cursor-pointer"
             >
-              <option value="all" className="bg-zinc-900 text-zinc-200">
+              <option value="all" className="bg-app-surface text-app-fg">
                 All Profiles & Processes
               </option>
-              <option value="managed" className="bg-zinc-900 text-emerald-300">
+              <option value="managed" className="bg-app-surface text-emerald-600 dark:text-emerald-300">
                 Managed Only
               </option>
-              <option value="unmanaged" className="bg-zinc-900 text-amber-300">
+              <option value="unmanaged" className="bg-app-surface text-amber-600 dark:text-amber-300">
                 Unmanaged Only
               </option>
             </select>
@@ -256,26 +256,26 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
 
         {/* Sort Controls */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-zinc-950/60 border border-zinc-800 rounded-lg px-2.5 py-1">
-            <span className="text-zinc-500 text-[11px] font-medium">Sort by:</span>
+          <div className="flex items-center gap-1.5 bg-app-muted border border-app-border rounded-lg px-2.5 py-1">
+            <span className="text-app-muted-fg text-[11px] font-medium">Sort by:</span>
             <select
               value={sortField}
               onChange={(e) => onSortChange(e.target.value as ServerSortField)}
-              className="bg-transparent text-xs text-zinc-200 focus:outline-hidden cursor-pointer font-medium"
+              className="bg-transparent text-xs text-app-fg focus:outline-hidden cursor-pointer font-medium"
             >
-              <option value="port" className="bg-zinc-900 text-zinc-200">
+              <option value="port" className="bg-app-surface text-app-fg">
                 Port Number
               </option>
-              <option value="name" className="bg-zinc-900 text-zinc-200">
+              <option value="name" className="bg-app-surface text-app-fg">
                 Server Name
               </option>
-              <option value="pid" className="bg-zinc-900 text-zinc-200">
+              <option value="pid" className="bg-app-surface text-app-fg">
                 Process ID (PID)
               </option>
-              <option value="runtime" className="bg-zinc-900 text-zinc-200">
+              <option value="runtime" className="bg-app-surface text-app-fg">
                 Runtime
               </option>
-              <option value="environment" className="bg-zinc-900 text-zinc-200">
+              <option value="environment" className="bg-app-surface text-app-fg">
                 Environment
               </option>
             </select>
@@ -284,7 +284,7 @@ export const ServerToolbar: React.FC<ServerToolbarProps> = ({
               type="button"
               onClick={onToggleSortDirection}
               title={`Sort direction: ${sortDirection === 'asc' ? 'Ascending' : 'Descending'}`}
-              className="ml-1 p-1 text-zinc-400 hover:text-zinc-100 rounded hover:bg-zinc-800 transition-colors"
+              className="ml-1 p-1 text-app-muted-fg hover:text-app-fg rounded hover:bg-app-surface-hover transition-colors cursor-pointer"
             >
               {sortDirection === 'asc' ? (
                 <svg

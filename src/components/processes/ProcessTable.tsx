@@ -34,7 +34,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
       );
     }
     return (
-      <span className="text-blue-400 ml-1 inline-block">
+      <span className="text-blue-500 ml-1 inline-block">
         {sortDirection === 'asc' ? '↑' : '↓'}
       </span>
     );
@@ -44,65 +44,65 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
     switch (runtime) {
       case 'Node.js':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-green-950/60 text-green-400 border border-green-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             Node.js
           </span>
         );
       case 'Python':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-yellow-950/60 text-yellow-400 border border-yellow-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
             Python
           </span>
         );
       case 'Java':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-950/60 text-red-400 border border-red-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
             Java
           </span>
         );
       case '.NET':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-950/60 text-purple-400 border border-purple-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
             .NET
           </span>
         );
       case 'Go':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-950/60 text-cyan-400 border border-cyan-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
             Go
           </span>
         );
       case 'Rust':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-orange-950/60 text-orange-400 border border-orange-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
             Rust
           </span>
         );
       default:
-        return <span className="text-zinc-600 text-xs">-</span>;
+        return <span className="text-app-muted-fg text-xs">-</span>;
     }
   };
 
   const renderPackageManagerBadge = (pm: PackageManager) => {
-    if (pm === 'Unknown') return <span className="text-zinc-600 text-xs">-</span>;
+    if (pm === 'Unknown') return <span className="text-app-muted-fg text-xs">-</span>;
 
     const colors: Record<string, string> = {
-      npm: 'bg-red-950/40 text-red-300 border-red-800/30',
-      pnpm: 'bg-amber-950/40 text-amber-300 border-amber-800/30',
-      yarn: 'bg-blue-950/40 text-blue-300 border-blue-800/30',
-      bun: 'bg-orange-950/40 text-orange-300 border-orange-800/30',
+      npm: 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30',
+      pnpm: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+      yarn: 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30',
+      bun: 'bg-orange-500/15 text-orange-600 dark:text-orange-300 border-orange-500/30',
     };
 
     return (
       <span
         className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border ${
-          colors[pm] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+          colors[pm] ?? 'bg-app-muted text-app-muted-fg border-app-border'
         }`}
       >
         {pm}
@@ -114,34 +114,34 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
     switch (status) {
       case 'running':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             Running
           </span>
         );
       case 'accessrestricted':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-950/60 text-amber-400 border border-amber-800/40">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
             Restricted
           </span>
         );
       case 'unavailable':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-app-muted text-app-muted-fg border border-app-border">
             Unavailable
           </span>
         );
       default:
-        return <span className="text-zinc-500 text-xs">-</span>;
+        return <span className="text-app-muted-fg text-xs">-</span>;
     }
   };
 
   if (identities.length === 0) {
     return (
-      <div className="border border-dashed border-zinc-800 rounded-xl p-12 text-center bg-zinc-900/30">
+      <div className="border border-dashed border-app-border rounded-xl p-12 text-center bg-app-surface/40">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="mx-auto h-10 w-10 text-zinc-600 mb-3"
+          className="mx-auto h-10 w-10 text-app-muted-fg/60 mb-3"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -150,21 +150,21 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.3-4.3" />
         </svg>
-        <p className="text-sm font-medium text-zinc-300">No matching processes found</p>
-        <p className="text-xs text-zinc-500 mt-1">Try adjusting your search criteria.</p>
+        <p className="text-sm font-medium text-app-fg">No matching processes found</p>
+        <p className="text-xs text-app-muted-fg mt-1">Try adjusting your search criteria.</p>
       </div>
     );
   }
 
   return (
-    <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/40 shadow-xs">
+    <div className="border border-app-border rounded-xl overflow-hidden bg-app-surface shadow-xs">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-zinc-800/70 border-b border-zinc-800 text-zinc-400 select-none font-medium">
+            <tr className="bg-app-muted border-b border-app-border text-app-muted-fg select-none font-medium">
               <th
                 onClick={() => onSort('pid')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-20"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-20"
               >
                 <div className="flex items-center">
                   <span>PID</span>
@@ -173,7 +173,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('name')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-44"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-44"
               >
                 <div className="flex items-center">
                   <span>Process Name</span>
@@ -182,7 +182,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('runtime')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-28"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-28"
               >
                 <div className="flex items-center">
                   <span>Runtime</span>
@@ -191,7 +191,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('packageManager')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-24"
               >
                 <div className="flex items-center">
                   <span>Pkg Mgr</span>
@@ -200,7 +200,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('ports')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-28"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-28"
               >
                 <div className="flex items-center">
                   <span>Ports</span>
@@ -209,7 +209,7 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('commandLine')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group min-w-[200px]"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group min-w-[200px]"
               >
                 <div className="flex items-center">
                   <span>Command Line</span>
@@ -220,19 +220,19 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
               <th className="py-3 px-4 w-28 text-center">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
+          <tbody className="divide-y divide-app-border text-app-fg">
             {identities.map((id) => {
               const { process: proc, runtime, packageManager, listeningPorts } = id;
               return (
                 <tr
                   key={proc.pid}
                   onClick={() => onSelectIdentity(id)}
-                  className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
+                  className="hover:bg-app-surface-hover cursor-pointer transition-colors group"
                 >
-                  <td className="py-2.5 px-4 font-mono font-medium text-zinc-200">
+                  <td className="py-2.5 px-4 font-mono font-medium text-app-fg">
                     {proc.pid}
                   </td>
-                  <td className="py-2.5 px-4 font-medium text-zinc-100 group-hover:text-blue-400 transition-colors">
+                  <td className="py-2.5 px-4 font-medium text-app-fg group-hover:text-blue-500 transition-colors">
                     <div className="flex items-center gap-2">
                       <span className="truncate max-w-[170px] font-mono" title={proc.name}>
                         {proc.name}
@@ -247,32 +247,32 @@ export const ProcessTable: React.FC<ProcessTableProps> = ({
                         {listeningPorts.map((p) => (
                           <span
                             key={p}
-                            className="bg-blue-950/60 border border-blue-800/40 px-1.5 py-0.5 rounded text-[11px] text-blue-300 font-semibold"
+                            className="bg-blue-600/10 border border-blue-500/30 px-1.5 py-0.5 rounded text-[11px] text-blue-600 dark:text-blue-300 font-semibold"
                           >
                             {p}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-zinc-600 text-xs">-</span>
+                      <span className="text-app-muted-fg text-xs">-</span>
                     )}
                   </td>
-                  <td className="py-2.5 px-4 font-mono text-zinc-300 max-w-xs truncate">
+                  <td className="py-2.5 px-4 font-mono text-app-fg max-w-xs truncate">
                     {proc.commandLine ? (
                       <span title={proc.commandLine} className="truncate block">
                         {proc.commandLine}
                       </span>
                     ) : (
-                      <span className="text-zinc-600 italic">unavailable</span>
+                      <span className="text-app-muted-fg italic">unavailable</span>
                     )}
                   </td>
-                  <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-[180px] truncate">
+                  <td className="py-2.5 px-4 font-mono text-app-muted-fg max-w-[180px] truncate">
                     {proc.workingDirectory ? (
                       <span title={proc.workingDirectory} className="truncate block">
                         {proc.workingDirectory}
                       </span>
                     ) : (
-                      <span className="text-zinc-600 italic">unavailable</span>
+                      <span className="text-app-muted-fg italic">unavailable</span>
                     )}
                   </td>
                   <td className="py-2.5 px-4 text-center">

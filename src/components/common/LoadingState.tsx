@@ -4,7 +4,7 @@ export const LoadingState: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Top Banner Status */}
-      <div className="border border-zinc-800/80 rounded-xl p-6 text-center bg-zinc-900/30 flex flex-col items-center justify-center gap-3">
+      <div className="border border-app-border rounded-xl p-6 text-center bg-app-surface/40 flex flex-col items-center justify-center gap-3">
         <div className="relative">
           <svg
             className="animate-spin h-7 w-7 text-blue-500"
@@ -21,8 +21,8 @@ export const LoadingState: React.FC = () => {
           </svg>
         </div>
         <div>
-          <p className="text-sm text-zinc-200 font-semibold">Discovering local development servers...</p>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-sm text-app-fg font-semibold">Discovering local development servers...</p>
+          <p className="text-xs text-app-muted-fg mt-0.5">
             Querying Windows & WSL listening TCP endpoints, process PEBs, ancestry trees & runtimes
           </p>
         </div>
@@ -33,20 +33,20 @@ export const LoadingState: React.FC = () => {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4 animate-pulse"
+            className="bg-app-surface border border-app-border rounded-xl p-5 space-y-4 animate-pulse"
           >
             <div className="flex items-center justify-between">
-              <div className="h-5 bg-zinc-800 rounded w-1/2"></div>
-              <div className="h-5 bg-zinc-800 rounded-full w-16"></div>
+              <div className="h-5 bg-app-muted rounded w-1/2"></div>
+              <div className="h-5 bg-app-muted rounded-full w-16"></div>
             </div>
-            <div className="h-8 bg-zinc-800/80 rounded w-1/3"></div>
-            <div className="space-y-2 pt-2 border-t border-zinc-800/60">
-              <div className="h-3.5 bg-zinc-800/60 rounded w-4/5"></div>
-              <div className="h-3.5 bg-zinc-800/60 rounded w-3/5"></div>
+            <div className="h-8 bg-app-muted rounded w-1/3"></div>
+            <div className="space-y-2 pt-2 border-t border-app-border">
+              <div className="h-3.5 bg-app-muted rounded w-4/5"></div>
+              <div className="h-3.5 bg-app-muted rounded w-3/5"></div>
             </div>
             <div className="flex items-center justify-between pt-2">
-              <div className="h-4 bg-zinc-800/60 rounded w-20"></div>
-              <div className="h-7 bg-zinc-800 rounded w-16"></div>
+              <div className="h-4 bg-app-muted rounded w-20"></div>
+              <div className="h-7 bg-app-muted rounded w-16"></div>
             </div>
           </div>
         ))}

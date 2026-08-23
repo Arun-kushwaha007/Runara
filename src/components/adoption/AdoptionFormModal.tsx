@@ -131,17 +131,17 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="adoption-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-xs animate-in fade-in duration-150 text-app-fg"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-xl bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+        className="relative w-full max-w-xl bg-app-surface border border-app-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto text-app-fg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/40">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-app-border bg-app-surface/90">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
+            <div className="p-2 rounded-xl bg-emerald-600/20 text-emerald-500 border border-emerald-500/30">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
@@ -158,10 +158,10 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
               </svg>
             </div>
             <div>
-              <h2 id="adoption-modal-title" className="text-base font-semibold text-zinc-100">
+              <h2 id="adoption-modal-title" className="text-base font-semibold text-app-fg">
                 Adopt Running Server
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-app-muted-fg">
                 Save this discovered process as a managed profile for one-click control and startup.
               </p>
             </div>
@@ -171,7 +171,7 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="text-app-muted-fg hover:text-app-fg p-1.5 rounded-lg hover:bg-app-surface-hover transition-colors cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -193,27 +193,27 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* Discovered Context Banner */}
-          <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800 text-xs space-y-1.5">
-            <div className="flex items-center justify-between text-zinc-400">
-              <span className="font-medium text-zinc-300">Detected Process Context</span>
-              <span className="font-mono text-zinc-400">PID {server.pid}</span>
+          <div className="p-3 rounded-xl bg-app-bg border border-app-border text-xs space-y-1.5">
+            <div className="flex items-center justify-between text-app-muted-fg">
+              <span className="font-medium text-app-fg">Detected Process Context</span>
+              <span className="font-mono text-app-muted-fg">PID {server.pid}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-1 text-zinc-300">
-              <span className="inline-flex items-center px-2 py-0.5 rounded bg-zinc-800 text-zinc-200 font-mono text-[11px]">
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-app-fg">
+              <span className="inline-flex items-center px-2 py-0.5 rounded bg-app-muted text-app-fg font-mono text-[11px] border border-app-border">
                 {server.processName}
               </span>
               {server.runtime && server.runtime !== 'Unknown' && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-800/50 text-[11px]">
+                <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-600/15 text-blue-600 dark:text-blue-300 border border-blue-500/30 text-[11px]">
                   {server.runtime}
                 </span>
               )}
               {server.packageManager && server.packageManager !== 'Unknown' && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 text-[11px]">
+                <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-[11px]">
                   {server.packageManager}
                 </span>
               )}
-              <span className="text-zinc-500">•</span>
-              <span className="font-mono text-zinc-400">
+              <span className="text-app-muted-fg">•</span>
+              <span className="font-mono text-app-muted-fg">
                 Port {server.allPorts.join(', ')}
               </span>
             </div>
@@ -221,7 +221,7 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
 
           {/* Validation Error Banner */}
           {validationError && (
-            <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 text-rose-200 text-xs flex items-center gap-2 animate-in fade-in duration-150">
+            <div className="p-3 rounded-lg bg-red-500/15 border border-red-500/30 text-red-600 dark:text-red-300 text-xs flex items-center gap-2 animate-in fade-in duration-150">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -232,7 +232,7 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-rose-400 shrink-0"
+                className="text-red-500 shrink-0"
               >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -258,8 +258,8 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
 
           {/* Profile Name Field */}
           <div className="space-y-1.5">
-            <label htmlFor="adoption-profile-name" className="text-xs font-medium text-zinc-300">
-              Profile Name <span className="text-rose-400">*</span>
+            <label htmlFor="adoption-profile-name" className="text-xs font-medium text-app-fg">
+              Profile Name <span className="text-red-500">*</span>
             </label>
             <input
               id="adoption-profile-name"
@@ -268,18 +268,18 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Company Frontend, API Service"
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
           {/* Environment & Distro Badges (Read-Only) */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
-              Environment <span className="text-zinc-500 font-normal">(Derived from running server)</span>
+            <label className="text-xs font-medium text-app-fg">
+              Environment <span className="text-app-muted-fg font-normal">(Derived from running server)</span>
             </label>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 text-xs">
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-app-bg border border-app-border text-xs">
               {isWsl ? (
-                <div className="flex items-center gap-2 text-purple-300">
+                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="14"
@@ -290,7 +290,7 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-purple-400"
+                    className="text-purple-500"
                   >
                     <polyline points="4 17 10 11 4 5" />
                     <line x1="12" y1="19" x2="20" y2="19" />
@@ -298,12 +298,12 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                   <span className="font-medium">
                     WSL / {draft.environment.type === 'wsl' ? draft.environment.distro : 'Linux'}
                   </span>
-                  <span className="text-[10px] text-zinc-500 uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-800/80">
+                  <span className="text-[10px] text-app-muted-fg uppercase tracking-wider px-1.5 py-0.5 rounded bg-app-muted">
                     Linux Distro
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-blue-300">
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="14"
@@ -314,7 +314,7 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-blue-400"
+                    className="text-blue-500"
                   >
                     <rect width="20" height="14" x="2" y="3" rx="2" />
                     <line x1="8" x2="16" y1="21" y2="21" />
@@ -340,10 +340,10 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
           {/* Command Field */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="adoption-command" className="text-xs font-medium text-zinc-300">
-                Startup Command <span className="text-rose-400">*</span>
+              <label htmlFor="adoption-command" className="text-xs font-medium text-app-fg">
+                Startup Command <span className="text-red-500">*</span>
               </label>
-              <span className="text-[11px] text-amber-400/90 font-normal">
+              <span className="text-[11px] text-amber-600 dark:text-amber-400 font-normal">
                 Detected from process — edit to original dev command if needed
               </span>
             </div>
@@ -354,18 +354,18 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               placeholder="e.g. npm run dev, python -m uvicorn main:app, cargo run"
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
           {/* Expected Port Field */}
           <div className="space-y-1.5">
-            <label htmlFor="adoption-port" className="text-xs font-medium text-zinc-300">
+            <label htmlFor="adoption-port" className="text-xs font-medium text-app-fg">
               Expected Port
             </label>
             {hasMultiplePorts ? (
               <div className="space-y-2">
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-app-muted-fg">
                   Multiple listening ports detected. Select the primary server port:
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -374,10 +374,10 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                       key={p}
                       type="button"
                       onClick={() => setSelectedPort(String(p))}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors border ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors border cursor-pointer ${
                         selectedPort === String(p)
-                          ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/70 font-semibold'
-                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-800 hover:text-zinc-200'
+                          ? 'bg-emerald-600/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/70 font-semibold'
+                          : 'bg-app-bg text-app-muted-fg border-app-border hover:bg-app-surface-hover hover:text-app-fg'
                       }`}
                     >
                       Port {p}
@@ -386,10 +386,10 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setSelectedPort('')}
-                    className={`px-3 py-1.5 rounded-lg text-xs transition-colors border ${
+                    className={`px-3 py-1.5 rounded-lg text-xs transition-colors border cursor-pointer ${
                       selectedPort === ''
-                        ? 'bg-zinc-800 text-zinc-200 border-zinc-600 font-medium'
-                        : 'bg-zinc-950 text-zinc-500 border-zinc-800 hover:bg-zinc-800 hover:text-zinc-300'
+                        ? 'bg-app-muted text-app-fg border-app-border font-medium'
+                        : 'bg-app-bg text-app-muted-fg border-app-border hover:bg-app-surface-hover hover:text-app-fg'
                     }`}
                   >
                     None / Match by dir
@@ -405,15 +405,15 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
                 value={selectedPort}
                 onChange={(e) => setSelectedPort(e.target.value)}
                 placeholder="e.g. 3000, 5173, 8080 (optional)"
-                className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
               />
             )}
           </div>
 
           {/* Expected Host Field */}
           <div className="space-y-1.5">
-            <label htmlFor="adoption-host" className="text-xs font-medium text-zinc-300">
-              Expected Host Binding <span className="text-zinc-500 font-normal">(Optional)</span>
+            <label htmlFor="adoption-host" className="text-xs font-medium text-app-fg">
+              Expected Host Binding <span className="text-app-muted-fg font-normal">(Optional)</span>
             </label>
             <input
               id="adoption-host"
@@ -421,14 +421,14 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
               value={expectedHost}
               onChange={(e) => setExpectedHost(e.target.value)}
               placeholder="e.g. 127.0.0.1, localhost (optional)"
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label htmlFor="adoption-description" className="text-xs font-medium text-zinc-300">
-              Description <span className="text-zinc-500 font-normal">(Optional)</span>
+            <label htmlFor="adoption-description" className="text-xs font-medium text-app-fg">
+              Description <span className="text-app-muted-fg font-normal">(Optional)</span>
             </label>
             <textarea
               id="adoption-description"
@@ -436,24 +436,24 @@ export const AdoptionFormModal: React.FC<AdoptionFormModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add optional notes about this server..."
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-emerald-500 resize-none"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-emerald-500 resize-none"
             />
           </div>
 
           {/* Modal Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-app-border">
             <button
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-app-muted hover:bg-app-surface-hover text-app-fg text-xs font-medium border border-app-border transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isSaving ? (
                 <>

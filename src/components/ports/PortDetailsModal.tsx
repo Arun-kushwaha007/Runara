@@ -35,20 +35,20 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
     : `${port.address}:${port.port}`;
 
   const renderRuntimeBadge = (r?: Runtime) => {
-    if (!r || r === 'Unknown') return <span className="text-zinc-500 font-sans">Unknown</span>;
+    if (!r || r === 'Unknown') return <span className="text-app-muted-fg font-sans">Unknown</span>;
     const map: Record<string, string> = {
-      'Node.js': 'bg-green-950/60 text-green-300 border-green-800/40',
-      Python: 'bg-yellow-950/60 text-yellow-300 border-yellow-800/40',
-      Java: 'bg-red-950/60 text-red-300 border-red-800/40',
-      '.NET': 'bg-purple-950/60 text-purple-300 border-purple-800/40',
-      Go: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
-      Rust: 'bg-orange-950/60 text-orange-300 border-orange-800/40',
+      'Node.js': 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+      Python: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+      Java: 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30',
+      '.NET': 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30',
+      Go: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border-cyan-500/30',
+      Rust: 'bg-orange-500/15 text-orange-600 dark:text-orange-300 border-orange-500/30',
     };
 
     return (
       <span
         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
-          map[r] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+          map[r] ?? 'bg-app-muted text-app-muted-fg border-app-border'
         }`}
       >
         {r}
@@ -57,18 +57,18 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
   };
 
   const renderPackageManagerBadge = (pm?: PackageManager) => {
-    if (!pm || pm === 'Unknown') return <span className="text-zinc-500 font-sans">None</span>;
+    if (!pm || pm === 'Unknown') return <span className="text-app-muted-fg font-sans">None</span>;
     const colors: Record<string, string> = {
-      npm: 'bg-red-950/40 text-red-300 border-red-800/40',
-      pnpm: 'bg-amber-950/40 text-amber-300 border-amber-800/40',
-      yarn: 'bg-blue-950/40 text-blue-300 border-blue-800/40',
-      bun: 'bg-orange-950/40 text-orange-300 border-orange-800/40',
+      npm: 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30',
+      pnpm: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+      yarn: 'bg-blue-500/15 text-blue-600 dark:text-blue-300 border-blue-500/30',
+      bun: 'bg-orange-500/15 text-orange-600 dark:text-orange-300 border-orange-500/30',
     };
 
     return (
       <span
         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium border ${
-          colors[pm] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+          colors[pm] ?? 'bg-app-muted text-app-muted-fg border-app-border'
         }`}
       >
         {pm}
@@ -78,7 +78,7 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs text-app-fg"
       onClick={onClose}
       onKeyDown={(e) => e.key === 'Escape' && onClose()}
       role="dialog"
@@ -86,13 +86,13 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
       tabIndex={-1}
     >
       <div
-        className="bg-zinc-900 border border-zinc-700/70 rounded-xl shadow-2xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="bg-app-surface border border-app-border rounded-xl shadow-2xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 text-app-fg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/90">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-app-border bg-app-surface/90">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <div className="p-2 rounded-lg bg-blue-600/10 text-blue-500 border border-blue-500/20">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -111,24 +111,24 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
               </svg>
             </div>
             <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-zinc-100 truncate flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-app-fg truncate flex items-center gap-2">
                 <span>Port {port.port}</span>
-                <span className="text-xs font-mono text-zinc-400 font-normal">({fullEndpoint})</span>
+                <span className="text-xs font-mono text-app-muted-fg font-normal">({fullEndpoint})</span>
               </h3>
-              <p className="text-xs text-zinc-400">
-                Owning PID: <span className="font-mono text-zinc-300 font-semibold">{port.pid}</span>
+              <p className="text-xs text-app-muted-fg">
+                Owning PID: <span className="font-mono text-app-fg font-semibold">{port.pid}</span>
                 {process ? ` (${process.name})` : ' (Process Unavailable)'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Listening
             </span>
             <button
               onClick={onClose}
-              className="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors ml-1"
+              className="text-app-muted-fg hover:text-app-fg p-1.5 rounded-lg hover:bg-app-surface-hover transition-colors ml-1 cursor-pointer"
               title="Close (Esc)"
             >
               <svg
@@ -152,14 +152,14 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
         {/* Modal Body */}
         <div className="p-6 space-y-5 overflow-y-auto">
           {/* Socket Endpoint Card */}
-          <div className="bg-zinc-800/40 border border-zinc-700/50 rounded-lg p-4 space-y-3">
+          <div className="bg-app-bg border border-app-border rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-app-muted-fg uppercase tracking-wider">
                 TCP Socket Endpoint
               </span>
               <button
                 onClick={() => copyToClipboard(fullEndpoint, 'endpoint')}
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-xs text-blue-500 hover:text-blue-400 transition-colors cursor-pointer"
               >
                 {copiedField === 'endpoint' ? '✓ Copied' : 'Copy endpoint'}
               </button>
@@ -167,33 +167,33 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <div className="text-[11px] text-zinc-500">Port</div>
-                <div className="text-base font-mono font-semibold text-blue-400">{port.port}</div>
+                <div className="text-[11px] text-app-muted-fg">Port</div>
+                <div className="text-base font-mono font-semibold text-blue-500">{port.port}</div>
               </div>
               <div>
-                <div className="text-[11px] text-zinc-500">Bound Address</div>
-                <div className="text-xs font-mono font-medium text-zinc-200 truncate" title={port.address}>
+                <div className="text-[11px] text-app-muted-fg">Bound Address</div>
+                <div className="text-xs font-mono font-medium text-app-fg truncate" title={port.address}>
                   {port.address}
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-zinc-500">Protocol / Type</div>
-                <div className="text-xs font-medium text-zinc-300">
+                <div className="text-[11px] text-app-muted-fg">Protocol / Type</div>
+                <div className="text-xs font-medium text-app-fg">
                   <span className="uppercase">{port.protocol}</span>{' '}
-                  <span className="text-[11px] text-zinc-500">
+                  <span className="text-[11px] text-app-muted-fg">
                     ({port.address.includes(':') ? 'IPv6' : 'IPv4'})
                   </span>
                 </div>
               </div>
               <div>
-                <div className="text-[11px] text-zinc-500">Scope</div>
+                <div className="text-[11px] text-app-muted-fg">Scope</div>
                 <div className="text-xs font-medium">
                   {isLocalhost ? (
-                    <span className="text-emerald-400">Loopback Only</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">Loopback Only</span>
                   ) : isWildcard ? (
-                    <span className="text-amber-400">All Interfaces (0.0.0.0)</span>
+                    <span className="text-amber-600 dark:text-amber-400">All Interfaces (0.0.0.0)</span>
                   ) : (
-                    <span className="text-blue-400">Specific Host IP</span>
+                    <span className="text-blue-500">Specific Host IP</span>
                   )}
                 </div>
               </div>
@@ -202,12 +202,12 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
 
           {/* Process Information Card */}
           <div className="space-y-4">
-            <div className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+            <div className="text-xs font-medium text-app-muted-fg uppercase tracking-wider flex items-center justify-between">
               <span>Owning Process (PID {port.pid})</span>
               {process && (
                 <button
                   onClick={() => copyToClipboard(port.pid.toString(), 'pid')}
-                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-xs text-blue-500 hover:text-blue-400 transition-colors cursor-pointer"
                 >
                   {copiedField === 'pid' ? '✓ Copied' : 'Copy PID'}
                 </button>
@@ -215,15 +215,15 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
             </div>
 
             {process ? (
-              <div className="space-y-4 bg-zinc-950/60 border border-zinc-800 rounded-lg p-4">
+              <div className="space-y-4 bg-app-bg border border-app-border rounded-lg p-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <div className="text-[11px] text-zinc-500">Process Name</div>
-                    <div className="text-sm font-semibold text-zinc-100 font-mono">{process.name}</div>
+                    <div className="text-[11px] text-app-muted-fg">Process Name</div>
+                    <div className="text-sm font-semibold text-app-fg font-mono">{process.name}</div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-zinc-500">Parent Process</div>
-                    <div className="text-xs font-mono text-zinc-300 mt-0.5 truncate">
+                    <div className="text-[11px] text-app-muted-fg">Parent Process</div>
+                    <div className="text-xs font-mono text-app-fg mt-0.5 truncate">
                       {identity?.parent ? (
                         <span>
                           {identity.parent.name} ({identity.parent.pid})
@@ -234,11 +234,11 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
                     </div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-zinc-500">Runtime</div>
+                    <div className="text-[11px] text-app-muted-fg">Runtime</div>
                     <div className="mt-0.5">{renderRuntimeBadge(identity?.runtime)}</div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-zinc-500">Package Manager</div>
+                    <div className="text-[11px] text-app-muted-fg">Package Manager</div>
                     <div className="mt-0.5">{renderPackageManagerBadge(identity?.packageManager)}</div>
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
                 {/* All Listening Ports for this process */}
                 {identity && identity.listeningPorts.length > 1 && (
                   <div className="space-y-1">
-                    <div className="text-[11px] text-zinc-400">
+                    <div className="text-[11px] text-app-muted-fg">
                       All Listening Ports Owned by PID {port.pid} ({identity.listeningPorts.length})
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -256,7 +256,7 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
                           className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
                             p === port.port
                               ? 'bg-blue-600 text-white border-blue-500'
-                              : 'bg-blue-950/50 text-blue-300 border-blue-800/40'
+                              : 'bg-blue-600/15 text-blue-600 dark:text-blue-300 border-blue-500/30'
                           }`}
                         >
                           Port {p} {p === port.port && '(Active)'}
@@ -269,19 +269,19 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
                 {/* Process Tree if available */}
                 {identity && identity.processTree.length > 0 && (
                   <div className="space-y-1">
-                    <div className="text-[11px] text-zinc-400">Process Ancestry Tree</div>
-                    <div className="bg-zinc-900/90 border border-zinc-800/80 rounded p-3 text-xs font-mono space-y-1">
+                    <div className="text-[11px] text-app-muted-fg">Process Ancestry Tree</div>
+                    <div className="bg-app-surface border border-app-border rounded p-3 text-xs font-mono space-y-1">
                       {identity.processTree.map((node, index) => (
                         <div
                           key={`${node.pid}_${index}`}
                           style={{ paddingLeft: `${node.depth * 16}px` }}
                           className={`flex items-center gap-2 ${
-                            node.isTarget ? 'text-blue-300 font-semibold' : 'text-zinc-400'
+                            node.isTarget ? 'text-blue-600 dark:text-blue-300 font-semibold' : 'text-app-muted-fg'
                           }`}
                         >
-                          <span className="text-zinc-600">{node.depth === 0 ? '●' : '└──'}</span>
+                          <span className="text-app-muted-fg/60">{node.depth === 0 ? '●' : '└──'}</span>
                           <span>{node.name}</span>
-                          <span className="text-zinc-600 text-[11px]">(PID {node.pid})</span>
+                          <span className="text-app-muted-fg text-[11px]">(PID {node.pid})</span>
                           {node.isTarget && (
                             <span className="text-[9px] bg-blue-600 text-white px-1 rounded uppercase font-sans font-bold">
                               Target
@@ -295,64 +295,64 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
 
                 {/* Executable Path */}
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                  <div className="flex items-center justify-between text-[11px] text-app-muted-fg">
                     <span>Executable Path</span>
                     {process.executablePath && (
                       <button
                         onClick={() => copyToClipboard(process.executablePath!, 'exe')}
-                        className="text-[11px] text-blue-400 hover:text-blue-300"
+                        className="text-[11px] text-blue-500 hover:text-blue-400 cursor-pointer"
                       >
                         {copiedField === 'exe' ? '✓ Copied' : 'Copy'}
                       </button>
                     )}
                   </div>
-                  <div className="bg-zinc-900/90 border border-zinc-800/80 rounded p-2 text-xs font-mono text-zinc-300 break-all">
-                    {process.executablePath || <span className="text-zinc-500 italic">Unavailable / Restricted</span>}
+                  <div className="bg-app-surface border border-app-border rounded p-2 text-xs font-mono text-app-fg break-all">
+                    {process.executablePath || <span className="text-app-muted-fg italic">Unavailable / Restricted</span>}
                   </div>
                 </div>
 
                 {/* Command Line */}
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                  <div className="flex items-center justify-between text-[11px] text-app-muted-fg">
                     <span>Command Line</span>
                     {process.commandLine && (
                       <button
                         onClick={() => copyToClipboard(process.commandLine!, 'cmd')}
-                        className="text-[11px] text-blue-400 hover:text-blue-300"
+                        className="text-[11px] text-blue-500 hover:text-blue-400 cursor-pointer"
                       >
                         {copiedField === 'cmd' ? '✓ Copied' : 'Copy'}
                       </button>
                     )}
                   </div>
-                  <div className="bg-zinc-900/90 border border-zinc-800/80 rounded p-2 text-xs font-mono text-zinc-300 break-all whitespace-pre-wrap max-h-28 overflow-y-auto">
-                    {process.commandLine || <span className="text-zinc-500 italic">Unavailable / Restricted</span>}
+                  <div className="bg-app-surface border border-app-border rounded p-2 text-xs font-mono text-app-fg break-all whitespace-pre-wrap max-h-28 overflow-y-auto">
+                    {process.commandLine || <span className="text-app-muted-fg italic">Unavailable / Restricted</span>}
                   </div>
                 </div>
 
                 {/* Working Directory */}
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] text-zinc-400">
+                  <div className="flex items-center justify-between text-[11px] text-app-muted-fg">
                     <span>Working Directory (CWD)</span>
                     {process.workingDirectory && (
                       <button
                         onClick={() => copyToClipboard(process.workingDirectory!, 'cwd')}
-                        className="text-[11px] text-blue-400 hover:text-blue-300"
+                        className="text-[11px] text-blue-500 hover:text-blue-400 cursor-pointer"
                       >
                         {copiedField === 'cwd' ? '✓ Copied' : 'Copy'}
                       </button>
                     )}
                   </div>
-                  <div className="bg-zinc-900/90 border border-zinc-800/80 rounded p-2 text-xs font-mono text-zinc-300 break-all">
-                    {process.workingDirectory || <span className="text-zinc-500 italic">Unavailable / Restricted</span>}
+                  <div className="bg-app-surface border border-app-border rounded p-2 text-xs font-mono text-app-fg break-all">
+                    {process.workingDirectory || <span className="text-app-muted-fg italic">Unavailable / Restricted</span>}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-zinc-950/60 border border-dashed border-zinc-800 rounded-lg p-6 text-center">
-                <p className="text-xs text-amber-400 font-medium">
+              <div className="bg-app-bg border border-dashed border-app-border rounded-lg p-6 text-center">
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                   Process information unavailable for PID {port.pid}
                 </p>
-                <p className="text-[11px] text-zinc-500 mt-1 max-w-sm mx-auto">
+                <p className="text-[11px] text-app-muted-fg mt-1 max-w-sm mx-auto">
                   The process may have terminated immediately after socket enumeration, or access may be restricted by Windows security.
                 </p>
               </div>
@@ -361,13 +361,13 @@ export const PortDetailsModal: React.FC<PortDetailsModalProps> = ({ item, onClos
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-zinc-800 bg-zinc-900/90 flex items-center justify-between">
-          <div className="text-[11px] text-zinc-500">
+        <div className="px-6 py-3 border-t border-app-border bg-app-surface/90 flex items-center justify-between">
+          <div className="text-[11px] text-app-muted-fg">
             Snapshot data discovered via Win32 IP Helper and ProcessIdentityService
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-medium bg-app-muted hover:bg-app-surface-hover text-app-fg rounded-lg border border-app-border transition-colors cursor-pointer"
           >
             Close
           </button>

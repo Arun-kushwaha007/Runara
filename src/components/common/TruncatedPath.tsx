@@ -43,7 +43,7 @@ export const TruncatedPath: React.FC<TruncatedPathProps> = ({
   className = '',
   showCopy = true,
 }) => {
-  if (!path) return <span className="text-zinc-500 italic">None</span>;
+  if (!path) return <span className="text-app-muted-fg italic">None</span>;
 
   const displayPath = truncateMiddlePath(path, maxLength);
   const isTruncated = displayPath !== path;
@@ -52,7 +52,7 @@ export const TruncatedPath: React.FC<TruncatedPathProps> = ({
     <div className={`inline-flex items-center gap-1.5 max-w-full group ${className}`}>
       <span
         title={isTruncated ? path : undefined}
-        className="font-mono text-xs text-zinc-300 dark:text-zinc-300 truncate select-all"
+        className="font-mono text-xs text-app-fg truncate select-all"
       >
         {displayPath}
       </span>

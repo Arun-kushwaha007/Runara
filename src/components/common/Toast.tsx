@@ -19,8 +19,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
     switch (toast.type) {
       case 'success':
         return {
-          container: 'bg-emerald-950/90 border-emerald-700/60 text-emerald-100 shadow-emerald-950/50',
-          iconColor: 'text-emerald-400',
+          container: 'bg-emerald-50 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-700/60 text-emerald-950 dark:text-emerald-100 shadow-emerald-950/10 dark:shadow-emerald-950/50',
+          iconColor: 'text-emerald-600 dark:text-emerald-400',
           icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
@@ -29,10 +29,10 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         };
       case 'warning':
         return {
-          container: 'bg-amber-950/90 border-amber-700/60 text-amber-100 shadow-amber-950/50',
-          iconColor: 'text-amber-400',
+          container: 'bg-amber-50 dark:bg-amber-950/90 border-amber-300 dark:border-amber-700/60 text-amber-950 dark:text-amber-100 shadow-amber-950/10 dark:shadow-amber-950/50',
+          iconColor: 'text-amber-600 dark:text-amber-400',
           icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -41,8 +41,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         };
       case 'error':
         return {
-          container: 'bg-red-950/90 border-red-700/60 text-red-100 shadow-red-950/50',
-          iconColor: 'text-red-400',
+          container: 'bg-red-50 dark:bg-red-950/90 border-red-300 dark:border-red-700/60 text-red-950 dark:text-red-100 shadow-red-950/10 dark:shadow-red-950/50',
+          iconColor: 'text-red-600 dark:text-red-400',
           icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -54,8 +54,8 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
       case 'info':
       default:
         return {
-          container: 'bg-blue-950/90 border-blue-700/60 text-blue-100 shadow-blue-950/50',
-          iconColor: 'text-blue-400',
+          container: 'bg-blue-50 dark:bg-blue-950/90 border-blue-300 dark:border-blue-700/60 text-blue-950 dark:text-blue-100 shadow-blue-950/10 dark:shadow-blue-950/50',
+          iconColor: 'text-blue-600 dark:text-blue-400',
           icon: (
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
@@ -84,7 +84,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
             {toast.message}
           </p>
           {toast.details && (
-            <p className="text-[11px] opacity-80 mt-0.5 leading-relaxed break-words font-mono">
+            <p className="text-[11px] opacity-85 mt-0.5 leading-relaxed break-words font-mono">
               {toast.details}
             </p>
           )}
@@ -92,7 +92,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onDismiss }) => {
         <button
           type="button"
           onClick={onDismiss}
-          className="shrink-0 p-1 rounded-md opacity-70 hover:opacity-100 hover:bg-white/10 transition-all cursor-pointer"
+          className="shrink-0 p-1 rounded-md opacity-70 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10 transition-all cursor-pointer"
           title="Dismiss notification"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

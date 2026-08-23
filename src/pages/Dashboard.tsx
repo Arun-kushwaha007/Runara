@@ -470,12 +470,10 @@ export const Dashboard: React.FC = () => {
   }, [identities, searchQuery, processSortField, processSortDirection]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-
-
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-app-fg">
       {/* WSL Diagnostics Alert Banner (Graceful Degradation) */}
       {diagnostics.length > 0 && !dismissedDiagnostics && (
-        <div className="flex items-center justify-between p-4 rounded-xl border border-amber-800/60 bg-amber-950/40 text-amber-200 text-xs">
+        <div className="flex items-center justify-between p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200 text-xs">
           <div className="flex items-center gap-2.5">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -487,7 +485,7 @@ export const Dashboard: React.FC = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-amber-400 shrink-0"
+              className="text-amber-500 shrink-0"
             >
               <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
               <line x1="12" y1="9" x2="12" y2="13" />
@@ -503,7 +501,7 @@ export const Dashboard: React.FC = () => {
           <button
             type="button"
             onClick={() => setDismissedDiagnostics(true)}
-            className="text-amber-400 hover:text-amber-100 px-2 py-1 rounded hover:bg-amber-900/40 transition-colors shrink-0"
+            className="text-amber-600 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-100 px-2 py-1 rounded hover:bg-amber-500/20 transition-colors shrink-0 cursor-pointer"
           >
             Dismiss
           </button>
@@ -514,23 +512,23 @@ export const Dashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">
+            <h2 className="text-2xl font-bold text-app-fg tracking-tight">
               Local Development Control Center
             </h2>
-            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-950/80 text-blue-300 border border-blue-800/50">
+            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-600/10 text-blue-600 dark:text-blue-300 border border-blue-500/30">
               {sysInfo ? sysInfo.platform : 'Windows + WSL'}
             </span>
           </div>
-          <p className="text-zinc-400 text-xs mt-1">
+          <p className="text-app-muted-fg text-xs mt-1">
             Unified discovery, port ownership, process ancestry, and server inspection across Windows and WSL distributions.
           </p>
         </div>
 
         {/* Status & Last Updated */}
-        <div className="flex items-center gap-3 text-xs text-zinc-400">
+        <div className="flex items-center gap-3 text-xs text-app-muted-fg">
           <div className="text-right">
-            <div className="text-[11px] text-zinc-500 font-medium">Last updated</div>
-            <div className="font-mono text-zinc-300">
+            <div className="text-[11px] text-app-muted-fg font-medium">Last updated</div>
+            <div className="font-mono text-app-fg font-semibold">
               {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Pending'}
             </div>
           </div>
@@ -548,7 +546,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Main View Tabs */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <div className="flex items-center justify-between border-b border-app-border pb-3">
           <div className="flex items-center gap-2">
             {/* 1. Development Servers Tab (Primary View) */}
             <button
@@ -556,8 +554,8 @@ export const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('servers')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                 activeTab === 'servers'
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/40'
+                  : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover'
               }`}
             >
               <svg
@@ -585,8 +583,8 @@ export const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('ports')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === 'ports'
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/40'
+                  : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover'
               }`}
             >
               <svg
@@ -613,8 +611,8 @@ export const Dashboard: React.FC = () => {
               onClick={() => setActiveTab('processes')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 activeTab === 'processes'
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/40'
+                  : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover'
               }`}
             >
               <svg
@@ -685,7 +683,7 @@ export const Dashboard: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search listening ports by port, PID, process, runtime, command..."
-                className="w-full max-w-md bg-zinc-900 border border-zinc-700/60 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                className="w-full max-w-md bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <PortTable
@@ -714,7 +712,7 @@ export const Dashboard: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search processes by name, PID, runtime, package manager, command..."
-                className="w-full max-w-md bg-zinc-900 border border-zinc-700/60 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                className="w-full max-w-md bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <ProcessTable
@@ -734,6 +732,7 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
 
       {/* Selected Server Details Modal */}
       {selectedServer && (

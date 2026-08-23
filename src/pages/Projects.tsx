@@ -419,12 +419,12 @@ const Projects: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto h-full flex flex-col space-y-6">
+    <div className="max-w-6xl mx-auto h-full flex flex-col space-y-6 text-app-fg">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">Project Groups</h2>
-          <p className="text-sm text-zinc-400 mt-0.5">
+          <h2 className="text-2xl font-bold text-app-fg tracking-tight">Project Groups</h2>
+          <p className="text-sm text-app-muted-fg mt-0.5">
             Organize and orchestrate multiple local server profiles as unified development projects.
           </p>
         </div>
@@ -432,7 +432,7 @@ const Projects: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => fetchAll()}
-            className="p-2 text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800 rounded-xl hover:bg-zinc-800 transition-colors"
+            className="p-2 text-app-muted-fg hover:text-app-fg bg-app-surface border border-app-border rounded-xl hover:bg-app-surface-hover transition-colors cursor-pointer"
             title="Refresh projects"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -444,7 +444,7 @@ const Projects: React.FC = () => {
               setProjectToEdit(null);
               setIsFormOpen(true);
             }}
-            className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -457,35 +457,35 @@ const Projects: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-          <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Total Projects</div>
-          <div className="text-2xl font-bold text-zinc-100 mt-1 font-mono">{summary.total}</div>
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 shadow-xs">
+          <div className="text-[11px] font-semibold text-app-muted-fg uppercase tracking-wider">Total Projects</div>
+          <div className="text-2xl font-bold text-app-fg mt-1 font-mono">{summary.total}</div>
         </div>
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Healthy</div>
-          <div className="text-2xl font-bold text-emerald-400 mt-1 font-mono">{summary.running}</div>
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 shadow-xs">
+          <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Healthy</div>
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 font-mono">{summary.running}</div>
         </div>
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-          <div className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Partial</div>
-          <div className="text-2xl font-bold text-amber-400 mt-1 font-mono">{summary.partial}</div>
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 shadow-xs">
+          <div className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Partial</div>
+          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">{summary.partial}</div>
         </div>
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-          <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Stopped</div>
-          <div className="text-2xl font-bold text-zinc-400 mt-1 font-mono">{summary.stopped}</div>
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 shadow-xs">
+          <div className="text-[11px] font-semibold text-app-muted-fg uppercase tracking-wider">Stopped</div>
+          <div className="text-2xl font-bold text-app-muted-fg mt-1 font-mono">{summary.stopped}</div>
         </div>
       </div>
 
       {/* Toolbar / Search & Filter */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-2.5">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-app-surface border border-app-border rounded-xl p-2.5 shadow-xs">
         <div className="relative w-full sm:w-80">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects or services..."
-            className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-hidden focus:border-zinc-500"
+            className="w-full bg-app-input border border-app-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
           />
-          <svg className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="w-3.5 h-3.5 text-app-muted-fg absolute left-2.5 top-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -497,10 +497,10 @@ const Projects: React.FC = () => {
             <button
               key={filter}
               onClick={() => setStatusFilter(filter)}
-              className={`px-3 py-1 text-xs rounded-lg font-medium capitalize transition-colors whitespace-nowrap ${
+              className={`px-3 py-1 text-xs rounded-lg font-medium capitalize transition-colors whitespace-nowrap cursor-pointer ${
                 statusFilter === filter
-                  ? 'bg-zinc-700 text-zinc-100 font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                  ? 'bg-app-muted text-app-fg font-semibold border border-app-border shadow-xs'
+                  : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover'
               }`}
             >
               {filter}
@@ -511,8 +511,8 @@ const Projects: React.FC = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
-          <svg className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-600 dark:text-red-300 flex items-start gap-2">
+          <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -523,25 +523,25 @@ const Projects: React.FC = () => {
 
       {/* Main Grid */}
       {loading ? (
-        <div className="flex-1 flex items-center justify-center py-20 text-zinc-500 text-xs">
-          <svg className="animate-spin h-5 w-5 mr-2 text-indigo-400" viewBox="0 0 24 24" fill="none">
+        <div className="flex-1 flex items-center justify-center py-20 text-app-muted-fg text-xs">
+          <svg className="animate-spin h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
           Loading projects...
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="flex-1 border border-dashed border-zinc-800 rounded-2xl flex items-center justify-center p-12 bg-zinc-900/20">
+        <div className="flex-1 border border-dashed border-app-border rounded-2xl flex items-center justify-center p-12 bg-app-surface/40">
           <div className="text-center max-w-sm">
-            <div className="mx-auto h-12 w-12 rounded-2xl bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center text-zinc-400 mb-3.5">
+            <div className="mx-auto h-12 w-12 rounded-2xl bg-app-muted border border-app-border flex items-center justify-center text-app-muted-fg mb-3.5">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                 <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-1.2-1.2A2 2 0 0 0 6.07 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-zinc-200">
+            <h3 className="text-base font-semibold text-app-fg">
               {projectViews.length === 0 ? 'No projects yet' : 'No matching projects found'}
             </h3>
-            <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+            <p className="text-xs text-app-muted-fg mt-1 leading-relaxed">
               {projectViews.length === 0
                 ? 'Group your frontend, backend, and worker services into a Project to control them as a unit.'
                 : 'Try adjusting your search query or status filter.'}
@@ -552,7 +552,7 @@ const Projects: React.FC = () => {
                   setProjectToEdit(null);
                   setIsFormOpen(true);
                 }}
-                className="mt-4 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-colors inline-flex items-center gap-1.5"
+                className="mt-4 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -578,6 +578,7 @@ const Projects: React.FC = () => {
           ))}
         </div>
       )}
+
 
       {/* Details Modal */}
       <ProjectDetailsModal

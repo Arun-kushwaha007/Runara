@@ -447,16 +447,14 @@ export const Servers: React.FC = () => {
     filters.status !== 'all';
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-
-
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-app-fg">
       {/* Page Header with Action Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">
+          <h2 className="text-2xl font-bold text-app-fg tracking-tight">
             Development Server Management
           </h2>
-          <p className="text-zinc-400 text-xs mt-1">
+          <p className="text-app-muted-fg text-xs mt-1">
             Configure persistent server profiles, start commands directly from DevHub, and monitor active server processes across Windows and WSL.
           </p>
         </div>
@@ -485,14 +483,14 @@ export const Servers: React.FC = () => {
       </div>
 
       {/* View Switcher Tabs */}
-      <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-app-border pb-3">
         <button
           type="button"
           onClick={() => setActiveTab('profiles')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
             activeTab === 'profiles'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/40'
+              : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover'
           }`}
         >
           <svg
@@ -519,8 +517,8 @@ export const Servers: React.FC = () => {
           onClick={() => setActiveTab('active')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'active'
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              ? 'bg-blue-600/20 text-blue-600 dark:text-blue-400 border border-blue-500/40'
+              : 'text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover'
           }`}
         >
           <svg
@@ -566,8 +564,8 @@ export const Servers: React.FC = () => {
       {activeTab === 'profiles' && (
         <div className="space-y-4">
           {profileViews.length === 0 && !loading ? (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center space-y-4">
-              <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <div className="bg-app-surface border border-app-border rounded-2xl p-12 text-center space-y-4">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -586,10 +584,10 @@ export const Servers: React.FC = () => {
                 </svg>
               </div>
               <div className="space-y-1 max-w-md mx-auto">
-                <h3 className="text-base font-semibold text-zinc-100">
+                <h3 className="text-base font-semibold text-app-fg">
                   No Saved Server Profiles Yet
                 </h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-app-muted-fg leading-relaxed">
                   Save your frontend apps, API servers, and workers to start them with one click directly from DevHub without searching through terminals.
                 </p>
               </div>
@@ -616,8 +614,8 @@ export const Servers: React.FC = () => {
               </button>
             </div>
           ) : visibleProfiles.length === 0 && !loading ? (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-3">
-              <p className="text-xs text-zinc-400">
+            <div className="bg-app-surface border border-app-border rounded-2xl p-8 text-center space-y-3">
+              <p className="text-xs text-app-muted-fg">
                 No server profiles match your current search or filters.
               </p>
               <button
@@ -626,7 +624,7 @@ export const Servers: React.FC = () => {
                   setSearchQuery('');
                   setFilters({ environment: 'all', runtime: 'all', status: 'all' });
                 }}
-                className="text-xs text-blue-400 hover:text-blue-300 font-medium cursor-pointer"
+                className="text-xs text-blue-500 hover:text-blue-400 font-medium cursor-pointer"
               >
                 Clear all filters
               </button>
@@ -651,6 +649,7 @@ export const Servers: React.FC = () => {
           )}
         </div>
       )}
+
 
       {/* TAB 2: Live Discovered Servers View */}
       {activeTab === 'active' && (

@@ -53,10 +53,10 @@ export const ServerList: React.FC<ServerListProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
+      <div className="flex items-center justify-between text-xs text-app-muted-fg px-1">
         <span>
-          Showing <strong className="text-zinc-200">{servers.length}</strong> of{' '}
-          <strong className="text-zinc-200">{totalServersCount}</strong> running development{' '}
+          Showing <strong className="text-app-fg">{servers.length}</strong> of{' '}
+          <strong className="text-app-fg">{totalServersCount}</strong> running development{' '}
           {totalServersCount === 1 ? 'server' : 'servers'}
         </span>
       </div>

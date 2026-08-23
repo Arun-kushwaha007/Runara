@@ -35,11 +35,11 @@ function App() {
 
   if (isInitializing) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-zinc-950 text-zinc-100">
+      <div className="flex h-screen w-full items-center justify-center bg-app-bg text-app-fg">
         <div className="flex flex-col items-center gap-4 text-center max-w-sm px-6">
-          <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+          <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-500 dark:text-blue-400">
             <svg
-              className="animate-spin h-6 w-6 text-blue-400"
+              className="animate-spin h-6 w-6 text-blue-500 dark:text-blue-400"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -53,8 +53,8 @@ function App() {
             </svg>
           </div>
           <div>
-            <h1 className="text-base font-bold text-zinc-100 tracking-tight">Initializing DevHub</h1>
-            <p className="text-xs text-zinc-400 mt-1">
+            <h1 className="text-base font-bold text-app-fg tracking-tight">Initializing DevHub</h1>
+            <p className="text-xs text-app-muted-fg mt-1">
               Loading local SQLite database, establishing IPC bridges, and preparing discovery engine...
             </p>
           </div>
@@ -65,9 +65,9 @@ function App() {
 
   if (fatalError) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-zinc-950 text-zinc-100 p-6">
-        <div className="max-w-md w-full bg-zinc-900 border border-red-800/60 rounded-2xl p-6 text-center space-y-4 shadow-2xl">
-          <div className="w-12 h-12 rounded-full bg-red-950/70 border border-red-800/60 text-red-400 mx-auto flex items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center bg-app-bg text-app-fg p-6">
+        <div className="max-w-md w-full bg-app-surface border border-red-500/40 rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 mx-auto flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -86,8 +86,8 @@ function App() {
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-red-200">DevHub Initialization Failure</h2>
-            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">{fatalError}</p>
+            <h2 className="text-lg font-bold text-red-500 dark:text-red-400">DevHub Initialization Failure</h2>
+            <p className="text-xs text-app-muted-fg mt-1.5 leading-relaxed">{fatalError}</p>
           </div>
 
           <div className="pt-2 flex items-center justify-center gap-3">

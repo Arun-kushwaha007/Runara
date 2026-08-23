@@ -14,16 +14,16 @@ const Header: React.FC<HeaderProps> = ({
   isRefreshing = false,
 }) => {
   return (
-    <header className="h-14 flex items-center justify-between px-6 bg-zinc-900/60 border-b border-zinc-800/80 shrink-0 backdrop-blur-xs select-none">
+    <header className="h-14 flex items-center justify-between px-6 bg-app-surface/80 border-b border-app-border shrink-0 backdrop-blur-xs select-none">
       {/* Location / Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
-          <span className="text-zinc-400">DevHub</span>
+        <div className="flex items-center gap-2 text-xs text-app-muted-fg font-medium">
+          <span>DevHub</span>
           <span>/</span>
-          <span className="text-zinc-200 font-semibold">{title}</span>
+          <span className="text-app-fg font-semibold">{title}</span>
         </div>
         {subtitle && (
-          <span className="hidden md:inline-block text-xs text-zinc-500 truncate border-l border-zinc-800 pl-3">
+          <span className="hidden md:inline-block text-xs text-app-muted-fg truncate border-l border-app-border pl-3">
             {subtitle}
           </span>
         )}
@@ -31,8 +31,8 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Right side status / refresh indicator */}
       <div className="flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-app-muted border border-app-border text-[11px] text-app-muted-fg">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
           <span>Windows + WSL Control Center</span>
         </div>
 
@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors disabled:opacity-50 cursor-pointer"
+            className="p-1.5 rounded-lg text-app-muted-fg hover:text-app-fg hover:bg-app-surface-hover transition-colors disabled:opacity-50 cursor-pointer"
             title="Refresh current view (Ctrl+R / F5)"
           >
             <svg

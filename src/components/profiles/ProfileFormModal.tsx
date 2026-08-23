@@ -61,7 +61,6 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
     }
   }, [initialProfile]);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -133,12 +132,12 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-zinc-900 border border-zinc-700/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150 text-app-fg">
+      <div className="bg-app-surface border border-app-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] text-app-fg">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-app-border bg-app-surface/90">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30">
+            <div className="p-2 rounded-lg bg-blue-600/20 text-blue-500 border border-blue-500/30">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -157,10 +156,10 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-zinc-100">
+              <h3 className="text-base font-semibold text-app-fg">
                 {isEditing ? 'Edit Server Profile' : 'Create Server Profile'}
               </h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-app-muted-fg">
                 Save a reusable server configuration to start development commands with one click.
               </p>
             </div>
@@ -169,7 +168,7 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-200 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="text-app-muted-fg hover:text-app-fg p-1.5 rounded-lg hover:bg-app-surface-hover transition-colors cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -191,7 +190,7 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
         {/* Modal Form Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           {validationError && (
-            <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 text-rose-200 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-red-500/15 border border-red-500/30 text-red-600 dark:text-red-300 text-xs flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -202,7 +201,7 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-rose-400 shrink-0"
+                className="text-red-500 shrink-0"
               >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -214,8 +213,8 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
 
           {/* Profile Name */}
           <div className="space-y-1.5">
-            <label htmlFor="profile-name" className="text-xs font-medium text-zinc-300">
-              Server Name <span className="text-rose-400">*</span>
+            <label htmlFor="profile-name" className="text-xs font-medium text-app-fg">
+              Server Name <span className="text-red-500">*</span>
             </label>
             <input
               id="profile-name"
@@ -224,46 +223,46 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Company Frontend, API Service"
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Environment Selector */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="profile-env-type" className="text-xs font-medium text-zinc-300">
-                Environment <span className="text-rose-400">*</span>
+              <label htmlFor="profile-env-type" className="text-xs font-medium text-app-fg">
+                Environment <span className="text-red-500">*</span>
               </label>
               <select
                 id="profile-env-type"
                 value={envType}
                 onChange={(e) => setEnvType(e.target.value as 'windows' | 'wsl')}
-                className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
               >
-                <option value="windows">Windows Host</option>
-                <option value="wsl">WSL (Linux)</option>
+                <option value="windows" className="bg-app-surface text-app-fg">Windows Host</option>
+                <option value="wsl" className="bg-app-surface text-app-fg">WSL (Linux)</option>
               </select>
             </div>
 
             {/* WSL Distro Selector (Visible only when WSL is selected) */}
             {envType === 'wsl' && (
               <div className="space-y-1.5 animate-in fade-in duration-150">
-                <label htmlFor="profile-wsl-distro" className="text-xs font-medium text-zinc-300">
-                  WSL Distribution <span className="text-rose-400">*</span>
+                <label htmlFor="profile-wsl-distro" className="text-xs font-medium text-app-fg">
+                  WSL Distribution <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="profile-wsl-distro"
                   value={distro}
                   onChange={(e) => setDistro(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                  className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   {wslDistros.map((d) => (
-                    <option key={d.name} value={d.name}>
+                    <option key={d.name} value={d.name} className="bg-app-surface text-app-fg">
                       {d.name} {d.isDefault ? '(Default)' : ''} — {d.state}
                     </option>
                   ))}
                   {wslDistros.length === 0 && (
-                    <option value="Ubuntu">Ubuntu</option>
+                    <option value="Ubuntu" className="bg-app-surface text-app-fg">Ubuntu</option>
                   )}
                 </select>
               </div>
@@ -288,10 +287,10 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
           {/* Command */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="profile-cmd" className="text-xs font-medium text-zinc-300">
-                Startup Command <span className="text-rose-400">*</span>
+              <label htmlFor="profile-cmd" className="text-xs font-medium text-app-fg">
+                Startup Command <span className="text-red-500">*</span>
               </label>
-              <span className="text-[10px] text-zinc-500">
+              <span className="text-[10px] text-app-muted-fg">
                 e.g. npm run dev, cargo run, python -m uvicorn
               </span>
             </div>
@@ -302,15 +301,15 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               placeholder="npm run dev"
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Expected Port & Host (2 columns) */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="profile-expected-port" className="text-xs font-medium text-zinc-300">
-                Expected Port <span className="text-zinc-500 font-normal">(Optional)</span>
+              <label htmlFor="profile-expected-port" className="text-xs font-medium text-app-fg">
+                Expected Port <span className="text-app-muted-fg font-normal">(Optional)</span>
               </label>
               <input
                 id="profile-expected-port"
@@ -320,16 +319,16 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
                 value={expectedPort}
                 onChange={(e) => setExpectedPort(e.target.value)}
                 placeholder="3000"
-                className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               />
-              <p className="text-[10px] text-zinc-500">
+              <p className="text-[10px] text-app-muted-fg">
                 Verifies server is listening after launch.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="profile-expected-host" className="text-xs font-medium text-zinc-300">
-                Expected Host <span className="text-zinc-500 font-normal">(Optional)</span>
+              <label htmlFor="profile-expected-host" className="text-xs font-medium text-app-fg">
+                Expected Host <span className="text-app-muted-fg font-normal">(Optional)</span>
               </label>
               <input
                 id="profile-expected-host"
@@ -337,35 +336,34 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
                 value={expectedHost}
                 onChange={(e) => setExpectedHost(e.target.value)}
                 placeholder="127.0.0.1"
-                className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs font-mono text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
               />
-              <p className="text-[10px] text-zinc-500">
+              <p className="text-[10px] text-app-muted-fg">
                 e.g. 127.0.0.1 or localhost
               </p>
             </div>
           </div>
 
-
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-zinc-300">
-              Description <span className="text-zinc-500 font-normal">(Optional)</span>
+            <label className="text-xs font-medium text-app-fg">
+              Description <span className="text-app-muted-fg font-normal">(Optional)</span>
             </label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Notes or service context..."
-              className="w-full bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-app-input border border-app-border rounded-lg px-3 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-app-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="px-4 py-2 bg-app-muted hover:bg-app-surface-hover text-app-fg rounded-lg text-xs font-medium border border-app-border transition-colors cursor-pointer"
             >
               Cancel
             </button>

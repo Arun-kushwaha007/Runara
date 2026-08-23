@@ -22,18 +22,18 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
   const isPartial = result.status === 'partial';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150 text-app-fg">
+      <div className="bg-app-surface border border-app-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col text-app-fg">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-app-border flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
               className={`p-2 rounded-xl border ${
                 isSuccess
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
                   : isPartial
-                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                  : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                  ? 'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                  : 'bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400'
               }`}
             >
               {isSuccess ? (
@@ -54,7 +54,7 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
               )}
             </div>
             <div>
-              <h3 className="text-base font-semibold text-zinc-100">
+              <h3 className="text-base font-semibold text-app-fg">
                 {operationType === 'start'
                   ? 'Project Startup'
                   : operationType === 'stop'
@@ -62,15 +62,15 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
                   : 'Project Restart'}{' '}
                 — {projectName}
               </h3>
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-app-muted-fg">
                 Status:{' '}
                 <span
                   className={`font-semibold capitalize ${
                     isSuccess
-                      ? 'text-emerald-400'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : isPartial
-                      ? 'text-amber-400'
-                      : 'text-rose-400'
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-red-600 dark:text-red-400'
                   }`}
                 >
                   {result.status}
@@ -81,7 +81,7 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
 
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-300 p-1 rounded-lg transition-colors"
+            className="text-app-muted-fg hover:text-app-fg p-1 rounded-lg transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
@@ -95,10 +95,10 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
           <div
             className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
               isSuccess
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300'
                 : isPartial
-                ? 'bg-amber-500/10 border-amber-500/20 text-amber-300'
-                : 'bg-rose-500/10 border-rose-500/20 text-rose-300'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300'
+                : 'bg-red-500/10 border-red-500/30 text-red-800 dark:text-red-300'
             }`}
           >
             {result.message}
@@ -106,7 +106,7 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
 
           {/* Breakdown List */}
           <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <h4 className="text-xs font-semibold text-app-muted-fg uppercase tracking-wider">
               Execution Sequence Breakdown
             </h4>
 
@@ -114,13 +114,13 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
             {result.startedProfiles.map((name) => (
               <div
                 key={`started-${name}`}
-                className="flex items-center justify-between p-2.5 bg-zinc-950/40 border border-zinc-800 rounded-xl text-xs"
+                className="flex items-center justify-between p-2.5 bg-app-bg border border-app-border rounded-xl text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 font-bold">✓</span>
-                  <span className="font-medium text-zinc-200">{name}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓</span>
+                  <span className="font-medium text-app-fg">{name}</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-medium">
                   Started / Running
                 </span>
               </div>
@@ -130,13 +130,13 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
             {result.stoppedProfiles.map((name) => (
               <div
                 key={`stopped-${name}`}
-                className="flex items-center justify-between p-2.5 bg-zinc-950/40 border border-zinc-800 rounded-xl text-xs"
+                className="flex items-center justify-between p-2.5 bg-app-bg border border-app-border rounded-xl text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-400 font-bold">✓</span>
-                  <span className="font-medium text-zinc-200">{name}</span>
+                  <span className="text-app-muted-fg font-bold">✓</span>
+                  <span className="font-medium text-app-fg">{name}</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/50 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-app-muted text-app-muted-fg border border-app-border font-medium">
                   Stopped
                 </span>
               </div>
@@ -144,12 +144,12 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
 
             {/* Failed profile */}
             {result.failedProfile && (
-              <div className="flex items-center justify-between p-2.5 bg-rose-950/20 border border-rose-800/40 rounded-xl text-xs">
+              <div className="flex items-center justify-between p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="text-rose-400 font-bold">✕</span>
-                  <span className="font-medium text-rose-200">{result.failedProfile}</span>
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span className="font-medium text-red-600 dark:text-red-300">{result.failedProfile}</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 font-medium">
                   Failed
                 </span>
               </div>
@@ -159,13 +159,13 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
             {result.pendingProfiles.map((name) => (
               <div
                 key={`pending-${name}`}
-                className="flex items-center justify-between p-2.5 bg-zinc-950/20 border border-zinc-800/60 rounded-xl text-xs text-zinc-500"
+                className="flex items-center justify-between p-2.5 bg-app-bg border border-app-border/60 rounded-xl text-xs text-app-muted-fg"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-600">○</span>
+                  <span className="text-app-muted-fg">○</span>
                   <span>{name}</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-app-muted text-app-muted-fg border border-app-border font-medium">
                   Not Started (Fail-Fast)
                 </span>
               </div>
@@ -175,13 +175,13 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
             {result.unsupportedProfiles.map((name) => (
               <div
                 key={`unsupported-${name}`}
-                className="flex items-center justify-between p-2.5 bg-amber-950/20 border border-amber-800/40 rounded-xl text-xs"
+                className="flex items-center justify-between p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-400 font-bold">!</span>
-                  <span className="font-medium text-amber-200">{name}</span>
+                  <span className="text-amber-500 font-bold">!</span>
+                  <span className="font-medium text-amber-700 dark:text-amber-200">{name}</span>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-medium">
                   WSL Stop Unsupported
                 </span>
               </div>
@@ -190,11 +190,11 @@ export const ProjectOperationProgressModal: React.FC<ProjectOperationProgressMod
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-950/40 flex items-center justify-end">
+        <div className="px-6 py-4 border-t border-app-border bg-app-surface/90 flex items-center justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-white bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors"
+            className="px-4 py-2 text-xs font-medium text-app-fg bg-app-muted hover:bg-app-surface-hover border border-app-border rounded-xl transition-colors cursor-pointer"
           >
             Close
           </button>

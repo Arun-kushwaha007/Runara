@@ -9,15 +9,15 @@ interface ProcessTreeProps {
 export const ProcessTree: React.FC<ProcessTreeProps> = ({ tree }) => {
   if (!tree || tree.length === 0) {
     return (
-      <div className="text-xs text-zinc-500 italic py-2">
+      <div className="text-xs text-app-muted-fg italic py-2">
         Process ancestry information unavailable.
       </div>
     );
   }
 
   return (
-    <div className="space-y-1 bg-zinc-950/70 border border-zinc-800/80 rounded-xl p-4 font-mono text-xs overflow-x-auto">
-      <div className="text-[11px] font-sans font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+    <div className="space-y-1 bg-app-bg border border-app-border rounded-xl p-4 font-mono text-xs overflow-x-auto text-app-fg">
+      <div className="text-[11px] font-sans font-semibold text-app-muted-fg uppercase tracking-wider mb-2 flex items-center gap-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="13"
@@ -28,7 +28,7 @@ export const ProcessTree: React.FC<ProcessTreeProps> = ({ tree }) => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-blue-400"
+          className="text-blue-500"
         >
           <path d="M12 2v20" />
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -47,16 +47,16 @@ export const ProcessTree: React.FC<ProcessTreeProps> = ({ tree }) => {
               style={{ paddingLeft: `${indentPixels}px` }}
               className={`flex items-start gap-2 py-1.5 px-2 rounded-lg transition-colors group ${
                 isTarget
-                  ? 'bg-blue-950/40 border border-blue-600/40 text-blue-100 shadow-xs'
-                  : 'text-zinc-300 hover:bg-zinc-900/60'
+                  ? 'bg-blue-600/15 border border-blue-500/40 text-blue-600 dark:text-blue-200 shadow-xs'
+                  : 'text-app-fg hover:bg-app-surface'
               }`}
             >
               {/* Connector Tree Symbol */}
-              <div className="text-zinc-500 font-mono select-none shrink-0 pt-0.5">
+              <div className="text-app-muted-fg font-mono select-none shrink-0 pt-0.5">
                 {index === 0 ? (
-                  <span className="text-zinc-400 font-bold">●</span>
+                  <span className="text-app-muted-fg font-bold">●</span>
                 ) : (
-                  <span className="text-zinc-600">└──</span>
+                  <span className="text-app-muted-fg/60">└──</span>
                 )}
               </div>
 
@@ -65,18 +65,18 @@ export const ProcessTree: React.FC<ProcessTreeProps> = ({ tree }) => {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
                     className={`font-semibold ${
-                      isTarget ? 'text-blue-300 font-bold' : 'text-zinc-200'
+                      isTarget ? 'text-blue-600 dark:text-blue-300 font-bold' : 'text-app-fg'
                     }`}
                   >
                     {node.name}
                   </span>
 
-                  <span className="text-[11px] text-zinc-500 font-mono bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                  <span className="text-[11px] text-app-muted-fg font-mono bg-app-muted px-1.5 py-0.5 rounded border border-app-border">
                     PID {node.pid}
                   </span>
 
                   {isTarget && (
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30">
                       Target Server Process
                     </span>
                   )}
@@ -92,7 +92,7 @@ export const ProcessTree: React.FC<ProcessTreeProps> = ({ tree }) => {
 
                 {node.commandLine && (
                   <div
-                    className="text-[11px] text-zinc-400 font-mono mt-0.5 truncate max-w-xl"
+                    className="text-[11px] text-app-muted-fg font-mono mt-0.5 truncate max-w-xl"
                     title={node.commandLine}
                   >
                     {node.commandLine}

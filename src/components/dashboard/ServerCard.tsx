@@ -43,14 +43,14 @@ export const ServerCard: React.FC<ServerCardProps> = ({
   return (
     <div
       onClick={() => onInspect(server)}
-      className="group relative bg-zinc-900/60 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-zinc-700 rounded-xl p-5 transition-all duration-150 flex flex-col justify-between gap-4 cursor-pointer shadow-xs hover:shadow-md"
+      className="group relative bg-app-surface hover:bg-app-surface-hover border border-app-border hover:border-app-border-subtle rounded-xl p-5 transition-all duration-150 flex flex-col justify-between gap-4 cursor-pointer shadow-xs hover:shadow-md text-app-fg"
     >
       {/* Header: Title + Status + Environment */}
       <div>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3
-              className="text-base font-bold text-zinc-100 group-hover:text-blue-400 transition-colors truncate tracking-tight"
+              className="text-base font-bold text-app-fg group-hover:text-blue-500 transition-colors truncate tracking-tight"
               title={server.name}
             >
               {server.name}
@@ -59,24 +59,24 @@ export const ServerCard: React.FC<ServerCardProps> = ({
             {/* Sub-header: Runtime & Package Manager & Environment */}
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               {server.runtime !== 'Unknown' ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-950/60 text-blue-300 border border-blue-800/40">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-600/10 text-blue-600 dark:text-blue-300 border border-blue-500/30">
                   <span>{server.runtime}</span>
                   {server.packageManager !== 'Unknown' && (
                     <>
                       <span className="text-blue-500">•</span>
-                      <span className="text-blue-200 font-semibold">{server.packageManager}</span>
+                      <span className="text-blue-700 dark:text-blue-200 font-semibold">{server.packageManager}</span>
                     </>
                   )}
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-app-muted text-app-muted-fg border border-app-border">
                   Process
                 </span>
               )}
 
               {/* Environment badge */}
               {isWsl ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-950/60 text-purple-300 border border-purple-800/40">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-600/10 text-purple-600 dark:text-purple-300 border border-purple-500/30">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="10"
@@ -87,7 +87,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-purple-400"
+                    className="text-purple-500"
                   >
                     <polyline points="4 17 10 11 4 5" />
                     <line x1="12" y1="19" x2="20" y2="19" />
@@ -95,7 +95,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                   <span>WSL / {server.wslDistro || 'Linux'}</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-950/40 text-blue-300/90 border border-blue-800/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-600/10 text-blue-600 dark:text-blue-300 border border-blue-500/30">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="10"
@@ -106,7 +106,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-blue-400"
+                    className="text-blue-500"
                   >
                     <rect width="20" height="14" x="2" y="3" rx="2" />
                     <line x1="8" x2="16" y1="21" y2="21" />
@@ -122,7 +122,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
           <div className="shrink-0 flex items-center gap-1.5">
             {server.managed ? (
               <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/50 text-emerald-300 border border-emerald-800/40 shadow-xs"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 shadow-xs"
                 title="Managed by DevHub Server Profile"
               >
                 <svg
@@ -135,7 +135,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-emerald-400"
+                  className="text-emerald-500"
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
@@ -143,22 +143,22 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               </span>
             ) : (
               <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-800/80 text-zinc-400 border border-zinc-700/60 shadow-xs"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-app-muted text-app-muted-fg border border-app-border shadow-xs"
                 title="Unmanaged server process (can be adopted into a profile)"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                 <span>Unmanaged</span>
               </span>
             )}
 
             {isStopping ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/70 text-amber-300 border border-amber-700/50 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                 <span>STOPPING...</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>RUNNING</span>
               </span>
             )}
@@ -166,7 +166,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
         </div>
 
         {/* Primary Port & Endpoint Banner */}
-        <div className="mt-3.5 flex items-center justify-between bg-zinc-950/60 border border-zinc-800/90 rounded-lg px-3 py-2">
+        <div className="mt-3.5 flex items-center justify-between bg-app-bg border border-app-border rounded-lg px-3 py-2">
           <div className="flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -178,18 +178,18 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-blue-400"
+              className="text-blue-500"
             >
               <circle cx="12" cy="12" r="10" />
               <line x1="2" x2="22" y1="12" y2="12" />
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
             </svg>
-            <span className="text-xs font-mono font-semibold text-zinc-100">
+            <span className="text-xs font-mono font-semibold text-app-fg">
               localhost:{server.primaryPort}
             </span>
             {extraPortsCount > 0 && (
               <span
-                className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700"
+                className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-app-muted text-app-muted-fg border border-app-border"
                 title={`Additional ports: ${server.allPorts.slice(1).join(', ')}`}
               >
                 +{extraPortsCount} {extraPortsCount === 1 ? 'port' : 'ports'}
@@ -202,7 +202,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
               type="button"
               onClick={handleOpenBrowser}
               title={`Open ${browserUrl} in browser`}
-              className="px-2 py-1 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-2 py-1 bg-blue-600/15 hover:bg-blue-600 text-blue-600 dark:text-blue-300 hover:text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span>Open</span>
               <svg
@@ -234,13 +234,13 @@ export const ServerCard: React.FC<ServerCardProps> = ({
         {/* Process Metadata Details */}
         <div className="mt-3 space-y-1.5 text-xs">
           {/* Working Directory */}
-          <div className="flex items-center justify-between text-zinc-400 gap-2">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium shrink-0">
+          <div className="flex items-center justify-between text-app-muted-fg gap-2">
+            <span className="text-[11px] text-app-muted-fg uppercase tracking-wider font-medium shrink-0">
               Workspace
             </span>
             <div className="flex items-center gap-1.5 min-w-0">
               <span
-                className="font-mono text-zinc-300 truncate text-[11px]"
+                className="font-mono text-app-fg truncate text-[11px]"
                 title={server.workingDirectory ?? 'Unavailable'}
               >
                 {server.workingDirectory ?? 'Unavailable'}
@@ -258,13 +258,13 @@ export const ServerCard: React.FC<ServerCardProps> = ({
           </div>
 
           {/* Command Line */}
-          <div className="flex items-center justify-between text-zinc-400 gap-2">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-medium shrink-0">
+          <div className="flex items-center justify-between text-app-muted-fg gap-2">
+            <span className="text-[11px] text-app-muted-fg uppercase tracking-wider font-medium shrink-0">
               Cmd
             </span>
             <div className="flex items-center gap-1.5 min-w-0">
               <span
-                className="font-mono text-zinc-300 truncate text-[11px]"
+                className="font-mono text-app-fg truncate text-[11px]"
                 title={server.commandLine ?? 'Unavailable'}
               >
                 {server.commandLine ?? 'Unavailable'}
@@ -284,13 +284,13 @@ export const ServerCard: React.FC<ServerCardProps> = ({
       </div>
 
       {/* Footer: PID + Inspect & Stop Buttons */}
-      <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs gap-2">
-        <div className="flex items-center gap-2 text-zinc-400 min-w-0">
-          <span className="font-mono font-medium text-zinc-300 shrink-0">
+      <div className="pt-3 border-t border-app-border flex items-center justify-between text-xs gap-2">
+        <div className="flex items-center gap-2 text-app-muted-fg min-w-0">
+          <span className="font-mono font-medium text-app-fg shrink-0">
             PID {server.pid}
           </span>
-          <span className="text-zinc-600 shrink-0">•</span>
-          <span className="text-zinc-400 truncate" title={server.processName}>
+          <span className="text-app-muted-fg shrink-0">•</span>
+          <span className="text-app-muted-fg truncate" title={server.processName}>
             {server.processName}
           </span>
         </div>
@@ -304,7 +304,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                 onAdopt(server);
               }}
               title={`Adopt ${server.name} as a managed profile`}
-              className="px-2.5 py-1.5 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 hover:text-emerald-100 text-xs font-semibold rounded-lg border border-emerald-800/60 hover:border-emerald-600 transition-all cursor-pointer shadow-xs flex items-center gap-1"
+              className="px-2.5 py-1.5 bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-600 dark:text-emerald-300 text-xs font-semibold rounded-lg border border-emerald-500/40 transition-all cursor-pointer shadow-xs flex items-center gap-1"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -327,7 +327,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
           <button
             type="button"
             onClick={() => onInspect(server)}
-            className="px-2.5 py-1.5 bg-zinc-800 hover:bg-blue-600 hover:text-white text-zinc-200 text-xs font-semibold rounded-lg border border-zinc-700/60 hover:border-blue-500 transition-all cursor-pointer shadow-xs"
+            className="px-2.5 py-1.5 bg-app-muted hover:bg-blue-600 hover:text-white text-app-fg text-xs font-semibold rounded-lg border border-app-border hover:border-blue-500 transition-all cursor-pointer shadow-xs"
           >
             Inspect
           </button>
@@ -342,11 +342,11 @@ export const ServerCard: React.FC<ServerCardProps> = ({
                   ? 'Server is stopping...'
                   : `Stop ${server.name} (PID ${server.pid})`
               }
-              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-xs flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/70 disabled:opacity-50 disabled:cursor-not-allowed text-red-300 hover:text-red-100 border-red-800/50 hover:border-red-700 cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-xs flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-red-600 dark:text-red-300 border-red-500/30 cursor-pointer"
             >
               {isStopping ? (
                 <>
-                  <span className="w-3 h-3 border-2 border-red-300 border-t-transparent rounded-full animate-spin"></span>
+                  <span className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></span>
                   <span>Stopping</span>
                 </>
               ) : (

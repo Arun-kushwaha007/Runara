@@ -322,17 +322,17 @@ export const Profiles: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-app-fg">
       {/* Header with Title & Action */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100 tracking-tight flex items-center gap-2.5">
+          <h2 className="text-2xl font-bold text-app-fg tracking-tight flex items-center gap-2.5">
             <span>Server Profiles</span>
-            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+            <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-app-muted text-app-muted-fg border border-app-border">
               {profileViews.length}
             </span>
           </h2>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-app-muted-fg mt-1">
             Persistent configurations for launching, monitoring, and organizing local development servers.
           </p>
         </div>
@@ -342,7 +342,7 @@ export const Profiles: React.FC = () => {
             type="button"
             onClick={() => refreshAll(true)}
             disabled={loading || refreshing}
-            className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-xs font-semibold rounded-lg border border-zinc-700 transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-3 py-2 bg-app-muted hover:bg-app-surface-hover disabled:opacity-50 text-app-fg text-xs font-semibold rounded-lg border border-app-border transition-colors cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -390,12 +390,12 @@ export const Profiles: React.FC = () => {
 
       {/* Summary Metrics Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 flex items-center justify-between">
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Total Profiles</span>
-            <div className="text-xl font-bold font-mono text-zinc-100 mt-0.5">{profileViews.length}</div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-app-muted-fg">Total Profiles</span>
+            <div className="text-xl font-bold font-mono text-app-fg mt-0.5">{profileViews.length}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400">
+          <div className="w-8 h-8 rounded-lg bg-app-muted border border-app-border flex items-center justify-center text-app-muted-fg">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
               <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
@@ -405,22 +405,22 @@ export const Profiles: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 flex items-center justify-between">
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Running</span>
-            <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">{runningCount}</div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-app-muted-fg">Running</span>
+            <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">{runningCount}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-800/50 flex items-center justify-center text-emerald-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
           </div>
         </div>
 
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 flex items-center justify-between">
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Windows</span>
-            <div className="text-xl font-bold font-mono text-blue-400 mt-0.5">{windowsCount}</div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-app-muted-fg">Windows</span>
+            <div className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400 mt-0.5">{windowsCount}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-blue-950/60 border border-blue-800/50 flex items-center justify-center text-blue-400">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-500">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="20" height="14" x="2" y="3" rx="2" />
               <line x1="8" x2="16" y1="21" y2="21" />
@@ -429,12 +429,12 @@ export const Profiles: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 flex items-center justify-between">
+        <div className="bg-app-surface border border-app-border rounded-xl p-3.5 flex items-center justify-between shadow-xs">
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">WSL</span>
-            <div className="text-xl font-bold font-mono text-purple-400 mt-0.5">{wslCount}</div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-app-muted-fg">WSL</span>
+            <div className="text-xl font-bold font-mono text-purple-600 dark:text-purple-400 mt-0.5">{wslCount}</div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-purple-950/60 border border-purple-800/50 flex items-center justify-center text-purple-400">
+          <div className="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-500">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="4 17 10 11 4 5" />
               <line x1="12" y1="19" x2="20" y2="19" />
@@ -444,10 +444,10 @@ export const Profiles: React.FC = () => {
       </div>
 
       {/* Toolbar / Search & Filter */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-3.5">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-app-surface border border-app-border rounded-xl p-3.5 shadow-xs">
         {/* Search */}
         <div className="relative flex-1 min-w-[220px]">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-app-muted-fg">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -458,13 +458,13 @@ export const Profiles: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search profiles by name, command, port (e.g. 3000), directory..."
-            className="w-full bg-zinc-950/80 border border-zinc-800 focus:border-blue-500/80 rounded-lg pl-9 pr-8 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-hidden focus:ring-1 focus:ring-blue-500 transition-all"
+            className="w-full bg-app-input border border-app-border focus:border-blue-500 rounded-lg pl-9 pr-8 py-2 text-xs text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-blue-500 transition-all"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-200"
+              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-app-muted-fg hover:text-app-fg cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -477,12 +477,12 @@ export const Profiles: React.FC = () => {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Environment Filter */}
-          <div className="flex items-center gap-1 bg-zinc-950/60 border border-zinc-800 rounded-lg p-0.5 text-xs">
+          <div className="flex items-center gap-1 bg-app-bg border border-app-border rounded-lg p-0.5 text-xs">
             <button
               type="button"
               onClick={() => setEnvFilter('all')}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                envFilter === 'all' ? 'bg-zinc-800 text-zinc-100 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+              className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                envFilter === 'all' ? 'bg-app-muted text-app-fg font-semibold border border-app-border' : 'text-app-muted-fg hover:text-app-fg'
               }`}
             >
               All Envs
@@ -490,8 +490,8 @@ export const Profiles: React.FC = () => {
             <button
               type="button"
               onClick={() => setEnvFilter('windows')}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                envFilter === 'windows' ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+              className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                envFilter === 'windows' ? 'bg-blue-600/20 text-blue-600 dark:text-blue-300 border border-blue-500/40 font-semibold' : 'text-app-muted-fg hover:text-app-fg'
               }`}
             >
               Windows
@@ -499,8 +499,8 @@ export const Profiles: React.FC = () => {
             <button
               type="button"
               onClick={() => setEnvFilter('wsl')}
-              className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
-                envFilter === 'wsl' ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
+              className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                envFilter === 'wsl' ? 'bg-purple-600/20 text-purple-600 dark:text-purple-300 border border-purple-500/40 font-semibold' : 'text-app-muted-fg hover:text-app-fg'
               }`}
             >
               WSL
@@ -511,21 +511,21 @@ export const Profiles: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'running' | 'stopped' | 'error')}
-            className="bg-zinc-950/60 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-hidden cursor-pointer"
+            className="bg-app-input border border-app-border rounded-lg px-2.5 py-1.5 text-xs text-app-fg focus:outline-hidden cursor-pointer"
           >
-            <option value="all" className="bg-zinc-900">All Statuses</option>
-            <option value="running" className="bg-zinc-900 text-emerald-400">Running</option>
-            <option value="stopped" className="bg-zinc-900 text-zinc-400">Stopped</option>
-            <option value="error" className="bg-zinc-900 text-red-400">Error</option>
+            <option value="all" className="bg-app-surface text-app-fg">All Statuses</option>
+            <option value="running" className="bg-app-surface text-emerald-600 dark:text-emerald-400">Running</option>
+            <option value="stopped" className="bg-app-surface text-app-muted-fg">Stopped</option>
+            <option value="error" className="bg-app-surface text-red-600 dark:text-red-400">Error</option>
           </select>
 
           {/* Auto Refresh Toggle */}
-          <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer bg-zinc-950/60 border border-zinc-800 px-2.5 py-1.5 rounded-lg select-none">
+          <label className="flex items-center gap-1.5 text-xs text-app-muted-fg cursor-pointer bg-app-input border border-app-border px-2.5 py-1.5 rounded-lg select-none">
             <input
               type="checkbox"
               checked={autoRefresh}
               onChange={(e) => setAutoRefresh(e.target.checked)}
-              className="rounded bg-zinc-900 border-zinc-700 text-blue-600 focus:ring-0"
+              className="rounded bg-app-surface border-app-border text-blue-600 focus:ring-0"
             />
             <span>Auto (3s)</span>
           </label>
@@ -536,18 +536,18 @@ export const Profiles: React.FC = () => {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 space-y-4 animate-pulse">
-              <div className="h-5 bg-zinc-800 rounded w-1/2"></div>
-              <div className="h-8 bg-zinc-800/80 rounded w-1/3"></div>
-              <div className="space-y-2 pt-2 border-t border-zinc-800/60">
-                <div className="h-3.5 bg-zinc-800/60 rounded w-4/5"></div>
+            <div key={i} className="bg-app-surface border border-app-border rounded-xl p-5 space-y-4 animate-pulse">
+              <div className="h-5 bg-app-muted rounded w-1/2"></div>
+              <div className="h-8 bg-app-muted rounded w-1/3"></div>
+              <div className="space-y-2 pt-2 border-t border-app-border">
+                <div className="h-3.5 bg-app-muted rounded w-4/5"></div>
               </div>
             </div>
           ))}
         </div>
       ) : filteredProfiles.length === 0 ? (
-        <div className="border border-dashed border-zinc-800 rounded-2xl p-12 text-center bg-zinc-900/20 flex flex-col items-center justify-center">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-center text-zinc-400 mb-3">
+        <div className="border border-dashed border-app-border rounded-2xl p-12 text-center bg-app-surface/40 flex flex-col items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-app-muted border border-app-border flex items-center justify-center text-app-muted-fg mb-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
               <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
@@ -555,12 +555,12 @@ export const Profiles: React.FC = () => {
               <line x1="6" x2="6.01" y1="18" y2="18" />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-zinc-200">
+          <h3 className="text-sm font-semibold text-app-fg">
             {searchQuery || envFilter !== 'all' || statusFilter !== 'all'
               ? 'No matching server profiles'
               : 'No Server Profiles created yet'}
           </h3>
-          <p className="text-xs text-zinc-400 mt-1 max-w-sm">
+          <p className="text-xs text-app-muted-fg mt-1 max-w-sm">
             {searchQuery || envFilter !== 'all' || statusFilter !== 'all'
               ? 'No profiles matched your search or filter settings. Try adjusting or clearing your filters.'
               : 'Create a Server Profile to save startup commands, paths, and ports for quick one-click launching and project grouping.'}
@@ -573,7 +573,7 @@ export const Profiles: React.FC = () => {
                 setEnvFilter('all');
                 setStatusFilter('all');
               }}
-              className="mt-4 px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg border border-zinc-700 transition-colors"
+              className="mt-4 px-3.5 py-1.5 bg-app-muted hover:bg-app-surface-hover text-app-fg text-xs font-semibold rounded-lg border border-app-border transition-colors cursor-pointer"
             >
               Clear filters
             </button>

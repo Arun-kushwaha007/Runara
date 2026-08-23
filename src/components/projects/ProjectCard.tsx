@@ -43,22 +43,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     switch (status) {
       case 'running':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Healthy ({runningServices}/{totalServices})
           </span>
         );
       case 'partial':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
             Partial ({runningServices}/{totalServices})
           </span>
         );
       case 'starting':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <svg className="animate-spin h-3 w-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+            <svg className="animate-spin h-3 w-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -67,8 +67,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         );
       case 'stopping':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-            <svg className="animate-spin h-3 w-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+            <svg className="animate-spin h-3 w-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -77,16 +77,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         );
       case 'error':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
             Error
           </span>
         );
       case 'stopped':
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700/50">
-            <span className="h-1.5 w-1.5 rounded-full bg-zinc-500" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-app-muted text-app-muted-fg border border-app-border">
+            <span className="h-1.5 w-1.5 rounded-full bg-app-muted-fg" />
             Stopped
           </span>
         );
@@ -96,18 +96,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <div
       data-testid={`project-card-${project.id}`}
-      className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 hover:border-zinc-700/80 transition-all flex flex-col justify-between shadow-sm"
+      className="bg-app-surface border border-app-border rounded-xl p-5 hover:border-app-border-subtle transition-all flex flex-col justify-between shadow-xs text-app-fg"
     >
       <div>
         <div className="flex items-start justify-between gap-3 mb-2">
           <div>
-            <h3 className="font-semibold text-lg text-zinc-100 tracking-tight">{project.name}</h3>
+            <h3 className="font-semibold text-lg text-app-fg tracking-tight">{project.name}</h3>
             {project.description && (
-              <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2">{project.description}</p>
+              <p className="text-xs text-app-muted-fg mt-0.5 line-clamp-2">{project.description}</p>
             )}
             {environmentsSummary && (
               <div
-                className="text-[11px] text-zinc-500 mt-1 font-mono"
+                className="text-[11px] text-app-muted-fg mt-1 font-mono"
                 dangerouslySetInnerHTML={{ __html: environmentsSummary }}
               />
             )}
@@ -117,11 +117,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* Member Services Summary */}
         <div className="mt-4 mb-4">
-          <div className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
+          <div className="text-xs font-medium text-app-muted-fg uppercase tracking-wider mb-2">
             Services ({totalServices})
           </div>
           {profiles.length === 0 ? (
-            <div className="text-xs text-zinc-500 italic bg-zinc-950/40 p-2.5 rounded-lg border border-dashed border-zinc-800">
+            <div className="text-xs text-app-muted-fg italic bg-app-bg p-2.5 rounded-lg border border-dashed border-app-border">
               No services configured yet.
             </div>
           ) : (
@@ -129,12 +129,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               {profiles.map((item, idx) => (
                 <div
                   key={item.profile.id}
-                  className="flex items-center justify-between text-xs bg-zinc-950/40 px-2.5 py-1.5 rounded-lg border border-zinc-800/60"
+                  className="flex items-center justify-between text-xs bg-app-bg px-2.5 py-1.5 rounded-lg border border-app-border"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-zinc-500 font-mono text-[10px] w-3.5">{idx + 1}.</span>
-                    <span className="font-medium text-zinc-200 truncate">{item.profile.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/40 font-mono">
+                    <span className="text-app-muted-fg font-mono text-[10px] w-3.5">{idx + 1}.</span>
+                    <span className="font-medium text-app-fg truncate">{item.profile.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-app-muted text-app-muted-fg border border-app-border font-mono">
                       {item.profile.environment.type === 'wsl'
                         ? `WSL:${item.profile.environment.distro}`
                         : 'Win'}
@@ -142,19 +142,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {item.profile.expectedPort && (
-                      <span className="text-zinc-400 font-mono text-[11px]">
+                      <span className="text-app-muted-fg font-mono text-[11px]">
                         :{item.profile.expectedPort}
                       </span>
                     )}
                     <span
                       className={`h-2 w-2 rounded-full ${
                         item.status === 'running'
-                          ? 'bg-emerald-400'
+                          ? 'bg-emerald-500'
                           : item.status === 'starting'
-                          ? 'bg-blue-400 animate-pulse'
+                          ? 'bg-blue-500 animate-pulse'
                           : item.status === 'error'
-                          ? 'bg-rose-400'
-                          : 'bg-zinc-600'
+                          ? 'bg-red-500'
+                          : 'bg-app-muted-fg'
                       }`}
                     />
                   </div>
@@ -166,10 +166,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
 
       {/* Action Footer */}
-      <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2 mt-auto">
+      <div className="pt-3 border-t border-app-border flex items-center justify-between gap-2 mt-auto">
         <button
           onClick={() => onInspect(projectView)}
-          className="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-lg transition-colors"
+          className="px-3 py-1.5 text-xs font-medium text-app-fg bg-app-muted hover:bg-app-surface-hover rounded-lg border border-app-border transition-colors cursor-pointer"
         >
           Open Details
         </button>
@@ -181,7 +181,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               onClick={() => onStart(project.id)}
               disabled={isOperating || isStarting || isStopping || totalServices === 0}
               title={isOperating ? 'Project operation in progress' : 'Start all stopped services'}
-              className="px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/60 border border-emerald-800/50 hover:bg-emerald-900/80 hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 hover:bg-emerald-500/25 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5v14l11-7z" />
@@ -196,7 +196,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               onClick={() => onStop(project.id)}
               disabled={isOperating || isStarting || isStopping}
               title={isOperating ? 'Project operation in progress' : 'Stop all running services'}
-              className="px-3 py-1.5 text-xs font-medium text-rose-300 bg-rose-950/60 border border-rose-800/50 hover:bg-rose-900/80 hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-300 bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M6 6h12v12H6z" />
@@ -211,7 +211,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               onClick={() => onRestart(project.id)}
               disabled={isOperating || isStarting || isStopping}
               title={isOperating ? 'Project operation in progress' : 'Restart all services'}
-              className="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1.5 text-xs font-medium text-app-fg bg-app-muted hover:bg-app-surface-hover rounded-lg border border-app-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
@@ -224,4 +224,3 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     </div>
   );
 };
-

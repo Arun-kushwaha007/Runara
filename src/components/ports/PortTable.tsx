@@ -35,7 +35,7 @@ export const PortTable: React.FC<PortTableProps> = ({
       );
     }
     return (
-      <span className="text-blue-400 ml-1 inline-block">
+      <span className="text-blue-500 ml-1 inline-block">
         {sortDirection === 'asc' ? '↑' : '↓'}
       </span>
     );
@@ -49,22 +49,22 @@ export const PortTable: React.FC<PortTableProps> = ({
 
   const renderRuntimeBadge = (runtime?: Runtime) => {
     if (!runtime || runtime === 'Unknown') {
-      return <span className="text-zinc-600 text-xs">-</span>;
+      return <span className="text-app-muted-fg text-xs">-</span>;
     }
 
     const map: Record<string, string> = {
-      'Node.js': 'bg-green-950/60 text-green-300 border-green-800/40',
-      Python: 'bg-yellow-950/60 text-yellow-300 border-yellow-800/40',
-      Java: 'bg-red-950/60 text-red-300 border-red-800/40',
-      '.NET': 'bg-purple-950/60 text-purple-300 border-purple-800/40',
-      Go: 'bg-cyan-950/60 text-cyan-300 border-cyan-800/40',
-      Rust: 'bg-orange-950/60 text-orange-300 border-orange-800/40',
+      'Node.js': 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30',
+      Python: 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30',
+      Java: 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30',
+      '.NET': 'bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30',
+      Go: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border-cyan-500/30',
+      Rust: 'bg-orange-500/15 text-orange-600 dark:text-orange-300 border-orange-500/30',
     };
 
     return (
       <span
         className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-          map[runtime] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+          map[runtime] ?? 'bg-app-muted text-app-muted-fg border-app-border'
         }`}
       >
         {runtime}
@@ -74,10 +74,10 @@ export const PortTable: React.FC<PortTableProps> = ({
 
   if (items.length === 0) {
     return (
-      <div className="border border-dashed border-zinc-800 rounded-xl p-12 text-center bg-zinc-900/30">
+      <div className="border border-dashed border-app-border rounded-xl p-12 text-center bg-app-surface/40">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="mx-auto h-10 w-10 text-zinc-600 mb-3"
+          className="mx-auto h-10 w-10 text-app-muted-fg/60 mb-3"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -88,8 +88,8 @@ export const PortTable: React.FC<PortTableProps> = ({
           <line x1="6" x2="6.01" y1="6" y2="6" />
           <line x1="6" x2="6.01" y1="18" y2="18" />
         </svg>
-        <p className="text-sm font-medium text-zinc-300">No matching listening ports found</p>
-        <p className="text-xs text-zinc-500 mt-1">
+        <p className="text-sm font-medium text-app-fg">No matching listening ports found</p>
+        <p className="text-xs text-app-muted-fg mt-1">
           Make sure your local development servers are running or adjust your search filter.
         </p>
       </div>
@@ -97,14 +97,14 @@ export const PortTable: React.FC<PortTableProps> = ({
   }
 
   return (
-    <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/40 shadow-xs">
+    <div className="border border-app-border rounded-xl overflow-hidden bg-app-surface shadow-xs text-app-fg">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-zinc-800/70 border-b border-zinc-800 text-zinc-400 select-none font-medium">
+            <tr className="bg-app-muted border-b border-app-border text-app-muted-fg select-none font-medium">
               <th
                 onClick={() => onSort('port')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-24"
               >
                 <div className="flex items-center">
                   <span>Port</span>
@@ -113,7 +113,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('address')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-36"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-36"
               >
                 <div className="flex items-center">
                   <span>Local Address</span>
@@ -122,7 +122,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('pid')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-20"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-20"
               >
                 <div className="flex items-center">
                   <span>PID</span>
@@ -131,7 +131,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('process')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-40"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-40"
               >
                 <div className="flex items-center">
                   <span>Process Name</span>
@@ -140,7 +140,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('runtime')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group w-24"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group w-24"
               >
                 <div className="flex items-center">
                   <span>Runtime</span>
@@ -149,7 +149,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               </th>
               <th
                 onClick={() => onSort('command')}
-                className="py-3 px-4 cursor-pointer hover:text-zinc-200 transition-colors group min-w-[200px]"
+                className="py-3 px-4 cursor-pointer hover:text-app-fg transition-colors group min-w-[200px]"
               >
                 <div className="flex items-center">
                   <span>Command Line</span>
@@ -160,7 +160,7 @@ export const PortTable: React.FC<PortTableProps> = ({
               <th className="py-3 px-4 w-28 text-center">State</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
+          <tbody className="divide-y divide-app-border text-app-fg">
             {items.map((item, idx) => {
               const { port, process, identity } = item;
               const uniqueKey = `${port.address}_${port.port}_${port.pid}_${idx}`;
@@ -171,11 +171,11 @@ export const PortTable: React.FC<PortTableProps> = ({
                 <tr
                   key={uniqueKey}
                   onClick={() => onSelectItem(item)}
-                  className="hover:bg-zinc-800/40 cursor-pointer transition-colors group"
+                  className="hover:bg-app-surface-hover cursor-pointer transition-colors group"
                 >
                   {/* Port Number */}
-                  <td className="py-2.5 px-4 font-mono font-semibold text-blue-400">
-                    <span className="bg-blue-950/50 border border-blue-800/40 px-2 py-0.5 rounded text-blue-300">
+                  <td className="py-2.5 px-4 font-mono font-semibold text-blue-500">
+                    <span className="bg-blue-600/15 border border-blue-500/30 px-2 py-0.5 rounded text-blue-600 dark:text-blue-300">
                       {port.port}
                     </span>
                   </td>
@@ -186,10 +186,10 @@ export const PortTable: React.FC<PortTableProps> = ({
                       <span
                         className={`truncate max-w-[120px] ${
                           localhost
-                            ? 'text-emerald-300'
+                            ? 'text-emerald-600 dark:text-emerald-300 font-semibold'
                             : wildcard
-                            ? 'text-amber-300'
-                            : 'text-zinc-300'
+                            ? 'text-amber-600 dark:text-amber-300'
+                            : 'text-app-fg'
                         }`}
                         title={port.address}
                       >
@@ -199,18 +199,18 @@ export const PortTable: React.FC<PortTableProps> = ({
                   </td>
 
                   {/* PID */}
-                  <td className="py-2.5 px-4 font-mono font-medium text-zinc-200">
+                  <td className="py-2.5 px-4 font-mono font-medium text-app-fg">
                     {port.pid}
                   </td>
 
                   {/* Process Name */}
-                  <td className="py-2.5 px-4 font-medium text-zinc-100 group-hover:text-blue-400 transition-colors">
+                  <td className="py-2.5 px-4 font-medium text-app-fg group-hover:text-blue-500 transition-colors">
                     {process ? (
                       <span className="truncate max-w-[150px] block font-mono" title={process.name}>
                         {process.name}
                       </span>
                     ) : (
-                      <span className="text-amber-400/80 italic text-[11px]">
+                      <span className="text-amber-600 dark:text-amber-400 italic text-[11px]">
                         Unavailable (PID {port.pid})
                       </span>
                     )}
@@ -220,31 +220,31 @@ export const PortTable: React.FC<PortTableProps> = ({
                   <td className="py-2.5 px-4">{renderRuntimeBadge(identity?.runtime)}</td>
 
                   {/* Command Line */}
-                  <td className="py-2.5 px-4 font-mono text-zinc-300 max-w-xs truncate">
+                  <td className="py-2.5 px-4 font-mono text-app-fg max-w-xs truncate">
                     {process?.commandLine ? (
                       <span title={process.commandLine} className="truncate block">
                         {process.commandLine}
                       </span>
                     ) : (
-                      <span className="text-zinc-600 italic">unavailable</span>
+                      <span className="text-app-muted-fg italic">unavailable</span>
                     )}
                   </td>
 
                   {/* Working Directory */}
-                  <td className="py-2.5 px-4 font-mono text-zinc-400 max-w-[160px] truncate">
+                  <td className="py-2.5 px-4 font-mono text-app-muted-fg max-w-[160px] truncate">
                     {process?.workingDirectory ? (
                       <span title={process.workingDirectory} className="truncate block">
                         {process.workingDirectory}
                       </span>
                     ) : (
-                      <span className="text-zinc-600 italic">unavailable</span>
+                      <span className="text-app-muted-fg italic">unavailable</span>
                     )}
                   </td>
 
                   {/* State Badge */}
                   <td className="py-2.5 px-4 text-center">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       Listening
                     </span>
                   </td>

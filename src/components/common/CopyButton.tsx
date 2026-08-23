@@ -36,8 +36,8 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
       aria-label={copied ? 'Copied' : title}
       className={`inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium rounded transition-all duration-150 cursor-pointer select-none ${
         copied
-          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-700/60'
-          : 'bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-zinc-100 border border-zinc-700/50 hover:border-zinc-600'
+          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40'
+          : 'bg-app-muted hover:bg-app-surface-hover text-app-muted-fg hover:text-app-fg border border-app-border'
       } ${className}`}
     >
       {copied ? (
@@ -52,11 +52,11 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-emerald-400 shrink-0"
+            className="text-emerald-500 shrink-0"
           >
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          {!showIconOnly && <span className="font-semibold text-emerald-300">Copied</span>}
+          {!showIconOnly && <span className="font-semibold text-emerald-600 dark:text-emerald-300">Copied</span>}
         </>
       ) : (
         <>
@@ -70,7 +70,7 @@ export const CopyButton: React.FC<CopyButtonProps> = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-zinc-400 shrink-0"
+            className="text-app-muted-fg shrink-0"
           >
             <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />

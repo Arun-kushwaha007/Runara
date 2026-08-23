@@ -85,18 +85,18 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-        <div className="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150 text-app-fg">
+      <div className="bg-app-surface border border-app-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[85vh] text-app-fg">
+        <div className="px-6 py-5 border-b border-app-border flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-zinc-100">Add Server to Project</h3>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Adding to <span className="text-zinc-200 font-medium">{targetProject.project.name}</span>
+            <h3 className="text-lg font-semibold text-app-fg">Add Server to Project</h3>
+            <p className="text-xs text-app-muted-fg mt-0.5">
+              Adding to <span className="text-app-fg font-medium">{targetProject.project.name}</span>
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-300 p-1 rounded-lg transition-colors"
+            className="text-app-muted-fg hover:text-app-fg p-1 rounded-lg transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
@@ -106,8 +106,8 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
 
         <div className="p-6 overflow-y-auto space-y-4 flex-1">
           {error && (
-            <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
-              <svg className="w-4 h-4 text-rose-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-600 dark:text-red-300 flex items-start gap-2">
+              <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -123,10 +123,10 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search available server profiles..."
-              className="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl pl-9 pr-3.5 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-hidden focus:border-zinc-500"
+              className="w-full bg-app-input border border-app-border rounded-xl pl-9 pr-3.5 py-2 text-sm text-app-fg placeholder:text-app-muted-fg focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
             />
             <svg
-              className="w-4 h-4 text-zinc-500 absolute left-3 top-3"
+              className="w-4 h-4 text-app-muted-fg absolute left-3 top-3"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -140,7 +140,7 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
           {/* Profiles list */}
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
             {availableProfiles.length === 0 ? (
-              <div className="text-center py-8 text-xs text-zinc-500 italic bg-zinc-950/30 rounded-xl border border-dashed border-zinc-800">
+              <div className="text-center py-8 text-xs text-app-muted-fg italic bg-app-bg rounded-xl border border-dashed border-app-border">
                 {allProfiles.length === 0
                   ? 'No server profiles exist yet. Create a server profile first.'
                   : 'No remaining available server profiles match your search.'}
@@ -156,26 +156,26 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
                     onClick={() => setSelectedProfileId(p.id)}
                     className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                       isSelected
-                        ? 'bg-indigo-950/40 border-indigo-500/60 ring-1 ring-indigo-500/50'
-                        : 'bg-zinc-950/40 border-zinc-800/80 hover:border-zinc-700'
+                        ? 'bg-indigo-500/15 border-indigo-500/60 ring-1 ring-indigo-500/50'
+                        : 'bg-app-bg border-app-border hover:border-app-border-subtle'
                     }`}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-zinc-100 truncate">{p.name}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
+                        <span className="font-semibold text-sm text-app-fg truncate">{p.name}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-app-muted text-app-muted-fg font-mono border border-app-border">
                           {p.environment.type === 'wsl' ? `WSL:${p.environment.distro}` : 'Windows'}
                         </span>
                         {p.expectedPort && (
-                          <span className="text-[11px] text-zinc-400 font-mono">:{p.expectedPort}</span>
+                          <span className="text-[11px] text-app-muted-fg font-mono">:{p.expectedPort}</span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500 font-mono truncate mt-0.5">{p.command}</p>
+                      <p className="text-xs text-app-muted-fg font-mono truncate mt-0.5">{p.command}</p>
                     </div>
 
                     {membership && (
                       <div className="ml-3 shrink-0">
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-medium">
                           In: {membership.projectName}
                         </span>
                       </div>
@@ -188,28 +188,28 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
 
           {/* Warning Banner if moving profile */}
           {isMoving && selectedMembership && (
-            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-start gap-2.5">
-              <svg className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="p-3.5 bg-amber-500/15 border border-amber-500/30 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+              <svg className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
               <div>
                 <p className="font-semibold">Move profile between projects?</p>
-                <p className="mt-0.5 text-amber-400/90 leading-relaxed">
-                  This server profile currently belongs to <span className="font-semibold text-amber-200">"{selectedMembership.projectName}"</span>. Adding it here will move it to <span className="font-semibold text-amber-200">"{targetProject.project.name}"</span>.
+                <p className="mt-0.5 text-amber-800/90 dark:text-amber-400/90 leading-relaxed">
+                  This server profile currently belongs to <span className="font-semibold text-amber-900 dark:text-amber-200">"{selectedMembership.projectName}"</span>. Adding it here will move it to <span className="font-semibold text-amber-900 dark:text-amber-200">"{targetProject.project.name}"</span>.
                 </p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-950/40 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-app-border bg-app-surface/90 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-800/60 hover:bg-zinc-800 rounded-xl transition-colors"
+            className="px-4 py-2 text-xs font-medium text-app-fg bg-app-muted hover:bg-app-surface-hover border border-app-border rounded-xl transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -217,7 +217,7 @@ export const AddProfileModal: React.FC<AddProfileModalProps> = ({
             type="button"
             onClick={handleConfirm}
             disabled={!selectedProfileId || isSubmitting}
-            className="px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
           >
             {isSubmitting ? 'Adding...' : isMoving ? 'Move to Project' : 'Add to Project'}
           </button>

@@ -7,8 +7,8 @@ interface ErrorStateProps {
 
 export const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
   return (
-    <div className="border border-red-900/60 bg-red-950/20 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
-      <div className="w-12 h-12 rounded-full bg-red-900/40 text-red-400 border border-red-800/50 flex items-center justify-center shadow-inner">
+    <div className="border border-red-500/30 bg-red-500/10 rounded-xl p-8 text-center flex flex-col items-center justify-center gap-3">
+      <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-500 border border-red-500/30 flex items-center justify-center shadow-inner">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="22"
@@ -27,8 +27,8 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-red-200">Unable to inspect local development servers</h4>
-        <p className="text-xs text-red-300/80 mt-1 max-w-lg mx-auto leading-relaxed">
+        <h4 className="text-sm font-bold text-red-600 dark:text-red-300">Unable to inspect local development servers</h4>
+        <p className="text-xs text-red-700/80 dark:text-red-300/80 mt-1 max-w-lg mx-auto leading-relaxed">
           {error}
         </p>
       </div>
@@ -37,13 +37,13 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
         <button
           type="button"
           onClick={onRetry}
-          className="px-4 py-2 bg-red-800 hover:bg-red-700 text-red-100 text-xs font-semibold rounded-lg transition-colors shadow-xs"
+          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-colors shadow-xs cursor-pointer"
         >
           Retry Discovery
         </button>
       </div>
 
-      <div className="text-[11px] text-zinc-500 max-w-md mt-2">
+      <div className="text-[11px] text-app-muted-fg max-w-md mt-2">
         Ensure DevHub has standard permissions to query the Windows and WSL process and socket tables.
       </div>
     </div>
