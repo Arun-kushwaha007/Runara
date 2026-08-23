@@ -9,7 +9,7 @@
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Tests](https://img.shields.io/badge/Tests-280%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
-[![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 Runara is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
 
@@ -235,9 +235,16 @@ DevHub/
 * **[PRD.md](doc/PRD.md)** — Complete Product Requirements Document.
 * **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** — MVP verification matrix.
 * **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release notes, SHA-256 checksums, and changelog.
+* **[CONTRIBUTING.md](CONTRIBUTING.md)** — Contribution guidelines, architecture overviews, and local development setup.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup instructions, architecture overviews, and contribution guidelines.
 
 ---
 
 ## 📄 License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option.
+Runara is released under the [MIT License](LICENSE).
