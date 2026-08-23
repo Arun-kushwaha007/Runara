@@ -18,7 +18,7 @@ const Header: React.FC<HeaderProps> = ({
       {/* Location / Breadcrumbs */}
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center gap-2 text-xs text-app-muted-fg font-medium">
-          <span>DevHub</span>
+          <span>Runara</span>
           <span>/</span>
           <span className="text-app-fg font-semibold">{title}</span>
         </div>

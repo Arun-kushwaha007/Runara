@@ -156,7 +156,7 @@ export const StopConfirmationModal: React.FC<StopConfirmationModalProps> = ({
             <div className="space-y-1">
               <div className="font-semibold text-amber-800 dark:text-amber-200">Pre-Termination Safety Guard</div>
               <p className="text-[11px] leading-relaxed opacity-90">
-                DevHub will verify that PID {server.pid} matches &apos;{server.processName}&apos;
+                Runara will verify that PID {server.pid} matches &apos;{server.processName}&apos;
                 before terminating. Only the target process and its verified descendants will be
                 stopped. Ancestors (terminals and VS Code) remain untouched.
               </p>

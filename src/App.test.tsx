@@ -45,7 +45,7 @@ describe('App Root Component', () => {
 
     render(<App />);
 
-    expect(screen.getByText('Initializing DevHub')).toBeInTheDocument();
+    expect(screen.getByText('Initializing Runara')).toBeInTheDocument();
     expect(
       screen.getByText(/Loading local SQLite database, establishing IPC bridges/i)
     ).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe('App Root Component', () => {
 
   it('renders dashboard after successful initialization', async () => {
     vi.mocked(systemApi.getSystemInfo).mockResolvedValue({
-      app: 'DevHub',
+      app: 'Runara',
       version: '0.1.0',
       backend: 'rust',
       status: 'ok',
@@ -72,7 +72,7 @@ describe('App Root Component', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.queryByText('Initializing DevHub')).not.toBeInTheDocument();
+      expect(screen.queryByText('Initializing Runara')).not.toBeInTheDocument();
     });
 
     expect(screen.getByText('Local Development Control Center')).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('App Root Component', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('DevHub could not initialize local storage')
+        screen.getByText('Runara could not initialize local storage')
       ).toBeInTheDocument();
     });
 
@@ -110,7 +110,7 @@ describe('App Root Component', () => {
     vi.mocked(systemApi.getSystemInfo)
       .mockRejectedValueOnce(new Error('Temporary lock failure'))
       .mockResolvedValueOnce({
-        app: 'DevHub',
+        app: 'Runara',
         version: '0.1.0',
         backend: 'rust',
         status: 'ok',
@@ -130,7 +130,7 @@ describe('App Root Component', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('DevHub could not initialize local storage')
+        screen.getByText('Runara could not initialize local storage')
       ).toBeInTheDocument();
     });
 
@@ -139,7 +139,7 @@ describe('App Root Component', () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByText('DevHub could not initialize local storage')
+        screen.queryByText('Runara could not initialize local storage')
       ).not.toBeInTheDocument();
       expect(screen.getByText('Local Development Control Center')).toBeInTheDocument();
     });

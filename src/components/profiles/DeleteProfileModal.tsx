@@ -77,7 +77,7 @@ export const DeleteProfileModal: React.FC<DeleteProfileModalProps> = ({
             </div>
           ) : (
             <p className="text-xs text-app-fg leading-relaxed">
-              Are you sure you want to delete <strong className="text-app-fg font-bold">{view.profile.name}</strong>? This action will remove the saved configuration from DevHub.
+              Are you sure you want to delete <strong className="text-app-fg font-bold">{view.profile.name}</strong>? This action will remove the saved configuration from Runara.
             </p>
           )}
 

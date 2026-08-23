@@ -17,12 +17,12 @@ export const Settings: React.FC = () => {
 
   // Settings state (persisted to localStorage)
   const [defaultInterval, setDefaultInterval] = useState<number>(() => {
-    const saved = localStorage.getItem('devhub_poll_interval');
+    const saved = localStorage.getItem('runara_poll_interval');
     return saved ? parseInt(saved, 10) : 3000;
   });
 
   const [confirmDangerousActions, setConfirmDangerousActions] = useState<boolean>(() => {
-    const saved = localStorage.getItem('devhub_confirm_danger');
+    const saved = localStorage.getItem('runara_confirm_danger');
     return saved !== null ? saved === 'true' : true;
   });
 
@@ -66,13 +66,13 @@ export const Settings: React.FC = () => {
 
   const handleIntervalChange = (val: number) => {
     setDefaultInterval(val);
-    localStorage.setItem('devhub_poll_interval', val.toString());
+    localStorage.setItem('runara_poll_interval', val.toString());
     setToast({ type: 'info', message: `Default polling interval set to ${val / 1000}s.` });
   };
 
   const handleConfirmToggle = (val: boolean) => {
     setConfirmDangerousActions(val);
-    localStorage.setItem('devhub_confirm_danger', val.toString());
+    localStorage.setItem('runara_confirm_danger', val.toString());
     setToast({
       type: 'info',
       message: val
@@ -84,9 +84,9 @@ export const Settings: React.FC = () => {
   const handleResetSettings = () => {
     setTheme('dark');
     setDefaultInterval(3000);
-    localStorage.setItem('devhub_poll_interval', '3000');
+    localStorage.setItem('runara_poll_interval', '3000');
     setConfirmDangerousActions(true);
-    localStorage.setItem('devhub_confirm_danger', 'true');
+    localStorage.setItem('runara_confirm_danger', 'true');
     setToast({
       type: 'success',
       message: 'Appearance and application preferences reset to defaults.',
@@ -252,9 +252,9 @@ export const Settings: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-500 text-[10px] font-bold">
-                  DH
+                  R
                 </div>
-                <span className="text-xs font-bold text-app-fg">DevHub Control Center</span>
+                <span className="text-xs font-bold text-app-fg">Runara Control Center</span>
               </div>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -562,7 +562,7 @@ export const Settings: React.FC = () => {
                 </div>
               ) : (
                 <div className="p-3 rounded-lg bg-app-bg border border-app-border text-xs text-app-muted-fg">
-                  No WSL distributions currently detected. DevHub operates normally in Windows-only mode.
+                  No WSL distributions currently detected. Runara operates normally in Windows-only mode.
                 </div>
               )}
             </div>
@@ -603,9 +603,9 @@ export const Settings: React.FC = () => {
 
       {/* About Box */}
       <div className="bg-app-surface/50 border border-app-border rounded-xl p-5 text-xs text-app-muted-fg space-y-2">
-        <h4 className="font-semibold text-app-fg">DevHub MVP Release (v0.1.0)</h4>
+        <h4 className="font-semibold text-app-fg">Runara MVP Release (v0.1.0)</h4>
         <p className="leading-relaxed">
-          DevHub is a native Windows desktop application for managing local development servers across Windows and WSL. Built with Rust, Tauri 2, React 19, TypeScript, and SQLite.
+          Runara is a native Windows desktop application for managing local development servers across Windows and WSL. Built with Rust, Tauri 2, React 19, TypeScript, and SQLite.
         </p>
         <div className="pt-2 flex flex-wrap gap-4 text-xs font-mono text-app-muted-fg">
           <span>Target Platform: Windows 10/11</span>

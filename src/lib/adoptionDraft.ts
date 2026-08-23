@@ -7,7 +7,7 @@ import { deriveServerName } from './serverUtils';
  *
  * Background: The process command (e.g. "node.exe C:\vite\bin\vite.js")
  * is NOT the same as the original startup command (e.g. "npm run dev").
- * DevHub cannot always reconstruct the exact human-typed command.
+ * Runara cannot always reconstruct the exact human-typed command.
  *
  * Heuristic rules applied:
  * 1. Shell wrappers (cmd.exe /c, powershell.exe -Command, bash -lc) — strip wrapper, extract inner

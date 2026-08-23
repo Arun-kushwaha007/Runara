@@ -1,7 +1,7 @@
-# DevHub Engineering Learning Guide
+﻿# Runara Engineering Learning Guide
 
 ```
-Project:           DevHub — Local Development Control Center
+Project:           Runara — Local Development Control Center
 Current Milestone: Milestone 14 (Theme and Settings)
 Document Purpose:  Comprehensive Engineering Learning and Code-Reading Guide for CS Students & HLD/LLD Interview Preparation
 Document Version:  14.0.0
@@ -35,7 +35,7 @@ Document Version:  14.0.0
    - [7.2 Contract Synchronization & Type Mismatches](#72-contract-synchronization--type-mismatches)
 8. [Software Architecture & Design Principles](#8-software-architecture--design-principles)
    - [8.1 Layered Architecture Pattern](#81-layered-architecture-pattern)
-   - [8.2 SOLID Principles Applied in DevHub](#82-solid-principles-applied-in-devhub)
+   - [8.2 SOLID Principles Applied in Runara](#82-solid-principles-applied-in-runara)
 9. [High-Level Design (HLD)](#9-high-level-design-hld)
    - [9.1 System Boundaries & Component Topology](#91-system-boundaries--component-topology)
    - [9.2 Architectural Strategy for Future Milestones (WSL & Profiles)](#92-architectural-strategy-for-future-milestones-wsl--profiles)
@@ -61,14 +61,14 @@ Document Version:  14.0.0
 16. [Practical Debugging Methodology](#16-practical-debugging-methodology)
 17. [Comprehensive Code-Reading Guide](#17-comprehensive-code-reading-guide)
 18. [End-to-End Code Traces](#18-end-to-end-code-traces)
-19. [How DevHub Maps to HLD/LLD Interview Concepts](#19-how-devhub-maps-to-hldlld-interview-concepts)
+19. [How Runara Maps to HLD/LLD Interview Concepts](#19-how-runara-maps-to-hldlld-interview-concepts)
 20. [Engineering Glossary](#20-engineering-glossary)
 21. [Milestone 2: Networking Fundamentals & Architecture](#21-milestone-2-networking-fundamentals--architecture)
     - [21.1 IP Addresses, IPv4, IPv6, and Loopback vs. Wildcard](#211-ip-addresses-ipv4-ipv6-and-loopback-vs-wildcard)
     - [21.2 Ports, Sockets, and Endpoints](#212-ports-sockets-and-endpoints)
     - [21.3 TCP Protocol, Three-Way Handshake, and Connection States](#213-tcp-protocol-three-way-handshake-and-connection-states)
     - [21.4 Socket Lifecycle: Creation, Binding, Listening, and Connection Acceptance](#214-socket-lifecycle-creation-binding-listening-and-connection-acceptance)
-    - [21.5 Why DevHub Focuses on `LISTENING` Sockets](#215-why-devhub-focuses-on-listening-sockets)
+    - [21.5 Why Runara Focuses on `LISTENING` Sockets](#215-why-runara-focuses-on-listening-sockets)
 22. [Milestone 2: Windows Networking Subsystem & IP Helper API](#22-milestone-2-windows-networking-subsystem--ip-helper-api)
     - [22.1 Win32 IP Helper API (`iphlpapi.dll`) & `GetExtendedTcpTable`](#221-win32-ip-helper-api-iphlpapidll--getextendedtcptable)
     - [22.2 Byte Ordering: Network Byte Order (Big-Endian) vs. Host Byte Order (Little-Endian)](#222-byte-ordering-network-byte-order-big-endian-vs-host-byte-order-little-endian)
@@ -146,7 +146,7 @@ Document Version:  14.0.0
     - [43.2 Progressive Disclosure: 3-Tier Information Hierarchy](#432-progressive-disclosure-3-tier-information-hierarchy)
 44. [Milestone 4: Component Boundaries & Presentational Decomposition](#44-milestone-4-component-boundaries--presentational-decomposition)
     - [44.1 Container vs. Presentational Responsibilities](#441-container-vs-presentational-responsibilities)
-    - [44.2 DevHub Component Hierarchy & Props Contracts](#442-devhub-component-hierarchy--props-contracts)
+    - [44.2 Runara Component Hierarchy & Props Contracts](#442-runara-component-hierarchy--props-contracts)
 45. [Milestone 4: Design Tokens & Accessibility](#45-milestone-4-design-tokens--accessibility)
     - [45.1 Tailwind CSS Design Tokens & Visual Hierarchy](#451-tailwind-css-design-tokens--visual-hierarchy)
     - [45.2 Keyboard Accessibility, ARIA Roles & Color Independence](#452-keyboard-accessibility-aria-roles--color-independence)
@@ -173,7 +173,7 @@ Document Version:  14.0.0
     - [52.4 How Win32 Kernel Handles Pin Process Objects in Memory](#524-how-win32-kernel-handles-pin-process-objects-in-memory)
 53. [Milestone 5: Target Validation Strategy & Least Privilege in Developer Tooling](#53-milestone-5-target-validation-strategy--least-privilege-in-developer-tooling)
     - [53.1 Why Read-Only Tools Differ from Destructive Control Layers](#531-why-read-only-tools-differ-from-destructive-control-layers)
-    - [53.2 DevHub's 9-Point Pre-Termination Identity Verification Checklist](#532-devhubs-9-point-pre-termination-identity-verification-checklist)
+    - [53.2 Runara's 9-Point Pre-Termination Identity Verification Checklist](#532-runaras-9-point-pre-termination-identity-verification-checklist)
     - [53.3 Protecting Critical System Processes & Failsafe Behavior](#533-protecting-critical-system-processes--failsafe-behavior)
     - [53.4 Explicit User Confirmation: Preventing Accidental Outages](#534-explicit-user-confirmation-preventing-accidental-outages)
 54. [Milestone 5: Post-Termination Verification & Port Owner Diagnostics](#54-milestone-5-post-termination-verification--port-owner-diagnostics)
@@ -389,7 +389,7 @@ Document Version:  14.0.0
 
 ## 1. How to Read This Project
 
-To understand DevHub, you must look at it as a multi-tier systems application partitioned across a security and process boundary:
+To understand Runara, you must look at it as a multi-tier systems application partitioned across a security and process boundary:
 
 ```mermaid
 graph TD
@@ -461,7 +461,7 @@ Process (Address Space, Sockets, Environment, CWD)
    └── Thread 3 (I/O Listener)
 ```
 
-**Why DevHub Focuses on Processes Rather Than Threads:**
+**Why Runara Focuses on Processes Rather Than Threads:**
 Development servers (`node.exe`, `python.exe`, `uvicorn`, `vite`) are managed as distinct processes. Port binding, terminal control, and lifecycle termination (`SIGTERM` / `TerminateProcess`) operate on the process boundary. Thread inspection will only be introduced if fine-grained worker pooling analysis becomes necessary.
 
 ### 2.3 OS Process Model and Lifecycle
@@ -475,7 +475,7 @@ On Windows:
 - **Current Working Directory (`cwd`)**: A per-process context property pointing to the directory from which relative file paths are resolved.
 - **Command Line (`cmdLine`)**: The exact string arguments passed to the process at launch (e.g., `node "D:\projects\my-app\node_modules\vite\bin\vite.js" --port 3000`).
 
-**Why `cwd` Is Critical for DevHub:**
+**Why `cwd` Is Critical for Runara:**
 If five developers run `node.exe`, all five have the exact same executable path. Only the `cwd` and `commandLine` reveal which project repository (e.g. `D:\company\frontend-dashboard`) owns the server!
 
 ---
@@ -491,7 +491,7 @@ On Windows, there are three primary ways to inspect processes:
 | **`EnumProcesses` (PSAPI)** | Array of all active PIDs (`psapi.dll`) | Simple | Requires secondary `OpenProcess` calls for all details |
 | **Native Kernel Query / PEB (`NtQueryInformationProcess`)** | Queries internal process structures | Captures full command line, CWD, environment | Requires handle with query rights; internal structures subject to change |
 
-DevHub leverages the **`sysinfo`** Rust crate, which combines `CreateToolhelp32Snapshot`, `QueryFullProcessImageNameW`, and internal `NtQueryInformationProcess` queries with complete memory safety, proper handle cleanup, and 32/64-bit architecture compatibility.
+Runara leverages the **`sysinfo`** Rust crate, which combines `CreateToolhelp32Snapshot`, `QueryFullProcessImageNameW`, and internal `NtQueryInformationProcess` queries with complete memory safety, proper handle cleanup, and 32/64-bit architecture compatibility.
 
 ### 3.2 Windows Process Handles and Security Descriptors
 To query a process, Windows requires opening a **Process Handle** via `OpenProcess()` with specific access flags:
@@ -539,7 +539,7 @@ Why calling PowerShell from code is poor architecture:
 +-------------------------------------------------------------------------+
 ```
 
-DevHub uses **Tauri 2** because it pairs the rapid UI development of React with the bare-metal performance, memory safety, and native systems APIs of Rust, without the multi-hundred-megabyte overhead of bundling a dedicated browser and Node runtime.
+Runara uses **Tauri 2** because it pairs the rapid UI development of React with the bare-metal performance, memory safety, and native systems APIs of Rust, without the multi-hundred-megabyte overhead of bundling a dedicated browser and Node runtime.
 
 ### 4.2 Security Boundaries: Core Process vs. WebView Process
 Tauri separates the application into two distinct processes:
@@ -595,7 +595,7 @@ To bridge them across the IPC boundary, data must be **marshalled** (serialized 
 ### 6.2 Serde Mechanics: `snake_case` to `camelCase` Mapping
 In Rust, the idiomatic naming convention is `snake_case`. In JavaScript/TypeScript, it is `camelCase`.
 
-DevHub solves this seamlessly using Serde container attributes in `src-tauri/src/models/process.rs` and `src-tauri/src/models/port.rs`:
+Runara solves this seamlessly using Serde container attributes in `src-tauri/src/models/process.rs` and `src-tauri/src/models/port.rs`:
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -623,7 +623,7 @@ Both Rust and TypeScript enforce strong static typing, but at different phases:
 ### 7.2 Contract Synchronization & Type Mismatches
 If a Rust field is named `parent_pid` and serialized without `rename_all = "camelCase"`, but TypeScript expects `parentPid`, TypeScript will receive `undefined` at runtime with no compile warning.
 
-DevHub enforces cross-language contract consistency:
+Runara enforces cross-language contract consistency:
 1. Rust unit tests (`test_process_info_serialization_camel_case`, `test_port_info_serialization_camel_case`) verify the exact JSON key outputs.
 2. The TypeScript interface strictly matches the serialized contract:
 ```typescript
@@ -643,7 +643,7 @@ export interface ProcessInfo {
 ## 8. Software Architecture & Design Principles
 
 ### 8.1 Layered Architecture Pattern
-DevHub strictly enforces a four-tier architecture:
+Runara strictly enforces a four-tier architecture:
 
 ```
 [ Tier 1: Presentation Layer ]  --> React 19 UI, Tailwind CSS, Lucide icons
@@ -655,7 +655,7 @@ DevHub strictly enforces a four-tier architecture:
 [ Tier 4: OS Integration Layer ] --> Windows API bindings / sysinfo crate / iphlpapi.dll
 ```
 
-### 8.2 SOLID Principles Applied in DevHub
+### 8.2 SOLID Principles Applied in Runara
 - **Single Responsibility Principle (SRP)**:
   - `commands::processes::get_processes`: Only handles IPC parameter routing and error wrapping for processes.
   - `commands::ports::get_listening_ports`: Only handles IPC parameter routing and error wrapping for ports.
@@ -675,7 +675,7 @@ DevHub strictly enforces a four-tier architecture:
 
 ```
 +------------------------------------------------------------------------------------+
-|                                    DEVHUB HLD                                      |
+|                                    RUNARA HLD                                      |
 |                                                                                    |
 |  +-------------------+       Tauri IPC       +----------------------------------+  |
 |  |  React Frontend   | ────────────────────> |       Rust Backend Core          |  |
@@ -738,7 +738,7 @@ Command functions contain no business logic or Win32 calls. They instantiate dis
 - **Unexpected Failures**: If OS APIs fail to allocate a snapshot buffer, the service returns `Err(String)`, which surfaces as a user-friendly error banner with a "Retry" button on the UI.
 
 ### 11.2 Graceful Degradation for Protected System Processes
-Instead of panicking or throwing unhandled errors, DevHub sanitizes missing fields:
+Instead of panicking or throwing unhandled errors, Runara sanitizes missing fields:
 ```rust
 let executable_path = process
     .exe()
@@ -837,7 +837,7 @@ In Milestone 4+, an embedded SQLite database (`rusqlite`) will store saved confi
 
 ## 16. Practical Debugging Methodology
 
-When diagnosing an issue in DevHub, follow this four-tier diagnostic ladder:
+When diagnosing an issue in Runara, follow this four-tier diagnostic ladder:
 
 ```
 Tier 1: UI Display Issue?
@@ -872,7 +872,7 @@ Tier 4: Windows Permissions / System Issue?
 | [`src-tauri/src/commands/ports.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/ports.rs) | Thin IPC command handler routing `get_listening_ports` calls | Thin Controller / Separation of Concerns | Tauri IPC Dispatcher | `WindowsPortDiscovery` |
 | [`src-tauri/src/commands/system.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/commands/system.rs) | Provides basic application and platform metadata | System Health Check | Tauri IPC Dispatcher | `std::env` |
 | [`src-tauri/src/lib.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/lib.rs) | Tauri application builder and command handler registry | Application Composition Root | `main.rs` | Tauri runtime |
-| [`src-tauri/src/main.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/main.rs) | Desktop binary entry point | Binary Entry Point | OS Process Launcher | `devhub_lib::run()` |
+| [`src-tauri/src/main.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/main.rs) | Desktop binary entry point | Binary Entry Point | OS Process Launcher | `runara_lib::run()` |
 
 #### Frontend Files (`src`)
 
@@ -891,7 +891,7 @@ Tier 4: Windows Permissions / System Issue?
 
 ## 18. End-to-End Code Traces
 
-### Trace: User Clicks "Refresh" in DevHub (Milestone 2)
+### Trace: User Clicks "Refresh" in Runara (Milestone 2)
 
 1. **User Action**: User clicks "Refresh" on the Dashboard.
 2. **Event Trigger** (`Dashboard.tsx`):
@@ -929,9 +929,9 @@ Tier 4: Windows Permissions / System Issue?
 
 ---
 
-## 19. How DevHub Maps to HLD/LLD Interview Concepts
+## 19. How Runara Maps to HLD/LLD Interview Concepts
 
-| Interview Question / Topic | How DevHub Answers It |
+| Interview Question / Topic | How Runara Answers It |
 | :--- | :--- |
 | **Why use a Service Layer instead of putting logic in the Controller/Command?** | Keeps the Tauri command thin, allows the discovery logic to be unit tested independently, and permits swapping discovery strategies (e.g. Linux/WSL/Mock) without modifying IPC handlers. |
 | **How do you isolate OS-specific logic in a cross-platform application?** | By defining high-level Rust traits (`ProcessDiscovery`, `PortDiscovery`) and normalizing OS-specific quirks into unified domain models (`ProcessInfo`, `PortInfo`). |
@@ -1046,11 +1046,11 @@ sequenceDiagram
 4. **Accepting (`accept()`)**: Blocks/polls until an incoming connection arrives, then creates a **new socket** for data transfer while the original listening socket remains in `LISTENING` to accept further connections.
 5. **Closing (`closesocket()`)**: Closes the socket and releases the port back to the OS.
 
-### 21.5 Why DevHub Focuses on `LISTENING` Sockets
+### 21.5 Why Runara Focuses on `LISTENING` Sockets
 When inspecting a developer's machine:
 - A developer machine may have **thousands** of active TCP sockets in `ESTABLISHED`, `TIME_WAIT`, `CLOSE_WAIT`, or `SYN_SENT` states (browser tabs connecting to GitHub, Discord websocket connections, database pools).
 - These outbound client sockets are **ephemeral connections**, not development servers.
-- **DevHub specifically filters for `LISTENING` sockets** because a listening socket defines a **server** ready to accept inbound traffic.
+- **Runara specifically filters for `LISTENING` sockets** because a listening socket defines a **server** ready to accept inbound traffic.
 
 ---
 
@@ -1070,7 +1070,7 @@ DWORD GetExtendedTcpTable(
 );
 ```
 
-Parameters used in DevHub (`src-tauri/src/windows/networking.rs`):
+Parameters used in Runara (`src-tauri/src/windows/networking.rs`):
 - `ulAf`: `AF_INET` (2) for IPv4 sockets; `AF_INET6` (23) for IPv6 sockets.
 - `TableClass`: `TCP_TABLE_OWNER_PID_ALL` (5) to retrieve the complete socket table with owning Process IDs (`dwOwningPid`).
 - `bOrder`: `0` (sorting handled deterministically in Rust).
@@ -1085,14 +1085,14 @@ If port 3000 (hex `0x0BB8`) is stored in network order:
 - Low byte: `0xB8` (184)
 - On little-endian x86_64, reading the 16 bits directly yields `0xB80B` (decimal 47115) instead of 3000!
 
-DevHub converts this safely using Rust's standard byte conversion:
+Runara converts this safely using Rust's standard byte conversion:
 ```rust
 let port = u16::from_be(row.dw_local_port as u16);
 ```
 
 ### 22.3 Dynamic Buffer Allocation & Reentrancy Safety
-Between the time DevHub queries the required buffer size and allocates the memory vector, new sockets may be opened by other processes on the machine.
-To prevent buffer overflow or truncation errors, DevHub implements a dynamic retry loop:
+Between the time Runara queries the required buffer size and allocates the memory vector, new sockets may be opened by other processes on the machine.
+To prevent buffer overflow or truncation errors, Runara implements a dynamic retry loop:
 ```rust
 let mut retries = 0;
 loop {
@@ -1120,7 +1120,7 @@ loop {
 ```
 
 ### 22.4 Native API Performance vs. `netstat` Shell Parsing
-Why DevHub uses `GetExtendedTcpTable` rather than parsing `netstat -ano`:
+Why Runara uses `GetExtendedTcpTable` rather than parsing `netstat -ano`:
 1. **Zero Process Spawning**: Spawning `cmd.exe` or `netstat.exe` incurs 30–100ms of process creation latency. Direct FFI execution completes in **under 0.5 milliseconds**.
 2. **Type Safety & Binary Precision**: FFI reads binary structs directly from memory without risk of regex failures, localized string variations (e.g. localized strings for `LISTENING`), or column width truncations.
 
@@ -1129,7 +1129,7 @@ Why DevHub uses `GetExtendedTcpTable` rather than parsing `netstat -ano`:
 ## 23. Milestone 2: Data Modeling, Algorithmic Thinking & Port → PID Join
 
 ### 23.1 The Port → PID Mapping Problem
-DevHub retrieves two independent datasets from the operating system:
+Runara retrieves two independent datasets from the operating system:
 - **Dataset A (Processes)**: `Vec<ProcessInfo>` (contains PID, Name, Command Line, CWD, Executable Path).
 - **Dataset B (Listening Ports)**: `Vec<PortInfo>` (contains Port, Address, Protocol, State, Owning PID).
 
@@ -1161,7 +1161,7 @@ const joined = ports.map(port => ({
 }));
 ```
 
-#### Hash Map Join: $O(P + S)$ (DevHub Implementation)
+#### Hash Map Join: $O(P + S)$ (Runara Implementation)
 ```typescript
 // Step 1: Build PID map in O(P) time (300 operations)
 const processMap = new Map<number, ProcessInfo>();
@@ -1185,7 +1185,7 @@ const joined = ports.map(port => ({
 
 ### 23.5 Handling Missing Processes and Disappeared Endpoints
 If a process terminates immediately after its listening socket is enumerated, `processMap.get(port.pid)` safely returns `undefined`.
-DevHub handles this gracefully:
+Runara handles this gracefully:
 - Renders the port endpoint with PID.
 - Displays `Unavailable (PID <pid>)` with an explanation banner in the details modal.
 - Never panics, crashes, or fabricates nonexistent process data.
@@ -1233,7 +1233,7 @@ export interface PortInfo {
 
 ```
 +-----------------------------------------------------------------------------------------+
-|                                    DEVHUB HLD (M2)                                      |
+|                                    RUNARA HLD (M2)                                      |
 |                                                                                         |
 |  +--------------------+        Tauri IPC         +-----------------------------------+  |
 |  |  React 19 Frontend | ───────────────────────> |       Rust Backend Core           |  |
@@ -1332,7 +1332,7 @@ Critically, **one process can own zero, one, or multiple listening ports** (e.g.
 
 ### Q3: Why should PID not be treated as a permanent server identity?
 **Answer**:
-PIDs are ephemeral integers allocated dynamically by the OS kernel. When a process exits, its PID is returned to the OS pool and may be reused minutes or seconds later by an unrelated application. If DevHub saved a "Server Profile" using only a PID, starting DevHub tomorrow would mistakenly bind to whatever random application inherited that PID. Permanent server profiles (Milestone 7) must identify servers by repository path (`cwd`), launch command, and expected port.
+PIDs are ephemeral integers allocated dynamically by the OS kernel. When a process exits, its PID is returned to the OS pool and may be reused minutes or seconds later by an unrelated application. If Runara saved a "Server Profile" using only a PID, starting Runara tomorrow would mistakenly bind to whatever random application inherited that PID. Permanent server profiles (Milestone 7) must identify servers by repository path (`cwd`), launch command, and expected port.
 
 ### Q4: Why use a Hash Map for joining `PortInfo` and `ProcessInfo`?
 **Answer**:
@@ -1340,11 +1340,11 @@ Joining $S$ sockets with $P$ processes using a nested loop (`Array.find`) takes 
 
 ### Q5: What happens if a process exits during discovery?
 **Answer**:
-Because OS snapshots are non-atomic, a socket may be enumerated whose owning process exits before process enumeration runs. DevHub's join algorithm handles this gracefully: `processMap.get(port.pid)` returns `None` / `undefined`, and the UI displays the socket with PID and status `Unavailable` rather than crashing or throwing unhandled errors.
+Because OS snapshots are non-atomic, a socket may be enumerated whose owning process exits before process enumeration runs. Runara's join algorithm handles this gracefully: `processMap.get(port.pid)` returns `None` / `undefined`, and the UI displays the socket with PID and status `Unavailable` rather than crashing or throwing unhandled errors.
 
 ### Q6: Why do we filter for `LISTENING` sockets and ignore `ESTABLISHED` sockets?
 **Answer**:
-`ESTABLISHED` sockets represent active point-to-point connections (e.g. browser fetching data from an API, background telemetry, database client connections). A `LISTENING` socket represents an open server waiting for new incoming connections. DevHub's product purpose is **local development server discovery**, which corresponds strictly to `LISTENING` endpoints.
+`ESTABLISHED` sockets represent active point-to-point connections (e.g. browser fetching data from an API, background telemetry, database client connections). A `LISTENING` socket represents an open server waiting for new incoming connections. Runara's product purpose is **local development server discovery**, which corresponds strictly to `LISTENING` endpoints.
 
 ### Q7: What does binding to `0.0.0.0` mean compared to `127.0.0.1`?
 **Answer**:
@@ -1369,7 +1369,7 @@ Instead of manual or interval-based polling (`setInterval`), the backend could e
 ## 28. Milestone 3: Process Identity — Beyond Raw PIDs and Ports
 
 ### 28.1 The Identity Problem: Why PID & Port Are Insufficient
-In Milestones 1 and 2, DevHub answered:
+In Milestones 1 and 2, Runara answered:
 1. "Which processes exist?" &rarr; `PID 18240`, `node.exe`
 2. "Which ports are open?" &rarr; `Port 3000` &rarr; `PID 18240`
 
@@ -1399,7 +1399,7 @@ Process Tree:       Code.exe (16300) ──> powershell.exe (17120) ──> npm.
 ```
 
 ### 28.2 The 9 Dimensions of Developer Process Identity
-DevHub models process identity across nine fundamental dimensions:
+Runara models process identity across nine fundamental dimensions:
 
 | Dimension | Field in Model | Source of Truth | Why It Matters to Developers |
 | :--- | :--- | :--- | :--- |
@@ -1424,7 +1424,7 @@ Both processes have:
 - Identical runtime: `Node.js`
 - Identical package manager: `npm`
 
-Only the **Current Working Directory (`working_directory`)** allows DevHub to definitively attribute PID 18240 to `platform-frontend` and PID 19400 to `admin-portal`.
+Only the **Current Working Directory (`working_directory`)** allows Runara to definitively attribute PID 18240 to `platform-frontend` and PID 19400 to `admin-portal`.
 
 ---
 
@@ -1453,7 +1453,7 @@ In modern development workflows:
 ### 29.3 Why Process Ancestry Eliminates "Orphan Server" Confusion
 - **The Problem**: A developer closes a VS Code terminal window with `Ctrl+C`, but the underlying `node.exe` child process fails to terminate, remaining bound to port 3000.
 - **The Confusion**: The developer opens a new terminal, runs `npm run dev`, and gets `EADDRINUSE: address already in use :::3000`.
-- **How DevHub Solves This**: By displaying the full process ancestry tree, DevHub shows whether the server was orphaned or is still attached to an active PowerShell / VS Code session.
+- **How Runara Solves This**: By displaying the full process ancestry tree, Runara shows whether the server was orphaned or is still attached to an active PowerShell / VS Code session.
 
 ---
 
@@ -1462,7 +1462,7 @@ In modern development workflows:
 ### 30.1 Algorithmic Design: $O(P)$ Indexing and $O(D)$ Traversal
 Reconstructing the ancestry for $N$ processes must not perform repeated linear scans or repeated Windows API system queries.
 
-DevHub solves this in two decoupled phases:
+Runara solves this in two decoupled phases:
 1. **Phase 1 (Snapshot Indexing)**: Build an in-memory hash map `HashMap<u32, &ProcessInfo>` in $O(P)$ time from the single process snapshot.
 2. **Phase 2 (Ancestry Traversal)**: For any target process, traverse upward through `parent_pid` links using $O(1)$ map lookups in $O(D)$ time, where $D$ is the tree depth.
 
@@ -1486,7 +1486,7 @@ However, in real-world systems programming, process graphs can present anomalies
 3. **Corrupt or Spoofed Metadata**: Malformed system processes or security sandboxes may report self-referential PIDs (`PID == PPID`).
 
 ### 30.3 Visited Set (`HashSet<u32>`), Self-Parent Anomaly & Depth Bound
-DevHub implements three independent defensive barriers in `src-tauri/src/identity/tree.rs`:
+Runara implements three independent defensive barriers in `src-tauri/src/identity/tree.rs`:
 
 ```rust
 // 1. Visited Set to prevent cycles
@@ -1542,7 +1542,7 @@ In systems engineering, categorization heuristics must be strictly classified:
 [ Guessing  ]  ──> Speculation based on weak coincidence (e.g. assuming any port 3000 is Node).
 ```
 
-**DevHub Rule**: **Never Guess**. Prefer `Runtime::Unknown` over false assertions.
+**Runara Rule**: **Never Guess**. Prefer `Runtime::Unknown` over false assertions.
 
 ### 31.2 Conservative Runtime Classification Strategy
 `RuntimeDetector` (`src-tauri/src/identity/detector.rs`) applies strict matching rules:
@@ -1592,7 +1592,7 @@ In the JavaScript/TypeScript ecosystem, the runtime interpreter is almost always
 - `bun` (Fast all-in-one JavaScript runtime & package manager)
 
 ### 32.2 Why `node.exe` Does Not Imply `npm`
-Running `pnpm dev` executes `node.exe` under the hood. If DevHub blindly assumed `node.exe` &rarr; `npm`, it would misinform developers using `pnpm` monorepos or `yarn` workspaces.
+Running `pnpm dev` executes `node.exe` under the hood. If Runara blindly assumed `node.exe` &rarr; `npm`, it would misinform developers using `pnpm` monorepos or `yarn` workspaces.
 
 ### 32.3 Dual-Source Detection: Command-Line Token Parsing + Ancestry Inspection
 `PackageManagerDetector` inspects two independent sources:
@@ -1610,7 +1610,7 @@ Running `pnpm dev` executes `node.exe` under the hood. If DevHub blindly assumed
 ## 33. Milestone 3: Data Composition & Structural Separation
 
 ### 33.1 Composition over Inheritance and Duplication
-DevHub follows the **Composition over Duplication** principle:
+Runara follows the **Composition over Duplication** principle:
 - `ProcessInfo` remains the pure, unmutated representation of the raw OS process.
 - `ProcessIdentity` **composes** `ProcessInfo` with derived metadata (`Runtime`, `PackageManager`, `ProcessParentInfo`, `ProcessTreeNode[]`, and `listening_ports`).
 
@@ -1661,12 +1661,12 @@ When Milestone 6 introduces WSL (`/proc` and Linux sockets), the entire `Process
 
 ### 35.1 The Ephemeral Nature of OS Snapshots
 Process discovery is non-atomic. In a multitasking OS:
-1. DevHub captures process table snapshot at $t_0$.
-2. DevHub captures port listener table snapshot at $t_1$.
+1. Runara captures process table snapshot at $t_0$.
+2. Runara captures port listener table snapshot at $t_1$.
 3. Between $t_0$ and $t_1$, a process may exit, spawn new children, or rebind ports.
 
 ### 35.2 TOCTOU (Time-of-Check to Time-of-Use) in Process Inspection
-DevHub treats all discovery records as **ephemeral point-in-time snapshots**:
+Runara treats all discovery records as **ephemeral point-in-time snapshots**:
 - If a parent process exists in OS metadata but exited before snapshot capture, `ProcessTreeBuilder::resolve_parent` displays `PID <id> (Exited / Unavailable)` rather than failing.
 - If a port has no matching process, the UI displays `Unavailable (PID <id>)`.
 
@@ -1793,7 +1793,7 @@ Operating system Process Identifiers (PIDs) are ephemeral integers managed by th
 
 ### Q4: How do you prevent infinite loops during process tree traversal?
 **Answer**:
-Although process trees are theoretically acyclic, real-world systems experience race conditions, PID reuse, and malformed process records. DevHub employs three defensive layers:
+Although process trees are theoretically acyclic, real-world systems experience race conditions, PID reuse, and malformed process records. Runara employs three defensive layers:
 1. **Visited Set**: A `HashSet<u32>` tracks visited PIDs. If a parent PID is already present in the set, traversal aborts immediately.
 2. **Self-Parent Check**: If `parent_pid == current.pid` or `parent_pid == 0`, traversal stops.
 3. **Hard Depth Limit**: Traversal terminates if depth exceeds `MAX_TREE_DEPTH = 32`.
@@ -1810,9 +1810,9 @@ Although process trees are theoretically acyclic, real-world systems experience 
 
 ### Q7: Why is conservative runtime detection better than aggressive guessing?
 **Answer**:
-Developer tools must maintain high user trust. If DevHub incorrectly labeled a custom C++ application or Rust binary as "Node.js" simply because it bound to port 3000, it would confuse developers and corrupt automated lifecycle management. Returning `Runtime::Unknown` accurately reflects ground truth when reliable signals are absent.
+Developer tools must maintain high user trust. If Runara incorrectly labeled a custom C++ application or Rust binary as "Node.js" simply because it bound to port 3000, it would confuse developers and corrupt automated lifecycle management. Returning `Runtime::Unknown` accurately reflects ground truth when reliable signals are absent.
 
-### Q8: How does DevHub distinguish between `npm`, `pnpm`, `yarn`, and `bun` for a `node.exe` process?
+### Q8: How does Runara distinguish between `npm`, `pnpm`, `yarn`, and `bun` for a `node.exe` process?
 **Answer**:
 By using dual-source inspection:
 1. First, inspect the target process command line for invocation tokens (`pnpm dev`, `yarn start`, `bun run dev`, `npm run dev`).
@@ -1840,7 +1840,7 @@ In `ProcessIdentityService::enrich_processes()`, listening ports are grouped int
 **Answer**:
 Given $N$ process identities ($\approx 300$), client-side filtering inspects string properties in $O(N \times L)$ time (where $L$ is the average string length). With 300 items, this executes in $<0.5$ ms in JavaScript, easily supporting instant 60 FPS search-as-you-type without debouncing.
 
-### Q14: How does DevHub protect against untrusted command lines?
+### Q14: How does Runara protect against untrusted command lines?
 **Answer**:
 Command lines captured from the operating system are treated strictly as **inert display data**. They are never passed to shell evaluators (`cmd.exe /c`, `powershell.exe -Command`, `eval()`, or `system()`), preventing arbitrary code execution from malicious or crafted process arguments.
 
@@ -1886,7 +1886,7 @@ Milestone 3 creates the rich semantic identity (`Runtime`, `PackageManager`, `Wo
 ## 40. Milestone 4: Presentation Architecture & View Models
 
 ### 40.1 From OS Telemetry to Developer Product Semantics
-In Milestones 1 through 3, DevHub built the native infrastructure and domain layers:
+In Milestones 1 through 3, Runara built the native infrastructure and domain layers:
 - Discovered Windows processes (`ProcessInfo`).
 - Discovered listening TCP sockets (`PortInfo`).
 - Reconstructed parent-child process ancestry and conservative runtimes (`ProcessIdentity`).
@@ -1961,12 +1961,12 @@ A process identifier (`PID`) cannot serve as an entity ID in modern reactive UI 
 2. A single process can own multiple distinct server endpoints.
 3. React requires unique, stable keys across render cycles to avoid DOM reconciliation thrashing.
 
-DevHub constructs a snapshot-scoped composite key:
+Runara constructs a snapshot-scoped composite key:
 $$\text{id} = \text{environment} + \text{"-"} + \text{pid} + \text{"-"} + \text{primaryPort}$$
 For example: `"win-18240-3000"`.
 
 ### 40.4 Conservative Server Name Inference Strategy
-A developer tool must never invent fake project names or hallucinate repository metadata. DevHub applies a **strict priority-based inference strategy** in `src/lib/serverUtils.ts`:
+A developer tool must never invent fake project names or hallucinate repository metadata. Runara applies a **strict priority-based inference strategy** in `src/lib/serverUtils.ts`:
 
 ```
                            +-------------------------------+
@@ -2000,7 +2000,7 @@ A developer tool must never invent fake project names or hallucinate repository 
 ### 41.1 Source State vs. Derived State in React 19
 A frequent source of bugs in desktop UI development is **state duplication** (storing computed data in secondary React state variables).
 
-In DevHub:
+In Runara:
 - **Source State (Single Source of Truth)**:
   - `ports`: Raw listening ports from Rust.
   - `identities`: Raw process identities from Rust.
@@ -2038,7 +2038,7 @@ If `visibleServers` were stored in `useState`:
 By deriving `visibleServers` purely with `useMemo`, computation occurs synchronously during the render phase with zero state desynchronization risk.
 
 ### 41.3 Auto-Refresh Polling Lifecycle & Cleanup Safety
-DevHub supports live polling at 3-second intervals. To prevent memory leaks, unmounted component state updates, and overlapping in-flight promises:
+Runara supports live polling at 3-second intervals. To prevent memory leaks, unmounted component state updates, and overlapping in-flight promises:
 
 ```typescript
 useEffect(() => {
@@ -2071,21 +2071,21 @@ $$\begin{aligned}
 $$\text{Total Execution Cost per Render Frame} \approx 1,056 \text{ operations} \approx 0.12\text{ ms in JavaScript}$$
 
 ### 42.2 Performance on Developer Hardware & 60 FPS Guarantee
-A standard 60 FPS UI frame budget is **16.6 milliseconds**. DevHub's complete client-side data transformation pipeline completes in **$< 0.2$ milliseconds** (less than $1.5\%$ of the frame budget), guaranteeing instant, zero-lag search-as-you-type and instantaneous filter switching.
+A standard 60 FPS UI frame budget is **16.6 milliseconds**. Runara's complete client-side data transformation pipeline completes in **$< 0.2$ milliseconds** (less than $1.5\%$ of the frame budget), guaranteeing instant, zero-lag search-as-you-type and instantaneous filter switching.
 
 ### 42.3 Why Virtualization Is Not Necessary in Milestone 4
 **DOM Virtualization** (e.g. `react-window`, `react-virtualized`) adds non-trivial layout complexity and scroll-state edge cases.
 - Virtualization is necessary when rendering $1,000+$ DOM nodes simultaneously.
 - On developer workstations, active listening development servers typically range from $1$ to $25$.
 - Even with 100 active servers, rendering 100 React cards requires $<5$ ms of DOM layout.
-- **Engineering Principle**: Avoid premature optimization. DevHub separates raw process telemetry (300+ items, accessible in secondary tabs) from server dashboard cards ($N \le 25$), eliminating any need for complex virtual list overhead.
+- **Engineering Principle**: Avoid premature optimization. Runara separates raw process telemetry (300+ items, accessible in secondary tabs) from server dashboard cards ($N \le 25$), eliminating any need for complex virtual list overhead.
 
 ---
 
 ## 43. Milestone 4: UX State Machines & Progressive Disclosure
 
 ### 43.1 The 6 Fundamental UI Lifecycle States
-Desktop developer tools fail when edge cases produce broken or frozen interfaces. DevHub models the UI as a formal state machine:
+Desktop developer tools fail when edge cases produce broken or frozen interfaces. Runara models the UI as a formal state machine:
 
 ```
                   +--------------------------------+
@@ -2120,13 +2120,13 @@ Desktop developer tools fail when edge cases produce broken or frozen interfaces
 
 1. **Loading State (`LoadingState.tsx`)**: Displays clean skeleton cards and an active discovery indicator without locking the UI.
 2. **Success State (`ServerCard.tsx` in grid)**: Renders polished server cards with live metrics.
-3. **Empty State (`EmptyState.tsx`)**: Explains that DevHub is actively listening and gives quick-start hints (`npm run dev`, `python app.py`).
+3. **Empty State (`EmptyState.tsx`)**: Explains that Runara is actively listening and gives quick-start hints (`npm run dev`, `python app.py`).
 4. **Filtered Empty State**: Shows "No matching development servers" with a single-click "Clear search & filters" button.
 5. **Error State (`ErrorState.tsx`)**: Displays sanitized diagnostic feedback with a "Retry Discovery" button.
 6. **Selected State (`ServerDetailsModal.tsx`)**: Opens progressive disclosure inspection dialog.
 
 ### 43.2 Progressive Disclosure: 3-Tier Information Hierarchy
-Displaying every process attribute simultaneously creates cognitive overload. DevHub implements **Progressive Disclosure**:
+Displaying every process attribute simultaneously creates cognitive overload. Runara implements **Progressive Disclosure**:
 
 ```
 [ TIER 1: Primary Glance (ServerCard Header) ]
@@ -2156,7 +2156,7 @@ Displaying every process attribute simultaneously creates cognitive overload. De
 ## 44. Milestone 4: Component Boundaries & Presentational Decomposition
 
 ### 44.1 Container vs. Presentational Responsibilities
-DevHub maintains clean architectural separation between container orchestration and presentational rendering:
+Runara maintains clean architectural separation between container orchestration and presentational rendering:
 
 - **Container Components (`Dashboard.tsx`, `Servers.tsx`)**:
   - Own asynchronous data fetching (`refreshAll`).
@@ -2169,7 +2169,7 @@ DevHub maintains clean architectural separation between container orchestration 
   - Contain zero IPC or network calls.
   - Highly reusable and independently testable in isolation without mocking Tauri APIs.
 
-### 44.2 DevHub Component Hierarchy & Props Contracts
+### 44.2 Runara Component Hierarchy & Props Contracts
 
 ```
 Dashboard (Container)
@@ -2192,7 +2192,7 @@ Dashboard (Container)
 ## 45. Milestone 4: Design Tokens & Accessibility
 
 ### 45.1 Tailwind CSS Design Tokens & Visual Hierarchy
-DevHub utilizes a consistent, dark-mode native desktop design system:
+Runara utilizes a consistent, dark-mode native desktop design system:
 - **Surfaces**: `bg-zinc-950` (Canvas), `bg-zinc-900/60` (Card Surfaces), `border-zinc-800` (Subtle Borders).
 - **Typography**: Sans-serif for titles and labels; monospace (`font-mono`) for PIDs, Ports, CWDs, and Commands.
 - **Semantic Accents**:
@@ -2288,7 +2288,7 @@ graph TD
 ## 47. Milestone 4: End-to-End User Interaction Code Trace
 
 ```
-1. Developer opens DevHub desktop application.
+1. Developer opens Runara desktop application.
    │
 2. React mounts Dashboard component (src/pages/Dashboard.tsx).
    │
@@ -2318,7 +2318,7 @@ graph TD
 9. ServerList renders responsive 3-column grid of ServerCards:
    - Card 1: "company-frontend", localhost:3000 (+1 port), Node.js • npm, PID 18240
    - Card 2: "api-service", localhost:8000, Python, PID 22096
-   - Card 3: "DevHub", localhost:5173, Node.js • npm, PID 14200
+   - Card 3: "Runara", localhost:5173, Node.js • npm, PID 14200
    │
 10. Developer types "8000" into ServerToolbar search bar:
     - filterServers executes in O(N * L) time (< 0.1 ms).
@@ -2366,13 +2366,13 @@ graph TD
 2. **Zero Extra Render Cycles**: Deriving data with `useMemo` executes synchronously during the component's render phase, avoiding the double-render penalties of `useEffect + setState`.
 3. **Deterministic Predictability**: For any combination of `(servers, searchQuery, filters, sortField)`, `visibleServers` is a pure mathematical function, eliminating synchronization bugs.
 
-### Q4: How does DevHub prevent infinite loops or memory leaks during background polling?
+### Q4: How does Runara prevent infinite loops or memory leaks during background polling?
 **Answer**:
 1. In `useEffect`, the interval callback invokes `refreshAll()`.
 2. The `useEffect` returns a cleanup function `() => clearInterval(interval)`, ensuring that whenever the component unmounts or auto-refresh is toggled off, the timer is immediately cleared.
 3. In `refreshAll`, state setters (`setLoading`, `setRefreshing`) are guarded by `finally` blocks, preventing the UI from becoming permanently locked in a loading state if an exception occurs.
 
-### Q5: What is Progressive Disclosure and how is it implemented in DevHub?
+### Q5: What is Progressive Disclosure and how is it implemented in Runara?
 **Answer**:
 Progressive disclosure is an interaction design technique where complex information is presented in progressive tiers to prevent cognitive overload.
 - **Tier 1 (Card Header)**: Immediate identification (Name, Status, Primary Port, Runtime, Environment).
@@ -2385,9 +2385,9 @@ Progressive disclosure is an interaction design technique where complex informat
 2. **No Redundant OS Queries**: Querying Win32 process tables on every keystroke wastes CPU cycles and battery without providing new information, since the process snapshot is already in memory.
 3. **Offline Resilience**: Search and filtering operate entirely on in-memory collections with zero backend dependencies.
 
-### Q7: Why does DevHub normalize `0.0.0.0` and `127.0.0.1` to `localhost` for browser URLs?
+### Q7: Why does Runara normalize `0.0.0.0` and `127.0.0.1` to `localhost` for browser URLs?
 **Answer**:
-`0.0.0.0` (`INADDR_ANY`) instructs the operating system kernel to accept inbound TCP connections on all available network interfaces. It is a socket binding directive, not a valid target destination for web browsers. Attempting to navigate to `http://0.0.0.0:3000` on Windows fails or produces security errors in Chromium. DevHub safely normalizes wildcard and loopback interfaces (`0.0.0.0`, `127.0.0.1`, `[::]`, `[::1]`) into `http://localhost:<port>`.
+`0.0.0.0` (`INADDR_ANY`) instructs the operating system kernel to accept inbound TCP connections on all available network interfaces. It is a socket binding directive, not a valid target destination for web browsers. Attempting to navigate to `http://0.0.0.0:3000` on Windows fails or produces security errors in Chromium. Runara safely normalizes wildcard and loopback interfaces (`0.0.0.0`, `127.0.0.1`, `[::]`, `[::1]`) into `http://localhost:<port>`.
 
 ### Q8: How will the Milestone 4 UI architecture accommodate WSL servers in Milestone 6?
 **Answer**:
@@ -2396,7 +2396,7 @@ Progressive disclosure is an interaction design technique where complex informat
 3. `deriveDashboardServers` is designed to ingest normalized `PortInfo[]` and `ProcessIdentity[]` regardless of whether they originated from Win32 or `wsl.exe`.
 4. In Milestone 6, WSL servers will appear as seamless first-class cards alongside Windows servers with zero UI redesign.
 
-### Q9: Why is DOM virtualization not needed for DevHub's server list?
+### Q9: Why is DOM virtualization not needed for Runara's server list?
 **Answer**:
 Virtualization is designed for collections with thousands of rows (e.g. data grids or continuous logs). Development machines run a finite number of active development servers (typically 1 to 25). Rendering 25 cards produces $< 200$ DOM elements, which modern browser engines render in $< 2$ milliseconds. Implementing virtualization prematurely would introduce layout glitches, complex scroll containers, and testing overhead with zero measurable benefit.
 
@@ -2415,13 +2415,13 @@ The modal renders the point-in-time snapshot captured during discovery. If the d
 
 ### Q12: Why are copy actions accompanied by visual feedback instead of system alert dialogs?
 **Answer**:
-System dialogs (`alert()`) are modal, blocking, and disruptive to developer flow. DevHub's `CopyButton` provides inline visual feedback (switching from copy icon to green checkmark and "Copied" label for 1.8 seconds), maintaining focus while confirming clipboard mutation.
+System dialogs (`alert()`) are modal, blocking, and disruptive to developer flow. Runara's `CopyButton` provides inline visual feedback (switching from copy icon to green checkmark and "Copied" label for 1.8 seconds), maintaining focus while confirming clipboard mutation.
 
-### Q13: How does DevHub handle processes running under elevated administrator accounts?
+### Q13: How does Runara handle processes running under elevated administrator accounts?
 **Answer**:
 When standard user accounts inspect elevated processes, Windows denies `PROCESS_QUERY_INFORMATION`. `ProcessInfo` safely yields `None` for `commandLine` and `workingDirectory`, and `status` is set to `ProcessStatus::AccessRestricted`. `deriveDashboardServers` renders the listening port with name `Port <port> (PID <pid>)` and displays `Unavailable (Access Restricted)` in the details panel rather than crashing.
 
-### Q14: How does DevHub maintain accessibility for keyboard-only developers?
+### Q14: How does Runara maintain accessibility for keyboard-only developers?
 **Answer**:
 1. All interactive controls are standard HTML `<button>` and `<input>` elements accessible via `Tab` navigation.
 2. Distinct visual focus rings (`focus:ring-1 focus:ring-blue-500`) highlight active focus.
@@ -2521,12 +2521,12 @@ Operating systems differ fundamentally in how user-space processes cooperate dur
 | **Data Integrity** | High: application flushes disk writes, closes SQLite transactions, and notifies connected clients. | Moderate/Low: in-flight memory writes are aborted; file handles are closed by OS but unwritten buffers in user space are lost. |
 | **Reliability** | Susceptible to hangs if the application is stuck in an infinite loop, blocked on I/O, or ignores signals. | 100% deterministic termination by the kernel (unless process is blocked inside a faulty kernel-mode driver). |
 
-**DevHub's Termination Strategy on Windows:**
-On Windows, development servers (`node.exe`, `python.exe`, `uvicorn`, `vite`) are frequently spawned as child processes without window message loops, and standard user accounts cannot inject arbitrary console control events into separate console sessions. DevHub implements a **verified leaves-to-root termination model**:
+**Runara's Termination Strategy on Windows:**
+On Windows, development servers (`node.exe`, `python.exe`, `uvicorn`, `vite`) are frequently spawned as child processes without window message loops, and standard user accounts cannot inject arbitrary console control events into separate console sessions. Runara implements a **verified leaves-to-root termination model**:
 1. It acquires native Win32 process handles (`OpenProcess`) with `PROCESS_TERMINATE | SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION`.
 2. It attempts clean termination on child worker processes first, then the root server process.
 3. It performs a bounded wait (`WaitForSingleObject`) up to 3000 ms to confirm exit.
-4. If a process does not exit within the timeout, DevHub exposes an explicit **Force Stop** option.
+4. If a process does not exit within the timeout, Runara exposes an explicit **Force Stop** option.
 
 ### 50.3 Win32 Process Handles, Access Rights & Kernel Objects
 In Windows, processes are represented internally by executive objects (`EPROCESS`). User-mode code cannot manipulate `EPROCESS` pointers directly; instead, it requests an opaque **Handle** from the kernel via `OpenProcess`:
@@ -2548,7 +2548,7 @@ let handle = OpenProcess(
 Every kernel object in Windows has an internal **reference count**. When `OpenProcess` succeeds:
 1. The kernel increments the reference count of the target's `EPROCESS` block.
 2. Even if the process terminates immediately, the `EPROCESS` block **cannot be deleted from kernel memory** until all open handles are closed via `CloseHandle`.
-3. This is a critical security property: once DevHub acquires a valid handle to a verified process, subsequent termination calls on that handle are guaranteed to operate on **that exact process instance**, eliminating PID reuse race conditions for the lifetime of the handle!
+3. This is a critical security property: once Runara acquires a valid handle to a verified process, subsequent termination calls on that handle are guaranteed to operate on **that exact process instance**, eliminating PID reuse race conditions for the lifetime of the handle!
 
 ### 50.4 Why Process Termination Differs from Closing a Terminal Window
 Developers frequently assume that closing a terminal tab (e.g. in Windows Terminal or VS Code) is the same as stopping a development server. In reality, these are completely different OS mechanisms:
@@ -2561,15 +2561,15 @@ Scenario A: Closing Terminal Window
                                               [ node.exe (Zombie Server) ]
                                               Port 3000 Remains Occupied!
 
-Scenario B: DevHub Verified Process Control
-[ DevHub ] ──(Discovers & Validates PID)──> [ OpenProcess Handle ]
+Scenario B: Runara Verified Process Control
+[ Runara ] ──(Discovers & Validates PID)──> [ OpenProcess Handle ]
     │
     ├─► [ Terminate Leaf Workers (esbuild.exe) ]
     ├─► [ Terminate Root Server (node.exe) ]
     └─► [ Verify Port 3000 Freed ]
 ```
 
-When a terminal closes, Windows may terminate the console host (`conhost.exe`) or send a disconnect notification. If the child runtime was spawned detached, in the background, or with ignored console signals, it becomes an **orphan process** that continues running in the background while holding the TCP listening port. DevHub operates directly on the process tree and socket layer, terminating the actual listener and freeing the port cleanly.
+When a terminal closes, Windows may terminate the console host (`conhost.exe`) or send a disconnect notification. If the child runtime was spawned detached, in the background, or with ignored console signals, it becomes an **orphan process** that continues running in the background while holding the TCP listening port. Runara operates directly on the process tree and socket layer, terminating the actual listener and freeing the port cleanly.
 
 ---
 
@@ -2602,7 +2602,7 @@ To build safe process control systems, precise graph terminology is mandatory:
    [ worker.exe (PID 18400) ]                               ◄── Grandchild (Descendant)
 ```
 
-- **Target Process**: The specific server process identified by DevHub as owning the listening TCP port (`node.exe`, PID 18240).
+- **Target Process**: The specific server process identified by Runara as owning the listening TCP port (`node.exe`, PID 18240).
 - **Parent Process**: The direct process that created the target (`npm.cmd`, PID 17820).
 - **Ancestors**: The entire lineage above the target (`npm.cmd` &rarr; `pwsh.exe` &rarr; `Code.exe` &rarr; `explorer.exe`).
 - **Children**: Direct subprocesses spawned by the target (`esbuild.exe`, PID 18300).
@@ -2626,11 +2626,11 @@ A common anti-pattern in naive developer utilities is invoking `taskkill /F /T /
 - If you terminate `npm.cmd` while other background tasks or build watchers are running under it, unrelated processes are destroyed.
 
 > [!IMPORTANT]
-> **DevHub Ancestor Safety Invariant**:
+> **Runara Ancestor Safety Invariant**:
 > Process control operations MUST ONLY target the selected server process and its verified descendants. Ancestors and siblings are NEVER included in the termination set under any circumstances.
 
 ### 51.4 Descendant Resolution Algorithm & Leaves-to-Root Termination
-DevHub reconstructs the descendant tree using a breadth-first search (BFS) traversal over the in-memory process snapshot:
+Runara reconstructs the descendant tree using a breadth-first search (BFS) traversal over the in-memory process snapshot:
 
 ```rust
 pub fn find_descendants(
@@ -2680,7 +2680,7 @@ pub fn find_descendants(
 ```
 
 #### Why Leaves-to-Root Termination Matters
-When terminating a process tree, DevHub iterates through descendant handles in **reverse order** (leaves first, then intermediate parents, then the target root). If the root process were killed first, child workers might detect an orphaned IPC channel, attempt recovery, or spawn crash-reporting sub-processes before exit. Terminating leaf workers first guarantees a clean, deterministic shutdown.
+When terminating a process tree, Runara iterates through descendant handles in **reverse order** (leaves first, then intermediate parents, then the target root). If the root process were killed first, child workers might detect an orphaned IPC channel, attempt recovery, or spawn crash-reporting sub-processes before exit. Terminating leaf workers first guarantees a clean, deterministic shutdown.
 
 ---
 
@@ -2693,20 +2693,20 @@ In Windows, Process Identifiers (PIDs) are 32-bit unsigned integers allocated by
 
 ### 52.2 The Windows PID Reuse Collision Threat Model
 Consider this failure scenario in a naive application:
-1. **Time $t_0$**: DevHub discovers `node.exe` running on PID `18240` on port `3000`.
+1. **Time $t_0$**: Runara discovers `node.exe` running on PID `18240` on port `3000`.
 2. **Time $t_1$**: Developer opens their browser, tests their application, and decides to stop the server.
 3. **Time $t_2$**: In the background, `node.exe` crashes or is stopped by the developer via `Ctrl+C` in a terminal. PID `18240` exits.
 4. **Time $t_3$**: Windows launches a critical service (e.g. `sqlservr.exe` or `Spotify.exe`) and assigns it recycled PID `18240`.
-5. **Time $t_4$**: Developer clicks "Stop Server" in DevHub.
+5. **Time $t_4$**: Developer clicks "Stop Server" in Runara.
 6. **Naive Action**: Tool executes `taskkill /PID 18240`.
-7. **Disaster**: DevHub kills the new, unrelated process (`sqlservr.exe`) instead of the server!
+7. **Disaster**: Runara kills the new, unrelated process (`sqlservr.exe`) instead of the server!
 
 ### 52.3 Time-of-Check to Time-of-Use (TOCTOU) in Desktop Systems
 This race condition is a textbook **Time-of-Check to Time-of-Use (TOCTOU)** vulnerability:
 $$\text{Check Time } (t_0) \ll \text{Action Time } (t_4)$$
 
-To mitigate TOCTOU, DevHub enforces two critical layers of defense:
-1. **Fresh Pre-Termination Verification**: Right before any destructive action, DevHub queries a fresh snapshot from the OS and verifies all identity signals (PID, Process Name, Executable Path, Working Directory, and Port).
+To mitigate TOCTOU, Runara enforces two critical layers of defense:
+1. **Fresh Pre-Termination Verification**: Right before any destructive action, Runara queries a fresh snapshot from the OS and verifies all identity signals (PID, Process Name, Executable Path, Working Directory, and Port).
 2. **Kernel Handle Acquisition**: Once `OpenProcess` succeeds on the verified process, the kernel pins the process object in memory, ensuring that subsequent termination acts exclusively on the verified target.
 
 ### 52.4 How Win32 Kernel Handles Pin Process Objects in Memory
@@ -2729,7 +2729,7 @@ In destructive process-control tools (Milestone 5+), executing against stale dat
 - Require explicit user confirmation with full target disclosure.
 - Never guess or approximate process state.
 
-### 53.2 DevHub's 9-Point Pre-Termination Identity Verification Checklist
+### 53.2 Runara's 9-Point Pre-Termination Identity Verification Checklist
 Before sending a termination command, `ProcessControlService::validate_target` validates the target against 9 strict rules:
 
 ```
@@ -2751,7 +2751,7 @@ Before sending a termination command, `ProcessControlService::validate_target` v
 ```
 
 ### 53.3 Protecting Critical System Processes & Failsafe Behavior
-DevHub maintains a hardcoded kernel protection guard:
+Runara maintains a hardcoded kernel protection guard:
 ```rust
 const PROTECTED_SYSTEM_PROCESSES: &[&str] = &[
     "system", "idle", "smss.exe", "csrss.exe", "wininit.exe",
@@ -2759,10 +2759,10 @@ const PROTECTED_SYSTEM_PROCESSES: &[&str] = &[
     "winlogon.exe", "fontdrvhost.exe", "dwm.exe",
 ];
 ```
-If a developer accidentally attempts to stop a system process (e.g. if `svchost.exe` binds port 135 or 5353), DevHub immediately refuses the operation with domain error `UNSAFE_TARGET`.
+If a developer accidentally attempts to stop a system process (e.g. if `svchost.exe` binds port 135 or 5353), Runara immediately refuses the operation with domain error `UNSAFE_TARGET`.
 
 ### 53.4 Explicit User Confirmation: Preventing Accidental Outages
-DevHub does not feature one-click accidental kills. Clicking "Stop" triggers the `StopConfirmationModal`, which discloses:
+Runara does not feature one-click accidental kills. Clicking "Stop" triggers the `StopConfirmationModal`, which discloses:
 - Target Server Name
 - Listening Port and URL (`localhost:3000`)
 - Process ID (PID)
@@ -2784,7 +2784,7 @@ Calling `TerminateProcess` requests the operating system kernel to halt the proc
 Therefore, returning success to the user immediately after calling `TerminateProcess` is premature and inaccurate.
 
 ### 54.2 Bounded Exit Polling Loops & Non-Blocking Timeouts
-DevHub executes a bounded exit polling loop with a 3000 ms ceiling:
+Runara executes a bounded exit polling loop with a 3000 ms ceiling:
 ```rust
 let wait_timeout_ms = 3000u32;
 let slice_ms = 100u32;
@@ -2805,13 +2805,13 @@ while elapsed_ms < wait_timeout_ms {
 ```
 
 ### 54.3 Port Release Verification via Win32 IP Helper API
-Once the process has exited, DevHub performs an immediate query against `GetExtendedTcpTable`:
+Once the process has exited, Runara performs an immediate query against `GetExtendedTcpTable`:
 1. It verifies whether the target port is still present in the TCP table.
 2. If the port has disappeared from the table: **PORT CONFIRMED RELEASED**.
-3. If the port remains in the table: DevHub checks the owning PID of the lingering socket.
+3. If the port remains in the table: Runara checks the owning PID of the lingering socket.
 
 ### 54.4 Disambiguating "Freed Port" vs. "Port Owner Changed"
-If port 3000 is still bound after process exit, DevHub distinguishes two critical scenarios:
+If port 3000 is still bound after process exit, Runara distinguishes two critical scenarios:
 - **`PortStillInUse`**: The socket is held by the operating system kernel network stack or lingering child process. Message: *"Process terminated, but port 3000 remains occupied by the operating system socket stack."*
 - **`PortOwnerChanged`**: Another process (e.g. PID `19320`, `python.exe`) immediately rebound port 3000. Message: *"Process 18240 stopped, but port 3000 is now owned by python.exe (PID 19320)."*
 
@@ -2845,7 +2845,7 @@ stateDiagram-v2
 ### 55.2 Per-Server State Machines vs. Global UI Freezes
 A major architectural flaw in naive desktop applications is holding a single global `isStopping: boolean` flag in frontend state. If stopping server A takes 2 seconds, the entire UI freezes and server B cannot be stopped.
 
-DevHub implements **per-server state tracking**:
+Runara implements **per-server state tracking**:
 ```typescript
 const [stoppingPids, setStoppingPids] = useState<Set<number>>(new Set());
 ```
@@ -2868,17 +2868,17 @@ An operation is **idempotent** if applying it multiple times produces the same o
 
 In process control:
 - Attempting to stop a process that has **already exited** should not throw an ugly crash or destroy state.
-- DevHub recognizes `ALREADY_STOPPED`, cleans up UI state, refreshes discovery, and reports: *"Process with PID 18240 is no longer running. Refreshed."*
+- Runara recognizes `ALREADY_STOPPED`, cleans up UI state, refreshes discovery, and reports: *"Process with PID 18240 is no longer running. Refreshed."*
 
 ### 56.2 Handling External Process Termination Gracefully
-Developers frequently stop processes externally via `Ctrl+C` in their terminal. If DevHub displays a server card and the developer stops it externally before clicking "Stop" in DevHub:
+Developers frequently stop processes externally via `Ctrl+C` in their terminal. If Runara displays a server card and the developer stops it externally before clicking "Stop" in Runara:
 1. User clicks "Stop".
 2. Pre-termination verification checks the OS process table.
 3. Target PID is not found.
-4. DevHub safely aborts termination, returns `ALREADY_STOPPED`, triggers an automatic discovery refresh, and removes the dead card.
+4. Runara safely aborts termination, returns `ALREADY_STOPPED`, triggers an automatic discovery refresh, and removes the dead card.
 
 ### 56.3 Three-Tier Error Architecture: Technical vs. Domain vs. User Errors
-DevHub strictly separates error layers to prevent raw C++ / Win32 HRESULTs from leaking into the UI:
+Runara strictly separates error layers to prevent raw C++ / Win32 HRESULTs from leaking into the UI:
 
 ```
 [ Tier 1: Technical Error ]
@@ -2894,7 +2894,7 @@ ProcessControlError {
           │
           ▼
 [ Tier 3: User-Facing Presentation Error ]
-"Unable to stop Company Frontend. Windows denied access because the process is running under elevated administrator privileges. Try running DevHub as Administrator."
+"Unable to stop Company Frontend. Windows denied access because the process is running under elevated administrator privileges. Try running Runara as Administrator."
 ```
 
 ---
@@ -3118,19 +3118,19 @@ Process discovery is a read-only, non-destructive inspection of operating system
 **Answer**:
 Operating system PIDs are transient, recyclable integers. When process A exits, the kernel immediately reclaims its PID and can assign it to a completely unrelated process B within milliseconds. Relying solely on PID leads to TOCTOU race conditions where process control tools inadvertently destroy newly spawned applications that inherited the recycled PID.
 
-### Q3: What is TOCTOU and how does DevHub mitigate it?
+### Q3: What is TOCTOU and how does Runara mitigate it?
 **Answer**:
 Time-of-Check to Time-of-Use (TOCTOU) is a race condition where system state changes between the moment a condition is verified (Check) and the moment an action is executed (Use).
-DevHub mitigates TOCTOU through two complementary mechanisms:
+Runara mitigates TOCTOU through two complementary mechanisms:
 1. **Fresh Multi-Signal Pre-Check**: It re-verifies PID, process name, executable image, and working directory against a fresh OS snapshot immediately prior to termination.
-2. **Kernel Handle Acquisition**: Once `OpenProcess` succeeds on the verified process, the kernel increments the reference count on the `EPROCESS` executive object. The kernel will not delete or reassign that process object until DevHub closes the handle, guaranteeing that termination operates strictly on the verified target.
+2. **Kernel Handle Acquisition**: Once `OpenProcess` succeeds on the verified process, the kernel increments the reference count on the `EPROCESS` executive object. The kernel will not delete or reassign that process object until Runara closes the handle, guaranteeing that termination operates strictly on the verified target.
 
 ### Q4: Why must a server manager terminate descendants but NEVER ancestors?
 **Answer**:
 Development servers are spawned by a hierarchy of parent tools (IDE &rarr; Shell &rarr; Package Manager &rarr; Runtime &rarr; Worker).
 - **Descendants** (e.g. `esbuild.exe`, worker threads) are owned by the server; leaving them running causes orphan processes and CPU leaks.
 - **Ancestors** (e.g. `pwsh.exe`, `Code.exe`) are user tools hosting the server; terminating them crashes the developer's terminal or code editor.
-DevHub's BFS descendant resolver only traverses children downward from the target PID, explicitly excluding all parents and grandparents.
+Runara's BFS descendant resolver only traverses children downward from the target PID, explicitly excluding all parents and grandparents.
 
 ### Q5: How does Windows process termination differ from POSIX signals?
 **Answer**:
@@ -3138,19 +3138,19 @@ POSIX operating systems feature asynchronous inter-process signals (`kill(pid, S
 
 ### Q6: What happens if a process disappears after user confirmation but before termination?
 **Answer**:
-DevHub's pre-termination validation detects that the process is no longer present in the process table. It treats the situation idempotently as `ALREADY_STOPPED`, skips termination calls, triggers a background discovery refresh, and informs the user that the process has already exited.
+Runara's pre-termination validation detects that the process is no longer present in the process table. It treats the situation idempotently as `ALREADY_STOPPED`, skips termination calls, triggers a background discovery refresh, and informs the user that the process has already exited.
 
 ### Q7: What if another process immediately rebinds the target port after termination?
 **Answer**:
-During post-termination verification, DevHub queries `GetExtendedTcpTable`. If the expected port is still bound, DevHub inspects the owning PID:
-- If the owning PID differs from the target PID, DevHub returns `PortOwnerChanged` with diagnostic metadata (`remainingOwner: { pid: 19320, processName: "python.exe", port: 3000 }`).
+During post-termination verification, Runara queries `GetExtendedTcpTable`. If the expected port is still bound, Runara inspects the owning PID:
+- If the owning PID differs from the target PID, Runara returns `PortOwnerChanged` with diagnostic metadata (`remainingOwner: { pid: 19320, processName: "python.exe", port: 3000 }`).
 - The UI informs the developer: *"Server stopped, but port 3000 is now owned by python.exe (PID 19320)."*
 
-### Q8: Why does DevHub use a bounded wait loop after termination?
+### Q8: Why does Runara use a bounded wait loop after termination?
 **Answer**:
 `TerminateProcess` is asynchronous; the kernel takes several milliseconds to halt threads, decommit memory pages, close file handles, and transition socket buffers out of the TCP stack. A bounded polling loop with `WaitForSingleObject` (up to 3000 ms in 100 ms slices) gives the operating system sufficient time to complete teardown without freezing the UI event loop.
 
-### Q9: How does DevHub prevent duplicate concurrent termination requests?
+### Q9: How does Runara prevent duplicate concurrent termination requests?
 **Answer**:
 1. **Frontend**: Dashboard maintains a `stoppingPids: Set<number>` state. While a PID is present in the set, the "Stop" button is disabled and renders a spinning indicator.
 2. **Backend**: ProcessControlService validates target existence and handle status, returning structured error codes if the target has already exited or is currently being torn down.
@@ -3167,15 +3167,15 @@ On Linux, process control is implemented via POSIX signals (`kill(pid, SIGTERM)`
 
 ### Q12: How will process control work for WSL in Milestone 6?
 **Answer**:
-WSL processes run inside a lightweight Linux utility VM managed by Hyper-V. Windows Win32 `OpenProcess` cannot inspect or terminate Linux processes inside WSL directly. In Milestone 6, DevHub will execute WSL process control by bridging through `wsl.exe -d <distro> kill <pid>` using Linux domain abstractions.
+WSL processes run inside a lightweight Linux utility VM managed by Hyper-V. Windows Win32 `OpenProcess` cannot inspect or terminate Linux processes inside WSL directly. In Milestone 6, Runara will execute WSL process control by bridging through `wsl.exe -d <distro> kill <pid>` using Linux domain abstractions.
 
 ### Q13: Why is restart functionality restricted in Milestone 5?
 **Answer**:
 Restarting a development server requires an authentic, verified startup command and environment configuration (e.g. exact environment variables, shell wrappers, working directory). Guessing a startup command from raw process telemetry (`node.exe server.js`) frequently fails because necessary build flags or package manager scripts (`npm run dev`) are omitted. Full server startup and profiles belong to Milestone 7.
 
-### Q14: How does DevHub handle protected system processes?
+### Q14: How does Runara handle protected system processes?
 **Answer**:
-`ProcessControlService` enforces a strict system process guard checking for PID 0, PID 4, and known critical Windows binaries (`csrss.exe`, `smss.exe`, `services.exe`, `explorer.exe`). If an operation targets a protected process, DevHub immediately fails closed with `UNSAFE_TARGET` without attempting handle acquisition.
+`ProcessControlService` enforces a strict system process guard checking for PID 0, PID 4, and known critical Windows binaries (`csrss.exe`, `smss.exe`, `services.exe`, `explorer.exe`). If an operation targets a protected process, Runara immediately fails closed with `UNSAFE_TARGET` without attempting handle acquisition.
 
 ### Q15: What is the benefit of wrapping Win32 handles in a Rust RAII struct?
 **Answer**:
@@ -3224,7 +3224,7 @@ In Win32 C/C++, forgetting to call `CloseHandle` leaks kernel executive objects,
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                       DEVHUB MILESTONE 6 ARCHITECTURE                                       │
+│                                       RUNARA MILESTONE 6 ARCHITECTURE                                       │
 │                                                                                                             │
 │  ┌───────────────────────────────────────────────┐     ┌─────────────────────────────────────────────────┐  │
 │  │           WINDOWS HOST ENVIRONMENT            │     │            WSL GUEST ENVIRONMENT(S)             │  │
@@ -3260,7 +3260,7 @@ Modern web, backend, cloud, and data engineering on Windows predominantly occurs
 1. **Native Windows**: Desktop tools, Visual Studio, PowerShell, .NET applications, Docker Desktop UI, and native developer CLIs.
 2. **Windows Subsystem for Linux (WSL)**: Ubuntu, Debian, Fedora, Arch, and Alpine environments where developers run Node.js/Vite, Python/FastAPI, Go microservices, Rust web servers, Ruby on Rails, and Docker daemons under genuine Linux semantics.
 
-Historically, Windows developers had to keep separate terminal windows open, struggle with port forwarding confusion between `localhost` and the WSL Hyper-V virtual switch, and mentally juggle conflicting process identifiers. **Milestone 6 transforms DevHub into a unified multi-environment developer control center**, giving engineers complete visibility into active developer servers running both on Windows and inside WSL distributions.
+Historically, Windows developers had to keep separate terminal windows open, struggle with port forwarding confusion between `localhost` and the WSL Hyper-V virtual switch, and mentally juggle conflicting process identifiers. **Milestone 6 transforms Runara into a unified multi-environment developer control center**, giving engineers complete visibility into active developer servers running both on Windows and inside WSL distributions.
 
 ### 62.2 WSL1 vs WSL2: Translation Layer vs Hyper-V Utility VM
 To engineer reliable cross-environment telemetry, systems engineers must understand the architectural difference between WSL1 and WSL2:
@@ -3274,17 +3274,17 @@ To engineer reliable cross-environment telemetry, systems engineers must underst
 | **Process Model** | Linux processes visible in Windows Task Manager | Linux processes isolated inside Linux kernel PID namespace |
 | **Dominance Today** | Deprecated / Legacy | Universal standard across modern Windows 10/11 installations |
 
-Because WSL2 runs a genuine Linux kernel within an isolated PID namespace, **native Win32 process APIs (`CreateToolhelp32Snapshot`, `OpenProcess`) cannot see or touch Linux processes running inside WSL2**. DevHub bridges this boundary through structured, out-of-process subprocess telemetry.
+Because WSL2 runs a genuine Linux kernel within an isolated PID namespace, **native Win32 process APIs (`CreateToolhelp32Snapshot`, `OpenProcess`) cannot see or touch Linux processes running inside WSL2**. Runara bridges this boundary through structured, out-of-process subprocess telemetry.
 
 ### 62.3 Bridging the Windows-Linux Boundary: Host-to-Guest Communication
-DevHub communicates across the host-guest boundary using Windows `wsl.exe` as an execution bridge. The Tauri/Rust core process spawns `wsl.exe` with explicit argument vectors, executing standard Linux diagnostic utilities (`ps` and `ss`) inside each target distribution, and decodes the structured output into normalized domain models.
+Runara communicates across the host-guest boundary using Windows `wsl.exe` as an execution bridge. The Tauri/Rust core process spawns `wsl.exe` with explicit argument vectors, executing standard Linux diagnostic utilities (`ps` and `ss`) inside each target distribution, and decodes the structured output into normalized domain models.
 
 ---
 
 ## 63. Milestone 6: Multi-Environment Architecture & Domain Normalization
 
 ### 63.1 The Multi-Environment Abstraction: `Environment::Windows` vs `Environment::Wsl { distro }`
-DevHub models process environment context directly in its domain layer as an algebraic data type (enum):
+Runara models process environment context directly in its domain layer as an algebraic data type (enum):
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -3304,7 +3304,7 @@ This model is serialized to JSON using Serde tagged enum format:
 ### 63.2 Why Windows & WSL Are Different Infrastructure Sources Feeding One Normalized Model
 A common anti-pattern in desktop tooling is building separate, disjoint UI dashboards or bespoke data structures for each operating system (e.g. `WindowsServerCard` vs `WslServerCard`).
 
-DevHub adheres to clean domain-driven architecture: **Windows and WSL are simply different infrastructure sources feeding the same unified domain model**.
+Runara adheres to clean domain-driven architecture: **Windows and WSL are simply different infrastructure sources feeding the same unified domain model**.
 - A listening TCP socket on port `3000` is a `PortInfo`, whether it was discovered via Win32 `GetExtendedTcpTable` or Linux `ss -tlpn -H`.
 - A process running Node.js is a `ProcessInfo`, whether its executable is `C:\nodejs\node.exe` or `/usr/bin/node`.
 - The presentation layer renders a single unified `DashboardServer` card with an environment badge (`Windows` or `WSL / Ubuntu`).
@@ -3316,7 +3316,7 @@ In an operating system, Process Identifiers (PIDs) are unique **only within a si
 - Inside WSL Fedora, PID `421` might be a Python FastAPI backend.
 
 Treating raw PID `421` as a global primary key results in catastrophic cross-environment data corruption (e.g. attaching Fedora's port `8000` to a Windows system process).
-DevHub enforces a strict **Composite Key Rule**: every process, port join, process tree, and identity enrichment is keyed by `(Environment, PID)`:
+Runara enforces a strict **Composite Key Rule**: every process, port join, process tree, and identity enrichment is keyed by `(Environment, PID)`:
 
 $$\text{ProcessKey} = (\text{Environment}, \text{PID})$$
 
@@ -3334,7 +3334,7 @@ export function getProcessEnvironmentKey(env?: Environment | null, pid?: number)
 ## 64. Milestone 6: WSL Distribution Discovery & Wide-Character (UTF-16LE) Decoding
 
 ### 64.1 Enumerating Installed Distributions via `wsl.exe -l -v`
-DevHub discovers installed WSL distributions by executing `wsl.exe -l -v` (list verbose). The command produces a tabular report:
+Runara discovers installed WSL distributions by executing `wsl.exe -l -v` (list verbose). The command produces a tabular report:
 
 ```text
   NAME                   STATE           VERSION
@@ -3343,7 +3343,7 @@ DevHub discovers installed WSL distributions by executing `wsl.exe -l -v` (list 
   FedoraLinux-44         Running         2
 ```
 
-DevHub's `parse_wsl_list_output` parser:
+Runara's `parse_wsl_list_output` parser:
 1. Strips the optional default distribution indicator asterisk (`*`).
 2. Extracts distribution name (`Ubuntu`, `FedoraLinux-44`).
 3. Parses state (`Running` &rarr; `WslDistroState::Running`, `Stopped` &rarr; `WslDistroState::Stopped`).
@@ -3352,7 +3352,7 @@ DevHub's `parse_wsl_list_output` parser:
 ### 64.2 The Windows Wide Character (UTF-16LE) CLI Output Challenge & Solution
 On Windows NT systems, `wsl.exe` writes output to standard output streams formatted as **UTF-16LE (Little-Endian) wide characters** with 2 bytes per ASCII character (e.g. `N\0A\0M\0E\0`), occasionally prefixed by a 2-byte Byte Order Mark (`0xFF, 0xFE`). Standard UTF-8 decoders (`std::str::from_utf8`) fail or produce corrupted strings filled with null bytes.
 
-DevHub implements a robust dual-format byte decoder:
+Runara implements a robust dual-format byte decoder:
 
 ```rust
 pub fn decode_utf16_or_utf8(bytes: &[u8]) -> String {
@@ -3387,14 +3387,14 @@ pub fn decode_utf16_or_utf8(bytes: &[u8]) -> String {
 WSL distributions consume system memory and CPU when running, but can remain dormant in a `Stopped` state.
 Attempting to execute commands inside a `Stopped` distribution causes Windows to automatically boot the distribution VM, introducing a 3–8 second latency spike, allocating RAM, and violating the user's intent.
 
-DevHub enforces a strict rule: **Only distributions in the `Running` state are queried for processes and ports. Stopped distributions are presented in metrics cards but never queried.**
+Runara enforces a strict rule: **Only distributions in the `Running` state are queried for processes and ports. Stopped distributions are presented in metrics cards but never queried.**
 
 ---
 
 ## 65. Milestone 6: Linux Process & Port Discovery Inside WSL (`ps` & `ss` Telemetry)
 
 ### 65.1 Linux Process Enumeration via `ps -eo pid,ppid,comm,args --no-headers`
-Inside each running WSL distribution, DevHub executes POSIX standard process status:
+Inside each running WSL distribution, Runara executes POSIX standard process status:
 
 ```bash
 ps -eo pid,ppid,comm,args --no-headers
@@ -3405,10 +3405,10 @@ ps -eo pid,ppid,comm,args --no-headers
 - `comm`: Short process image name (e.g. `node`, `python3`, `bash`)
 - `args`: Full command-line arguments (e.g. `node server.js --port 3000`)
 
-DevHub parses this stream into `ProcessInfo` structs tagged with `Environment::Wsl { distro: distro.to_string() }`.
+Runara parses this stream into `ProcessInfo` structs tagged with `Environment::Wsl { distro: distro.to_string() }`.
 
 ### 65.2 Linux Listening TCP Port Discovery via Socket Statistics (`ss -tlpn -H`)
-For network discovery, DevHub uses the modern Linux socket statistics utility:
+For network discovery, Runara uses the modern Linux socket statistics utility:
 
 ```bash
 ss -tlpn -H
@@ -3434,21 +3434,21 @@ Process ownership strings like `users:(("node",pid=421,fd=19),("npm",pid=300,fd=
 ## 66. Milestone 6: Subprocess Execution, Timeout Bounds & Partial Failure Isolation
 
 ### 66.1 Executing WSL Commands via Direct Argument Vectors (No Shell Injection)
-DevHub avoids spawning intermediate Windows shells (`cmd.exe /c` or `powershell.exe -Command`). Instead, commands are executed using direct argument vectors via `std::process::Command`:
+Runara avoids spawning intermediate Windows shells (`cmd.exe /c` or `powershell.exe -Command`). Instead, commands are executed using direct argument vectors via `std::process::Command`:
 
 ```rust
 let mut cmd = Command::new("wsl.exe");
 cmd.args(["-d", distro, "--", "ps", "-eo", "pid,ppid,comm,args", "--no-headers"]);
 ```
 
-On Windows, DevHub attaches the `CREATE_NO_WINDOW (0x08000000)` creation flag to prevent console window flicker.
+On Windows, Runara attaches the `CREATE_NO_WINDOW (0x08000000)` creation flag to prevent console window flicker.
 
 ### 66.2 Timeout Protection & Hung Subprocess Prevention
 WSL commands can occasionally hang if a distribution is unresponsive, out of memory, or locked in a kernel syscall.
-DevHub enforces a strict **3000 ms execution timeout** using a background monitor thread and a synchronization channel. If the subprocess does not exit within the timeout window, DevHub aborts execution and logs a diagnostic, preventing UI lockup.
+Runara enforces a strict **3000 ms execution timeout** using a background monitor thread and a synchronization channel. If the subprocess does not exit within the timeout window, Runara aborts execution and logs a diagnostic, preventing UI lockup.
 
 ### 66.3 Graceful Degradation & Partial Failure Isolation (`DiscoveryDiagnostic`)
-If WSL is not installed, if a specific distribution fails, or if `wsl.exe` times out, DevHub **never fails the discovery cycle**.
+If WSL is not installed, if a specific distribution fails, or if `wsl.exe` times out, Runara **never fails the discovery cycle**.
 - Windows native discovery continues unaffected.
 - The failure is isolated into a `DiscoveryDiagnostic` entry:
   ```rust
@@ -3474,14 +3474,14 @@ Process tree reconstruction must operate strictly within the boundary of a singl
 
 ### 67.2 Linux Runtime & Package Manager Detection (Node.js, Python, Cargo, Vite)
 Linux command lines and executable paths differ from Windows (e.g. `/usr/bin/python3` instead of `C:\Python311\python.exe`).
-DevHub's runtime and package manager detectors inspect POSIX command lines and binary image names to classify:
+Runara's runtime and package manager detectors inspect POSIX command lines and binary image names to classify:
 - `node server.js` / `vite` / `next dev` &rarr; `Runtime::NodeJs`
 - `python3 -m uvicorn main:app` &rarr; `Runtime::Python`
 - `cargo run` / `target/debug/...` &rarr; `Runtime::Rust`
 - `npm run dev` / `pnpm dev` / `yarn start` / `bun run dev` &rarr; `PackageManager`
 
 ### 67.3 Path Normalization: Linux POSIX Paths (`/home/user/...`) vs Windows (`C:\...`)
-DevHub's UI and name inference handles both Windows paths (`C:\Projects\frontend`) and POSIX paths (`/home/developer/wsl-api`) seamlessly, extracting the last folder segment as the server name.
+Runara's UI and name inference handles both Windows paths (`C:\Projects\frontend`) and POSIX paths (`/home/developer/wsl-api`) seamlessly, extracting the last folder segment as the server name.
 
 ---
 
@@ -3491,7 +3491,7 @@ DevHub's UI and name inference handles both Windows paths (`C:\Projects\frontend
 Calling Win32 `OpenProcess` with a Linux PID (e.g. `421`) would attempt to open a **native Windows process with PID 421**, potentially terminating a critical Windows host service by mistake!
 
 ### 68.2 Backend Enforcement: Rejecting Non-Windows Targets with `UNSAFE_TARGET`
-DevHub enforces a strict backend guard in `ProcessControlService::validate_target`:
+Runara enforces a strict backend guard in `ProcessControlService::validate_target`:
 
 ```rust
 if let Some(env) = &target.environment {
@@ -3677,7 +3677,7 @@ pub struct UnifiedSnapshot {
 
 ## 72. Milestone 6: Deep Systems Engineering & HLD/LLD Interview Q&A
 
-### Q1: Why can't DevHub use Win32 `OpenProcess` to inspect or terminate WSL2 processes?
+### Q1: Why can't Runara use Win32 `OpenProcess` to inspect or terminate WSL2 processes?
 **Answer**:
 WSL2 processes run inside a lightweight Linux virtual machine running under Hyper-V. They exist within the Linux kernel's memory space and PID namespace. The Windows NT kernel does not manage Linux task structures (`task_struct`); therefore, Win32 `OpenProcess` does not recognize Linux PIDs. Calling Win32 process APIs with a Linux PID either fails with `ERROR_INVALID_PARAMETER` or accidentally targets an unrelated Windows process that shares the same numeric PID.
 
@@ -3685,23 +3685,23 @@ WSL2 processes run inside a lightweight Linux virtual machine running under Hype
 **Answer**:
 Process IDs are guaranteed to be unique only within a single kernel instance. When multiple execution environments coexist (Windows Host, WSL Ubuntu, WSL Fedora), each environment independently assigns PIDs starting from 1. If PID `421` exists simultaneously in Windows and Ubuntu, using PID alone causes hash map key collisions, associating Windows ports with Linux processes or vice-versa. Keying by `(Environment, PID)` provides complete namespace isolation.
 
-### Q3: Why does DevHub execute `wsl.exe -l -v` instead of reading the Windows Registry directly?
+### Q3: Why does Runara execute `wsl.exe -l -v` instead of reading the Windows Registry directly?
 **Answer**:
 While installed WSL distributions have metadata stored under `HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss`, the registry only indicates configuration state, not **live lifecycle state** (`Running` vs `Stopped`). `wsl.exe -l -v` queries the live Hyper-V WSL subsystem manager, providing authentic real-time status.
 
 ### Q4: Why does `wsl.exe` output wide characters (UTF-16LE), and how is this handled?
 **Answer**:
-Many built-in Windows command-line tools write wide-character (UTF-16LE) output by default to support international character sets across different system code pages. If read as raw UTF-8 bytes, every second byte is a null byte (`0x00`). DevHub detects UTF-16LE BOM or null-byte patterns and decodes them into standard Rust `String` objects using `String::from_utf16_lossy`.
+Many built-in Windows command-line tools write wide-character (UTF-16LE) output by default to support international character sets across different system code pages. If read as raw UTF-8 bytes, every second byte is a null byte (`0x00`). Runara detects UTF-16LE BOM or null-byte patterns and decodes them into standard Rust `String` objects using `String::from_utf16_lossy`.
 
 ### Q5: Why are `Stopped` WSL distributions never queried for processes and ports?
 **Answer**:
-Executing any command inside a stopped distribution (e.g. `wsl.exe -d Debian ps`) triggers an automatic boot of that distribution VM. This incurs a noticeable 3–8 second latency penalty, consumes host memory, and starts background Linux system services against the user's implicit intent. DevHub strictly inspects only currently `Running` distributions.
+Executing any command inside a stopped distribution (e.g. `wsl.exe -d Debian ps`) triggers an automatic boot of that distribution VM. This incurs a noticeable 3–8 second latency penalty, consumes host memory, and starts background Linux system services against the user's implicit intent. Runara strictly inspects only currently `Running` distributions.
 
-### Q6: How does DevHub prevent command injection when executing commands inside WSL?
+### Q6: How does Runara prevent command injection when executing commands inside WSL?
 **Answer**:
-DevHub passes arguments as explicit element vectors using `std::process::Command::args(["-d", distro, "--", "ps", "-eo", ...])` without invoking an intermediate Windows or Linux shell (`sh -c` or `cmd.exe /c`). This guarantees that command arguments are not subject to shell parameter expansion or injection vulnerabilities.
+Runara passes arguments as explicit element vectors using `std::process::Command::args(["-d", distro, "--", "ps", "-eo", ...])` without invoking an intermediate Windows or Linux shell (`sh -c` or `cmd.exe /c`). This guarantees that command arguments are not subject to shell parameter expansion or injection vulnerabilities.
 
-### Q7: What is the purpose of `DiscoveryDiagnostic` in DevHub's discovery pipeline?
+### Q7: What is the purpose of `DiscoveryDiagnostic` in Runara's discovery pipeline?
 **Answer**:
 It implements the **Graceful Degradation / Failure Isolation Pattern**. If a single WSL distribution times out or errors, the error is captured in `DiscoveryDiagnostic` and returned alongside successful Windows and peer WSL discovery results. The application never crashes, and the UI displays an informative warning banner while presenting all available running servers.
 
@@ -3742,7 +3742,7 @@ A central architectural principle introduced in Milestone 7 is the absolute sepa
 +------------------------------+--------------------------------+-------------------------------+
 | Attribute                    | Persistent Server Profile      | Ephemeral Process Telemetry   |
 +------------------------------+--------------------------------+-------------------------------+
-| Authoritative Store          | Embedded SQLite (`devhub.db`)  | Operating System Kernel       |
+| Authoritative Store          | Embedded SQLite (`runara.db`)  | Operating System Kernel       |
 | Primary Identifier           | UUID v4 (Stable across time)   | Numeric PID (Transient)       |
 | Nature of State              | Declarative Intent (What to run)| Observed Reality (What is run)|
 | Lifecycle Duration           | Survives reboots & app exits   | Destructs on process exit     |
@@ -3759,8 +3759,8 @@ A central architectural principle introduced in Milestone 7 is the absolute sepa
 ### 74.3 Why Process State and Port State Must Never Be Persisted as Authoritative
 If an application stores live runtime state inside SQLite:
 1. **Out-of-Band State Divergence**: If the developer closes a terminal window or kills a process via Task Manager, the database remains unaware, showing a stale `Running` status.
-2. **PID Recycling Collisions**: If DevHub persisted PID `18240` and the process died, Windows might later assign PID `18240` to a background audio service. If DevHub trusted the database, it would claim the server is running and display the audio service's CPU and memory!
-3. **Pure Derivation**: Instead, DevHub derives runtime status on-the-fly by joining SQLite profile definitions with real-time OS discovery snapshots (`UnifiedSnapshot`).
+2. **PID Recycling Collisions**: If Runara persisted PID `18240` and the process died, Windows might later assign PID `18240` to a background audio service. If Runara trusted the database, it would claim the server is running and display the audio service's CPU and memory!
+3. **Pure Derivation**: Instead, Runara derives runtime status on-the-fly by joining SQLite profile definitions with real-time OS discovery snapshots (`UnifiedSnapshot`).
 
 ### 74.4 The Lifecycle of a Profile: Definition, Validation, Execution, Association, Termination
 The life of a server profile spans five discrete phases:
@@ -3782,14 +3782,14 @@ stateDiagram-v2
 ## 75. Milestone 7: Persistence Architecture — Embedded SQLite, Migrations & Repository Pattern
 
 ### 75.1 Why Embedded SQLite is the Standard for Desktop Developer Tools
-For desktop tools (like VS Code, JetBrains IDEs, and DevHub), an embedded relational database provides immense advantages over flat JSON files:
+For desktop tools (like VS Code, JetBrains IDEs, and Runara), an embedded relational database provides immense advantages over flat JSON files:
 1. **ACID Transactions**: Atomic commits guarantee that profile updates never result in half-written or corrupted configuration files on sudden power loss.
 2. **Crash Resilience**: Built-in journaling prevents data corruption during unexpected application crashes.
 3. **Structured Querying & Indexing**: Enables instant searching, sorting, and future relational capabilities (projects, workspaces, environment variables).
 4. **Single-File Portability**: All profile metadata lives in a single, standard `.db` file in the user's application data directory.
 
 ### 75.2 Write-Ahead Logging (WAL Mode) & Foreign Key Constraints
-DevHub configures SQLite with high-performance desktop settings upon connection initialization (`src-tauri/src/db/mod.rs`):
+Runara configures SQLite with high-performance desktop settings upon connection initialization (`src-tauri/src/db/mod.rs`):
 ```sql
 PRAGMA journal_mode = WAL;
 PRAGMA synchronous = NORMAL;
@@ -3801,7 +3801,7 @@ PRAGMA busy_timeout = 5000;
 - **Foreign Keys = ON**: Enforces relational integrity for future multi-table extensions.
 
 ### 75.3 Versioned Database Migrations (`MigrationRunner` & `schema_migrations`)
-DevHub implements a forward-only database migration runner (`src-tauri/src/db/migration.rs`):
+Runara implements a forward-only database migration runner (`src-tauri/src/db/migration.rs`):
 ```sql
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
@@ -3834,7 +3834,7 @@ CREATE INDEX IF NOT EXISTS idx_server_profiles_port ON server_profiles(expected_
 ```
 
 ### 75.4 Repository Pattern: `ServerProfileRepository` Trait & SQLite Implementation
-To isolate persistence logic from domain services, DevHub defines a clean Rust trait:
+To isolate persistence logic from domain services, Runara defines a clean Rust trait:
 ```rust
 pub trait ServerProfileRepository: Send + Sync {
     fn create(&self, profile: &ServerProfile) -> Result<(), ProfileRepositoryError>;
@@ -3902,7 +3902,7 @@ This startup lag (typically 500ms to 8000ms) means **launching is asynchronous**
 ### 77.2 Pre-Launch Port Conflict Checking (Safe Refusal Without Termination)
 Before executing a profile launch, if `expectedPort` is configured:
 1. `ServerStartService` checks the current OS listening port table.
-2. If the port is already bound, DevHub **immediately refuses to start**:
+2. If the port is already bound, Runara **immediately refuses to start**:
    ```rust
    if let Some(owner) = current_owner {
        return Err(StartError {
@@ -3916,20 +3916,20 @@ Before executing a profile launch, if `expectedPort` is configured:
        });
    }
    ```
-3. **Safety Rule**: DevHub NEVER kills the existing process automatically. It alerts the developer via the Port Conflict Modal.
+3. **Safety Rule**: Runara NEVER kills the existing process automatically. It alerts the developer via the Port Conflict Modal.
 
 ### 77.3 The Correlation Problem: Linking a Spawned Process to OS Discovery Telemetry
 When `cmd.exe /C npm run dev` is spawned:
 - The spawned PID belongs to `cmd.exe`.
 - Seconds later, `cmd.exe` spawns child processes (`node.exe`), which actually bind the TCP port.
 - The initial `cmd.exe` process might even exit immediately if it delegates execution.
-- **Solution**: DevHub correlates the profile with the live server by matching **Environment + Listening Port + Normalized Working Directory**, rather than naively trusting the short-lived wrapper PID.
+- **Solution**: Runara correlates the profile with the live server by matching **Environment + Listening Port + Normalized Working Directory**, rather than naively trusting the short-lived wrapper PID.
 
 ### 77.4 Bounded Readiness Polling Loop (20s Timeout, 500ms Intervals, Early Exit Detection)
 `ServerStartService::orchestrate_start` runs a resilient polling loop:
 - **Interval**: 500 milliseconds between discovery snapshots.
 - **Maximum Timeout**: 20 seconds total.
-- **Early Termination Detection**: On Windows, DevHub monitors the initial child PID using Win32 `GetExitCodeProcess`. If the wrapper exits with a non-zero error code (e.g. syntax error or missing package), DevHub immediately aborts polling with `StartErrorCode::ProcessExited`.
+- **Early Termination Detection**: On Windows, Runara monitors the initial child PID using Win32 `GetExitCodeProcess`. If the wrapper exits with a non-zero error code (e.g. syntax error or missing package), Runara immediately aborts polling with `StartErrorCode::ProcessExited`.
 - **Success Criteria**: If `expectedPort` is set, polling succeeds the instant the port is observed in `LISTENING` state. If no port is set, it succeeds once the process is verified alive after an initial stabilization window.
 
 ### 77.5 Windows Server Restart: Stop, Verification, and Start Sequence
@@ -4013,7 +4013,7 @@ When a conflict occurs:
 
 ### 79.3 Profile Deletion Safety: Removing Configuration Without Destroying Running Processes
 Deleting a profile removes configuration from SQLite (`DELETE FROM server_profiles WHERE id = ?`).
-- If the server is currently running, DevHub warns the user: *"Deleting the profile will remove the saved configuration, but will not terminate the running operating system process."*
+- If the server is currently running, Runara warns the user: *"Deleting the profile will remove the saved configuration, but will not terminate the running operating system process."*
 - Telemetry continues to appear in the "Live Discovered Servers" tab as an unmanaged server.
 
 ### 79.4 WSL Restart & Control Boundaries (Enforcing Non-Destructive Invariant)
@@ -4063,7 +4063,7 @@ In accordance with Milestone 6 safety rules:
 │  │          SQLITE REPOSITORY LAYER             │                           ▼                           │
 │  │  • SqliteServerProfileRepository             │   ┌────────────────────────────────────────────────┐  │
 │  │  • Versioned Migration Runner (WAL Mode)     │   │         MULTI-ENVIRONMENT LAUNCHERS            │  │
-│  │  • devhub.db in App Data Directory           │   │  • WindowsLauncher (cmd.exe /D /C)             │  │
+│  │  • runara.db in App Data Directory           │   │  • WindowsLauncher (cmd.exe /D /C)             │  │
 │  └──────────────────────────────────────────────┘   │  • WslLauncher (wsl.exe -d --cd)               │  │
 │                                                     └───────────────────────┬────────────────────────┘  │
 │                                                                             │                           │
@@ -4184,23 +4184,23 @@ pub struct ServerProfileView {
 
 ### Q1: Why must current process state (running status, PID) never be stored as authoritative state in the database?
 **Answer**:
-Operating system state is ephemeral and dynamic. A process can terminate unexpectedly due to an unhandled exception, out-of-memory killer, or manual user kill via Task Manager without informing DevHub. If runtime status were persisted in SQLite, the database would immediately drift out of sync with reality, leading to stale "zombie" server displays and PID recycling bugs upon system restart. The OS kernel is the only authoritative source of process telemetry; the database is authoritative only for user configuration.
+Operating system state is ephemeral and dynamic. A process can terminate unexpectedly due to an unhandled exception, out-of-memory killer, or manual user kill via Task Manager without informing Runara. If runtime status were persisted in SQLite, the database would immediately drift out of sync with reality, leading to stale "zombie" server displays and PID recycling bugs upon system restart. The OS kernel is the only authoritative source of process telemetry; the database is authoritative only for user configuration.
 
-### Q2: Why does DevHub refuse to start a server when a port conflict is detected instead of automatically killing the existing process?
+### Q2: Why does Runara refuse to start a server when a port conflict is detected instead of automatically killing the existing process?
 **Answer**:
-Developer safety and the Principle of Least Astonishment. The process occupying the port might be an unrelated critical database (e.g. Postgres on 5432), another microservice, or an IDE background process. Automatically terminating unknown processes can cause data corruption or developer workflow disruption. DevHub informs the user with full diagnostic telemetry (PID, process name, port) and lets them inspect or stop the process deliberately.
+Developer safety and the Principle of Least Astonishment. The process occupying the port might be an unrelated critical database (e.g. Postgres on 5432), another microservice, or an IDE background process. Automatically terminating unknown processes can cause data corruption or developer workflow disruption. Runara informs the user with full diagnostic telemetry (PID, process name, port) and lets them inspect or stop the process deliberately.
 
-### Q3: How does DevHub correlate a spawned `cmd.exe` process with the actual server process listening on a port?
+### Q3: How does Runara correlate a spawned `cmd.exe` process with the actual server process listening on a port?
 **Answer**:
-Development tools use wrapper scripts (`npm.cmd`, `yarn.bat`, `cargo run`) that spawn child runtime processes (`node.exe`, `python.exe`). The wrapper PID returned by `Command::spawn()` often exits or does not hold the socket itself. DevHub solves this by correlating via **Environment + Listening Port + Current Working Directory (CWD)** from real-time discovery snapshots, rather than relying on the transient wrapper PID.
+Development tools use wrapper scripts (`npm.cmd`, `yarn.bat`, `cargo run`) that spawn child runtime processes (`node.exe`, `python.exe`). The wrapper PID returned by `Command::spawn()` often exits or does not hold the socket itself. Runara solves this by correlating via **Environment + Listening Port + Current Working Directory (CWD)** from real-time discovery snapshots, rather than relying on the transient wrapper PID.
 
-### Q4: Why is SQLite WAL (Write-Ahead Logging) mode essential for DevHub?
+### Q4: Why is SQLite WAL (Write-Ahead Logging) mode essential for Runara?
 **Answer**:
 In standard rollback journal mode, database writes place an exclusive lock on the entire database file, blocking all reads. In desktop applications with background polling threads, a periodic discovery write or profile save would block the UI thread from querying profiles. WAL mode allows concurrent readers and writers to operate simultaneously without locking contention.
 
-### Q5: How does DevHub handle early subprocess crashes during startup polling?
+### Q5: How does Runara handle early subprocess crashes during startup polling?
 **Answer**:
-If a command contains a syntax error, missing environment variable, or invalid package script, the subprocess exits immediately. Waiting for the full 20-second port timeout would produce a sluggish, frustrating user experience. On Windows, DevHub queries `GetExitCodeProcess` on the initial process handle during each 500ms polling cycle. If the process has exited with a non-zero exit code, DevHub aborts polling immediately and returns `StartErrorCode::ProcessExited`.
+If a command contains a syntax error, missing environment variable, or invalid package script, the subprocess exits immediately. Waiting for the full 20-second port timeout would produce a sluggish, frustrating user experience. On Windows, Runara queries `GetExitCodeProcess` on the initial process handle during each 500ms polling cycle. If the process has exited with a non-zero exit code, Runara aborts polling immediately and returns `StartErrorCode::ProcessExited`.
 
 ---
 
@@ -4246,7 +4246,7 @@ In systems engineering and infrastructure management (such as Terraform, Kuberne
 │  │                                              │  │                                          │ │
 │  │  • Has matching saved ServerProfile in DB   │  │  • No matching ServerProfile in DB       │ │
 │  │  • Known startup command & parameters        │  │  • Discovered alive via OS kernel scan   │ │
-│  │  • Reproducible lifecycle (Start / Restart)  │  │  • Ephemeral; started outside DevHub     │ │
+│  │  • Reproducible lifecycle (Start / Restart)  │  │  • Ephemeral; started outside Runara     │ │
 │  │  • User-customized metadata & descriptions   │  │  • Can be Adopted into managed state     │ │
 │  └──────────────────────────────────────────────┘  └──────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -4254,17 +4254,17 @@ In systems engineering and infrastructure management (such as Terraform, Kuberne
 
 1. **Managed Servers**:
    - A server process that corresponds 1-to-1 with an authoritative, persistent `ServerProfile` stored in SQLite.
-   - DevHub knows the authoritative startup command, working directory, target execution environment, and expected port.
-   - DevHub can deterministically restart, stop, or re-launch this server across workstation reboots.
+   - Runara knows the authoritative startup command, working directory, target execution environment, and expected port.
+   - Runara can deterministically restart, stop, or re-launch this server across workstation reboots.
 2. **Unmanaged Servers**:
    - A server process discovered dynamically via OS-level process and port inspection (e.g. started externally from VS Code, PowerShell, bash, or an IDE terminal).
-   - DevHub detects its active telemetry (PID, listening sockets, memory, process ancestry, working directory), but holds **no configuration record** in SQLite.
-   - It cannot be started or restarted once terminated because DevHub does not yet possess authoritative startup metadata.
+   - Runara detects its active telemetry (PID, listening sockets, memory, process ancestry, working directory), but holds **no configuration record** in SQLite.
+   - It cannot be started or restarted once terminated because Runara does not yet possess authoritative startup metadata.
 
 ### 85.2 What is Resource Adoption?
 **Resource Adoption** is the architectural pattern of transitioning an unmanaged, externally created runtime resource into a managed entity by synthesizing its observed operational state into a structured, persistent configuration model.
 
-Instead of requiring developers to manually re-type project directories, port numbers, commands, and WSL distribution details into a blank profile form, DevHub's adoption engine observes the live process, extracts its attributes, generates a prefilled transient **AdoptionDraft**, and presents it for developer validation.
+Instead of requiring developers to manually re-type project directories, port numbers, commands, and WSL distribution details into a blank profile form, Runara's adoption engine observes the live process, extracts its attributes, generates a prefilled transient **AdoptionDraft**, and presents it for developer validation.
 
 ---
 
@@ -4308,11 +4308,11 @@ export interface AdoptionDraft {
 Naive association implementations often attempt to link processes to profiles using a single attribute (such as Port Number or PID). In real-world software engineering, single-signal matching causes severe bugs:
 
 1. **PID Matching Fails**: Operating system Process IDs are ephemeral and recycled upon termination. Storing a PID in a profile breaks across restarts.
-2. **Port-Only Matching Fails**: Port 3000 may be used by Project A today and Project B tomorrow. If DevHub only matched on Port 3000, Project B would be incorrectly labeled as Project A.
+2. **Port-Only Matching Fails**: Port 3000 may be used by Project A today and Project B tomorrow. If Runara only matched on Port 3000, Project B would be incorrectly labeled as Project A.
 3. **Directory-Only Matching Fails**: A microservice repository may host multiple servers from the same root (e.g. Frontend on 3000, Mock API on 3001, Storybook on 6006).
 
 ### 87.2 The Multi-Signal Matching Hierarchy
-DevHub implements a **conservative, deterministic multi-signal matching algorithm**:
+Runara implements a **conservative, deterministic multi-signal matching algorithm**:
 
 ```
                        ┌────────────────────────┐
@@ -4367,12 +4367,12 @@ To ensure cross-platform compatibility across Windows and POSIX path conventions
 If a developer creates two profiles with identical working directories and no specific port constraints, both profiles match a discovered server with equal confidence.
 
 ### 88.2 The Conservative Resolution Rule
-DevHub enforces a strict **Zero-Guessing Principle**:
+Runara enforces a strict **Zero-Guessing Principle**:
 - If exactly **1 profile** matches $\rightarrow$ Server is **Managed** (`profileId = match.id`).
 - If **0 profiles** match $\rightarrow$ Server is **Unmanaged** (`managed = false`).
 - If **$\ge 2$ profiles** match $\rightarrow$ Marked as **Ambiguous** and kept as **Unmanaged** (`managed = false, ambiguous = true, candidateIds = [...]`).
 
-DevHub never silently assigns an ambiguous server to an arbitrary profile.
+Runara never silently assigns an ambiguous server to an arbitrary profile.
 
 ---
 
@@ -4390,17 +4390,17 @@ Operating System Process Command (Discovered in PEB):
 ```
 
 ### 89.2 Command Extraction Heuristics
-DevHub applies layered heuristics during adoption draft creation:
+Runara applies layered heuristics during adoption draft creation:
 1. **Shell Wrapper Stripping**: Strips `cmd.exe /c`, `powershell.exe -Command`, and `bash -lc` wrappers to extract the inner developer command.
 2. **Dev Tool Preservation**: Identifies known developer invocations (`npm run`, `pnpm dev`, `cargo run`, `python -m uvicorn`, `go run`, `dotnet run`) and preserves them verbatim.
-3. **Transparent Disclaimer**: When raw process binaries are detected (e.g. `node.exe server.js`), DevHub presents the command in the adoption form alongside an explicit UI banner: *"Detected process command — edit to original dev command if needed"*.
+3. **Transparent Disclaimer**: When raw process binaries are detected (e.g. `node.exe server.js`), Runara presents the command in the adoption form alongside an explicit UI banner: *"Detected process command — edit to original dev command if needed"*.
 
 ---
 
 ## 90. Dynamic Profile Association vs. Database Persistence
 
 ### 90.1 Why Managed State is Never Persisted in SQLite
-A common anti-pattern is storing an `is_managed: boolean` or `profile_id` column in a discovered processes table. DevHub strictly avoids this for three architectural reasons:
+A common anti-pattern is storing an `is_managed: boolean` or `profile_id` column in a discovered processes table. Runara strictly avoids this for three architectural reasons:
 
 1. **Temporal Decay**: An unmanaged server process can exit at any moment. If managed status were written to disk, stale associations would persist across app sessions.
 2. **Dynamic Profiling**: When a developer creates, edits, or deletes a profile, live servers must immediately transition between Managed and Unmanaged states **without requiring database writes or cache invalidation cycles**.
@@ -4411,14 +4411,14 @@ A common anti-pattern is storing an `is_managed: boolean` or `profile_id` column
 ## 91. Advisory Duplicate Profile Detection
 
 ### 91.1 Conservative Duplicate Criteria
-Before saving an adopted profile, DevHub executes a fast Rust command (`find_duplicate_server_profiles`) that checks for collisions across four dimensions:
+Before saving an adopted profile, Runara executes a fast Rust command (`find_duplicate_server_profiles`) that checks for collisions across four dimensions:
 1. **Environment Type & WSL Distro**: Exact match.
 2. **Working Directory**: Normalized path match.
 3. **Startup Command**: Trimmed string match.
 4. **Expected Port**: Port equality (`None == None`, `Some(3000) == Some(3000)`).
 
 ### 91.2 Non-Blocking Developer Autonomy
-DevHub displays an advisory warning modal with three options:
+Runara displays an advisory warning modal with three options:
 1. **Use Existing Profile**: Dismisses adoption and navigates to the existing profile.
 2. **Create Anyway**: Bypasses the advisory warning and creates a secondary profile.
 3. **Cancel**: Closes the dialog without creating duplicate records.
@@ -4464,7 +4464,7 @@ DevHub displays an advisory warning modal with three options:
 │  │                                              │   │                                                │  │
 │  │  • ServerProfileService (Validation, UUID)   │   │  • UnifiedDiscoveryService (Windows + WSL)     │  │
 │  │  • find_duplicate_profiles() (Adoption Match)│   │  • WindowsProcessDiscovery (Toolhelp32)        │  │
-│  │  • SQLite Repository (devhub.db / WAL Mode)  │   │  • WindowsPortDiscovery (iphlpapi.dll)         │  │
+│  │  • SQLite Repository (runara.db / WAL Mode)  │   │  • WindowsPortDiscovery (iphlpapi.dll)         │  │
 │  └──────────────────────────────────────────────┘   └────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -4515,7 +4515,7 @@ profileApi.findDuplicates() invokes find_duplicate_server_profiles -> returns []
 
 [7. User Submission & Persistence]
 User clicks "Save Profile" -> profileApi.createProfile(req)
-ServerProfileService validates inputs, generates UUID v4, inserts into SQLite devhub.db
+ServerProfileService validates inputs, generates UUID v4, inserts into SQLite runara.db
 
 [8. Reactive Recalculation]
 refreshAll() re-fetches profiles and discovery snapshot
@@ -4530,25 +4530,25 @@ ServerCard dynamically updates to "Managed" emerald badge; Adopt button disappea
 
 ### Q1: Why is profile association computed dynamically on the frontend rather than stored in the database?
 **Answer**:
-Operating system processes are ephemeral. If managed status were written to a database table, any external process exit or restart would cause the database to hold stale, invalid state. By executing `annotateWithProfiles` dynamically during each refresh cycle, DevHub guarantees 100% real-time synchronization between persistent configuration (SQLite) and runtime reality (OS kernel) without cache invalidation complexity.
+Operating system processes are ephemeral. If managed status were written to a database table, any external process exit or restart would cause the database to hold stale, invalid state. By executing `annotateWithProfiles` dynamically during each refresh cycle, Runara guarantees 100% real-time synchronization between persistent configuration (SQLite) and runtime reality (OS kernel) without cache invalidation complexity.
 
 ### Q2: Why is the execution environment (Windows Host / WSL Distro) strictly read-only during adoption?
 **Answer**:
 A running process is physically bound to the kernel namespace in which it was spawned. A process running inside WSL Ubuntu cannot execute Windows Win32 API calls or access Windows host paths identically. Allowing a developer to change a WSL process's environment to Windows Host during adoption would create an invalid profile whose startup command and paths would fail immediately upon execution.
 
-### Q3: How does DevHub handle adoption when a process binds to multiple TCP ports?
+### Q3: How does Runara handle adoption when a process binds to multiple TCP ports?
 **Answer**:
 When multiple ports are detected (e.g. `[3000, 3001, 8080]`), `inferExpectedPort` leaves `expectedPort` as `undefined`. The adoption UI renders explicit port selection chips for each detected port plus an option for *"None / Match by dir"*. This forces deliberate developer choice rather than making an arbitrary, silent guess of the first port.
 
 ### Q4: What happens if the source process disappears while the adoption modal is open?
 **Answer**:
-The configuration is still valid. DevHub does not block profile creation if the source process terminates during form editing. The profile is saved normally to SQLite, and upon the next refresh cycle, it simply appears in the `Stopped` state ready for one-click startup.
+The configuration is still valid. Runara does not block profile creation if the source process terminates during form editing. The profile is saved normally to SQLite, and upon the next refresh cycle, it simply appears in the `Stopped` state ready for one-click startup.
 
-### Q5: How does DevHub prevent duplicate profile creation during adoption?
+### Q5: How does Runara prevent duplicate profile creation during adoption?
 **Answer**:
-DevHub executes an advisory check via `find_duplicate_server_profiles` matching on Environment, Normalized Working Directory, Command, and Expected Port. If a match is found, an advisory banner offers the developer options to *Use Existing Profile* or *Create Anyway*.
+Runara executes an advisory check via `find_duplicate_server_profiles` matching on Environment, Normalized Working Directory, Command, and Expected Port. If a match is found, an advisory banner offers the developer options to *Use Existing Profile* or *Create Anyway*.
 
-### Q6: Why does DevHub never automatically start an adopted profile?
+### Q6: Why does Runara never automatically start an adopted profile?
 **Answer**:
 The process being adopted is **already running**. Spawning a second instance would immediately trigger a port conflict error (`PORT_ALREADY_IN_USE`) or process collision.
 
@@ -4592,7 +4592,7 @@ In modern full-stack and microservices development, applications are rarely isol
 - A Python data processor / Celery worker running background tasks
 - A Redis or database caching proxy on port 6379
 
-Prior to Milestone 9, DevHub managed each `ServerProfile` as an isolated operational entity. While this provided granular process supervision, starting a composite multi-service architecture required manually hunting down and starting 3 to 6 distinct profiles in sequence. Stopping the application required repeating the process in reverse.
+Prior to Milestone 9, Runara managed each `ServerProfile` as an isolated operational entity. While this provided granular process supervision, starting a composite multi-service architecture required manually hunting down and starting 3 to 6 distinct profiles in sequence. Stopping the application required repeating the process in reverse.
 
 **Milestone 9 introduces Project Groups**: an orchestration abstraction that allows developers to compose existing `ServerProfile` definitions into cohesive, unified project topologies and control the entire group as a single operational unit.
 
@@ -4611,7 +4611,7 @@ Prior to Milestone 9, DevHub managed each `ServerProfile` as an isolated operati
 ```
 
 ### 96.2 Zero Configuration Duplication: Composition over Duplication Pattern
-A critical engineering principle enforced throughout DevHub is **Zero Configuration Duplication**:
+A critical engineering principle enforced throughout Runara is **Zero Configuration Duplication**:
 - A `Project` entity never duplicates command strings, working directory paths, port numbers, host bindings, or environment definitions.
 - The `Project` entity persists only its own relational metadata (`id`, `name`, `description`, timestamps) and ordered foreign key references to `ServerProfile` records.
 - All operational execution parameters are read directly from the authoritative `server_profiles` table.
@@ -4653,7 +4653,7 @@ A critical engineering principle enforced throughout DevHub is **Zero Configurat
 3. **Storage Efficiency**: Normalized relational schema eliminates redundant string storage and index bloat.
 
 ### 96.3 Single Project Membership Invariant (1:N Relational Constraint) & Atomic Moves
-For the MVP of Project Groups, DevHub enforces a strict **Single Project Membership Invariant**:
+For the MVP of Project Groups, Runara enforces a strict **Single Project Membership Invariant**:
 > *A `ServerProfile` may belong to at most ONE `Project` at any given time.*
 
 This constraint is physically enforced at the database level by placing a `UNIQUE` index on `project_profiles.profile_id`:
@@ -4671,7 +4671,7 @@ CREATE TABLE IF NOT EXISTS project_profiles (
 
 #### Atomic Movement Semantics:
 When a developer adds a profile to Project $B$ that currently belongs to Project $A$:
-1. DevHub detects the existing membership and warns the developer in the UI: *"Currently in Project A. Moving it will remove it from Project A."*
+1. Runara detects the existing membership and warns the developer in the UI: *"Currently in Project A. Moving it will remove it from Project A."*
 2. Upon confirmation, `add_profile_to_project` executes an **atomic database transaction**:
    - Deletes any existing row where `profile_id = ?` across all projects.
    - Inserts the new relationship row for the target project.
@@ -4713,7 +4713,7 @@ SQLite supports standard ANSI SQL `ON DELETE CASCADE` constraints when foreign k
    - When `DELETE FROM projects WHERE id = ?` is executed, SQLite automatically deletes all associated rows in `project_profiles`.
    - **Crucially**, the referenced rows in `server_profiles` remain **completely untouched**. Deleting a project group never destroys the underlying server profile configurations or running processes.
 2. **Deleting a Server Profile**:
-   - When a developer deletes a `ServerProfile` from DevHub, SQLite automatically deletes any junction rows in `project_profiles` referencing that profile ID.
+   - When a developer deletes a `ServerProfile` from Runara, SQLite automatically deletes any junction rows in `project_profiles` referencing that profile ID.
    - The repository automatically re-indexes the project's remaining profiles to maintain a gapless `0..N-1` order.
 
 ---
@@ -4723,7 +4723,7 @@ SQLite supports standard ANSI SQL `ON DELETE CASCADE` constraints when foreign k
 ### 97.1 Execution Order vs. Implicit Dependency Inference
 A common pitfall in orchestration tooling is attempting to automatically infer dependency graphs (e.g. attempting to guess which service must start first based on network ports or source code parsing).
 
-DevHub chooses **explicit, deterministic execution ordering**:
+Runara chooses **explicit, deterministic execution ordering**:
 - Developers configure the precise sequence using an ordered integer index (`0, 1, 2...`).
 - The developer can easily reorder services with simple *"Move Up"* and *"Move Down"* controls in the UI.
 - The orchestrator executes the sequence strictly in configured order: $0 \to 1 \to 2 \dots \to N$.
@@ -4772,7 +4772,7 @@ sequenceDiagram
 ### 97.3 Fail-Fast Strategy & Why Automatic Rollback is Unsafe in Local Dev Environments
 When launching a project group with 5 services, what should happen if Service 3 fails to start (e.g. because port 8000 is occupied by another process)?
 
-DevHub implements a **Sequential Fail-Fast with No Automatic Rollback** strategy:
+Runara implements a **Sequential Fail-Fast with No Automatic Rollback** strategy:
 1. **Immediate Sequence Halt**: The orchestrator halts startup immediately. Services 4 and 5 are marked as `pending` and are not started.
 2. **No Automatic Rollback**: Services 1 and 2 (which already started successfully) are **NOT killed**.
 3. **Why Rollback is Antipattern in Local Development**:
@@ -4838,7 +4838,7 @@ Just like `ServerProfile` runtime state, a `Project`'s runtime state is **strict
 If a developer kills a Node process from their terminal window, upon the next 2.5-second polling interval, the Project status dynamically transitions from `Running` to `Partial` without requiring any database mutation!
 
 ### 98.2 The 8-Tier Project Runtime State Precedence Hierarchy
-When deriving the operational status of a Project, DevHub evaluates child profiles against an 8-tier precedence machine:
+When deriving the operational status of a Project, Runara evaluates child profiles against an 8-tier precedence machine:
 
 ```
 [ Tier 1 ] Active In-Flight Operation Lock?
@@ -4919,7 +4919,7 @@ graph TD
     subgraph Persistence Layer
         ProjectService --> ProjectRepo[SqliteServerProfileRepository (ProjectRepository)]
         ProjectOrch --> ProjectRepo
-        ProjectRepo --> SQLite[(SQLite devhub.db: projects & project_profiles)]
+        ProjectRepo --> SQLite[(SQLite runara.db: projects & project_profiles)]
     end
 
     subgraph OS Execution Layer
@@ -5152,7 +5152,7 @@ Transaction committed.
 
 ## 102. Milestone 9: Deep Systems Engineering & HLD/LLD Interview Q&A
 
-### Q1: Why does DevHub use a separate junction table (`project_profiles`) rather than adding a `project_id` foreign key directly to `server_profiles`?
+### Q1: Why does Runara use a separate junction table (`project_profiles`) rather than adding a `project_id` foreign key directly to `server_profiles`?
 **Answer**:
 Using a dedicated junction table provides architectural decoupling and future extensibility. While MVP enforces a single-project invariant via `UNIQUE(profile_id)`, the junction table cleanly separates project-specific ordering (`order_index`) and membership timestamps from server profile execution properties (`command`, `working_directory`, `port`). Furthermore, if future product requirements support multi-project profile sharing (N:M relationship), migrating only requires dropping the `UNIQUE` index without touching the `server_profiles` schema.
 
@@ -5162,9 +5162,9 @@ Using a dedicated junction table provides architectural decoupling and future ex
 2. **Deterministic Port Binding**: Parallel spawning causes CPU contention and non-deterministic port binding races where two services competing for resources can trigger false-positive startup timeouts.
 3. **Actionable Diagnostics**: When services start sequentially, if Service 2 fails, the failure reason is isolated and immediately identifiable, rather than having 4 simultaneous failure logs mixed together.
 
-### Q3: Why does DevHub NOT automatically rollback (kill) previously started services when a sequential startup sequence fails?
+### Q3: Why does Runara NOT automatically rollback (kill) previously started services when a sequential startup sequence fails?
 **Answer**:
-In local development environments, automatic rollback is dangerous and destructive. A developer might already be running long-lived local Docker containers, background cache proxies, or databases. If Service 3 fails because of an invalid environment variable or port collision, killing Services 1 and 2 forces the developer to endure another full build/boot cycle. By leaving working services running, the developer fixes the root cause on Service 3 and re-triggers startup; DevHub's idempotent startup check skips already-running services and completes the remaining sequence.
+In local development environments, automatic rollback is dangerous and destructive. A developer might already be running long-lived local Docker containers, background cache proxies, or databases. If Service 3 fails because of an invalid environment variable or port collision, killing Services 1 and 2 forces the developer to endure another full build/boot cycle. By leaving working services running, the developer fixes the root cause on Service 3 and re-triggers startup; Runara's idempotent startup check skips already-running services and completes the remaining sequence.
 
 ### Q4: How is a Project's runtime state computed, and why is it not stored in SQLite?
 **Answer**:
@@ -5172,9 +5172,9 @@ A Project's runtime state is ephemeral and derived dynamically using an 8-tier p
 
 ### Q5: What happens when a Project containing WSL services is stopped?
 **Answer**:
-Win32 `TerminateProcess` operates strictly on Windows NT kernel process handles. Calling it on Linux PIDs inside WSL is invalid and unsafe. When stopping a project with WSL members, DevHub safely terminates all Windows processes, records WSL members in `unsupported_profiles`, and derives the project state as `Partial` with an explicit diagnostic explanation to the developer.
+Win32 `TerminateProcess` operates strictly on Windows NT kernel process handles. Calling it on Linux PIDs inside WSL is invalid and unsafe. When stopping a project with WSL members, Runara safely terminates all Windows processes, records WSL members in `unsupported_profiles`, and derives the project state as `Partial` with an explicit diagnostic explanation to the developer.
 
-### Q6: How does DevHub prevent race conditions and duplicate subprocess launches during project operations?
+### Q6: How does Runara prevent race conditions and duplicate subprocess launches during project operations?
 **Answer**:
 `ProjectOrchestrator` maintains an in-memory thread-safe `Arc<Mutex<HashMap<String, ProjectOperation>>>`. When an operation begins, an entry is locked. Any duplicate concurrent IPC call for the same project UUID is rejected immediately with `ProjectErrorCode::OperationAlreadyInProgress`. The lock is released in a `finally`/RAII pattern upon completion or failure.
 
@@ -5255,7 +5255,7 @@ A robust desktop control center must provide developers with clear observability
 
 ### 105.1 The `SystemDiagnostics` Payload
 
-DevHub implements a centralized backend diagnostics command (`commands::system::get_diagnostics`) in Rust that gathers real-time telemetry across operating system boundaries without blocking the main event loop:
+Runara implements a centralized backend diagnostics command (`commands::system::get_diagnostics`) in Rust that gathers real-time telemetry across operating system boundaries without blocking the main event loop:
 
 $$\text{Diagnostics} = \langle \text{Host OS}, \text{Arch}, \text{Tauri Core}, \text{WSL Distros}, \text{SQLite Health}, \text{Migration Version}, \text{Counts} \rangle$$
 
@@ -5290,7 +5290,7 @@ To query schema version and database health without lock contention:
 
 ## 106. Designing High-Performance Unified Desktop Navigation
 
-DevHub organizes developer workflows into **5 high-cohesion views**:
+Runara organizes developer workflows into **5 high-cohesion views**:
 
 ```
 ┌──────────────┬───────────────────────────────────────────────────────────────────┐
@@ -5315,7 +5315,7 @@ In earlier milestones, profiles shared screen space with active server tables. D
 
 ## 107. Keyboard Accessibility & Global Event Interception
 
-Power users rely on keyboard navigation. DevHub implements global keyboard shortcuts across the application:
+Power users rely on keyboard navigation. Runara implements global keyboard shortcuts across the application:
 
 ```typescript
 // Global navigation keyboard shortcuts
@@ -5390,7 +5390,7 @@ A professional developer tool must maintain strict vocabulary consistency across
 
 ## 110. Cross-Platform Asset Branding and Window Constraint Safety
 
-DevHub provides crisp vector branding:
+Runara provides crisp vector branding:
 - Clean geometric SVG logo with dual-layer stack aesthetics representing host and virtualized subsystems.
 - Embedded favicon and header icons.
 - High-contrast, accessibility-compliant typography powered by Tailwind CSS v4 dark mode design tokens.
@@ -5399,7 +5399,7 @@ DevHub provides crisp vector branding:
 
 ## 111. Comprehensive Test-Driven Quality Gates: Rust & React Interop
 
-DevHub release verification enforces a dual-language testing strategy:
+Runara release verification enforces a dual-language testing strategy:
 
 $$\text{Quality Gate} = \underbrace{110\text{ Rust Backend Tests}}_{\text{Win32, Sockets, WSL, SQLite, Safety}} + \underbrace{102\text{ Vitest Frontend Tests}}_{\text{React Components, Modals, State, Filters}} = \mathbf{212\text{ Automated Tests}}$$
 
@@ -5433,7 +5433,7 @@ Test Suites Summary:
 
 ### 112.1 Cold-Start Optimization
 
-DevHub initializes its backend runtime and database in $< 20\text{ ms}$:
+Runara initializes its backend runtime and database in $< 20\text{ ms}$:
 1. SQLite connection pool opens with `PRAGMA synchronous = NORMAL; PRAGMA journal_mode = WAL;`.
 2. Unified discovery executes in parallel: Win32 native queries run on the thread pool while WSL distros are checked via non-blocking child process pipes.
 3. React renders a smooth, non-flickering startup shell that transitions into the live dashboard once initial telemetry is established.
@@ -5442,33 +5442,33 @@ DevHub initializes its backend runtime and database in $< 20\text{ ms}$:
 
 ## 113. Interview Preparation & Engineering Q&A for MVP Release
 
-### Q1: What makes DevHub architecturally superior to a simple Node.js or Electron desktop tool?
+### Q1: What makes Runara architecturally superior to a simple Node.js or Electron desktop tool?
 **Answer**:
 Electron bundles an entire Chromium browser and Node.js runtime, typically consuming 150–300 MB of RAM at idle and introducing severe security hazards if system-level child process controls are directly exposed to the frontend.
 
-DevHub uses **Tauri 2 (Rust core) + OS-native WebView2**:
+Runara uses **Tauri 2 (Rust core) + OS-native WebView2**:
 1. **Minimal Memory Footprint**: Idle memory consumption is typically $< 35\text{ MB}$.
 2. **Sub-Millisecond Kernel Sockets**: Queries Win32 `GetExtendedTcpTable` directly in native memory via FFI, avoiding slow command-line wrappers like `netstat`.
 3. **Strict Security Isolation**: The React frontend has zero direct OS access; every action passes through strongly-typed, validated Tauri IPC handlers.
 
-### Q2: How does DevHub guarantee that stopping a process won't accidentally kill the user's terminal or IDE?
+### Q2: How does Runara guarantee that stopping a process won't accidentally kill the user's terminal or IDE?
 **Answer**:
-DevHub enforces a strict **9-Point Pre-Termination Verification Gate**:
+Runara enforces a strict **9-Point Pre-Termination Verification Gate**:
 1. It verifies the process PID is currently alive.
 2. It verifies the binary name and executable disk path match the expected target.
 3. It filters out system-critical binaries (`svchost.exe`, `csrss.exe`, `explorer.exe`).
 4. **Ancestor Protection Rule**: It traverses the process hierarchy to ensure parent shells (`pwsh.exe`, `cmd.exe`, `bash`) and IDE processes (`Code.exe`) are explicitly excluded from termination targets.
 5. It uses BFS to terminate child worker processes first before signaling the parent process.
 
-### Q3: How does DevHub handle cross-environment PID collisions between Windows and WSL?
+### Q3: How does Runara handle cross-environment PID collisions between Windows and WSL?
 **Answer**:
 Windows and WSL Linux operate with completely isolated PID spaces. A Windows process with PID 1024 has no relationship to a Linux process with PID 1024 inside an Ubuntu distro.
 
-DevHub solves this by treating every process and port identity as a **composite key**:
+Runara solves this by treating every process and port identity as a **composite key**:
 $$\text{EntityKey} = (\text{Environment}, \text{PID})$$
 Where `Environment` is either `Windows` or `WSL { distro: "Ubuntu" }`. This prevents any possibility of cross-environment identification errors or accidental signal dispatch.
 
-### Q4: Why is SQLite WAL mode critical for a desktop application like DevHub?
+### Q4: Why is SQLite WAL mode critical for a desktop application like Runara?
 **Answer**:
 In default SQLite rollback journal mode, writing to the database places an exclusive lock on the entire database file, causing any concurrent telemetry queries or UI reads to block with `SQLITE_BUSY`.
 
@@ -5497,7 +5497,7 @@ In **Write-Ahead Logging (WAL) mode**:
 | [`src/components/Header.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Header.tsx) | Layout Header | Breadcrumbs, title, live environment status, refresh trigger | Breadcrumbs, Refresh Trigger | `Layout.tsx` | - |
 | [`src/components/Layout.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/Layout.tsx) | Layout Shell | Global keyboard shortcut listeners, view title resolution | Keyboard Event Interception | `App.tsx` | `Sidebar.tsx`, `Header.tsx` |
 | [`src/App.tsx`](file:///d:/ak/project/devhub/DevHub/src/App.tsx) | App Root | 5-view route dispatcher, startup initialization, fatal error screen | Lifecycle Management, Startup Loader | `main.tsx` | `Layout.tsx`, Pages |
-| [`public/devhub.svg`](file:///d:/ak/project/devhub/DevHub/public/devhub.svg) | Brand Assets | Crisp multi-layer vector SVG icon for DevHub | Vector Branding | `index.html` | - |
+| [`public/runara.svg`](file:///d:/ak/project/devhub/DevHub/public/runara.svg) | Brand Assets | Crisp multi-layer vector SVG icon for Runara | Vector Branding | `index.html` | - |
 | [`ARCHITECTURE.md`](file:///d:/ak/project/devhub/DevHub/ARCHITECTURE.md) | Documentation | Comprehensive HLD/LLD systems architecture specification | System Architecture Blueprint | Project Documentation | - |
 | [`RELEASE_CHECKLIST.md`](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md) | Verification | MVP release verification matrix and evidence | Quality Assurance | Release Process | - |
 | [`RELEASE_NOTES.md`](file:///d:/ak/project/devhub/DevHub/RELEASE_NOTES.md) | Documentation | Release notes and changelog for Version 0.1.0 MVP | Release Communication | GitHub Releases | - |
@@ -5514,7 +5514,7 @@ Process management in Unix-like operating systems (such as Linux distributions h
 
 ### POSIX Signal Fundamentals
 
-| Signal | Number | Name | Default Action | Catchable? | Purpose in DevHub |
+| Signal | Number | Name | Default Action | Catchable? | Purpose in Runara |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `SIGTERM` | `15` | Termination Signal | Process Termination | **Yes** | Graceful server shutdown. Allows runtimes (Node.js, Python, Rust) to close database pools, finish HTTP requests, and flush file handles. |
 | `SIGKILL` | `9` | Kill Signal | Unconditional Termination | **No** (Kernel-enforced) | Force stop. Immediately unmaps the process address space and frees kernel resources when a process hangs or ignores `SIGTERM`. |
@@ -5525,7 +5525,7 @@ Process management in Unix-like operating systems (such as Linux distributions h
 In POSIX systems, invoking `kill(pid, 0)` does not send a real signal to the target process. Instead, the Linux kernel performs permission and existence checks:
 1. **Return `0` (Success)**: The process with PID `pid` exists, is alive, and the caller has sufficient permissions to signal it.
 2. **Return `ESRCH` (No such process)**: The process does not exist (it has already exited or never existed).
-3. **Return `EPERM` (Operation not permitted)**: The process exists, but the caller lacks permission to signal it (e.g., a root process probed by an unprivileged user). In DevHub, `EPERM` confirms that the process is **still alive**, preventing false "already exited" assumptions.
+3. **Return `EPERM` (Operation not permitted)**: The process exists, but the caller lacks permission to signal it (e.g., a root process probed by an unprivileged user). In Runara, `EPERM` confirms that the process is **still alive**, preventing false "already exited" assumptions.
 
 ### Process Groups vs. Process Trees
 In Linux, every process belongs to a **Process Group** identified by a Process Group ID (`PGID`). When a user runs a command in an interactive terminal (e.g. `npm run dev`), the shell creates a new process group for the command pipeline.
@@ -5533,13 +5533,13 @@ However, process groups can be dangerous for automated process control tools:
 - A server process may detach from its process group (`setpgid`, `setsid`).
 - Sending a signal to a process group (`kill -TERM -<pgid>`) might inadvertently signal processes that the developer did not intend to terminate.
 
-DevHub avoids process group ambiguity by constructing an explicit **Hierarchical Process Tree** derived from parent PID (`PPID`) references in `/proc`. DevHub traverses the tree using Breadth-First Search (BFS) and terminates descendants in **leaf-to-root order**.
+Runara avoids process group ambiguity by constructing an explicit **Hierarchical Process Tree** derived from parent PID (`PPID`) references in `/proc`. Runara traverses the tree using Breadth-First Search (BFS) and terminates descendants in **leaf-to-root order**.
 
 ---
 
 ## 116. Windows vs. Linux Process Control Comparison
 
-| Architectural Dimension | Windows Process Control (Win32) | Linux / WSL Process Control (POSIX) | DevHub Cross-Environment Abstraction |
+| Architectural Dimension | Windows Process Control (Win32) | Linux / WSL Process Control (POSIX) | Runara Cross-Environment Abstraction |
 | :--- | :--- | :--- | :--- |
 | **Identity Model** | 32-bit Integer PID in global Windows namespace | 32-bit Integer PID scoped to WSL guest PID namespace | `ProcessTarget` with `(Environment, PID)` composite identity |
 | **Process Access Model** | Kernel Object Handles opened via `OpenProcess()` with granular access masks (`PROCESS_TERMINATE`, `SYNCHRONIZE`) | Signal delivery via system calls (`kill(pid, sig)`) or CLI tool `/bin/kill` inside distro | `WindowsProcessController` vs `WslProcessController` |
@@ -5576,8 +5576,8 @@ WSL Distribution: Fedora-44
 > 2. Calling `stop_server(421)` on Ubuntu could kill the Express server, while targeting Fedora would kill Python.
 > 3. An error in environment dispatch could terminate vital operating system daemons.
 
-### The DevHub 7-Signal Identity Tuple
-DevHub enforces that every process control operation must be qualified with the 7-signal composite identity tuple:
+### The Runara 7-Signal Identity Tuple
+Runara enforces that every process control operation must be qualified with the 7-signal composite identity tuple:
 
 $$\text{TargetIdentity} = (\text{Environment}, \text{Distribution}, \text{PID}, \text{ProcessName}, \text{ExecutablePath}, \text{WorkingDirectory}, \text{ExpectedPorts})$$
 
@@ -5594,7 +5594,7 @@ Before any signal or termination call is dispatched:
 
 ## 118. Cross-Environment Process Control Architecture
 
-DevHub maintains a unified application service layer (`ProcessControlService`) that dispatches environment-specific operations to specialized controller adapters through the **Dependency Inversion Principle**:
+Runara maintains a unified application service layer (`ProcessControlService`) that dispatches environment-specific operations to specialized controller adapters through the **Dependency Inversion Principle**:
 
 ```mermaid
 graph TD
@@ -5611,7 +5611,7 @@ graph TD
 ```
 
 ### Direct Argument Vector Safety
-To eliminate command injection vulnerabilities, DevHub **never passes unescaped shell strings** to WSL. Instead, `DefaultWslProcessController` builds structured argument vectors:
+To eliminate command injection vulnerabilities, Runara **never passes unescaped shell strings** to WSL. Instead, `DefaultWslProcessController` builds structured argument vectors:
 
 ```rust
 let sig_str = format!("-{}", signal.abs());
@@ -5692,12 +5692,12 @@ PID 1: /init (WSL Init Daemon)
 ```
 
 ### The Ancestor Protection Invariant
-If DevHub were to terminate process groups indiscriminately or signal parent PIDs, it would terminate:
+If Runara were to terminate process groups indiscriminately or signal parent PIDs, it would terminate:
 - The developer's interactive `bash` shell (closing their terminal window).
 - The IDE terminal daemon (`ptyHost`).
 - The entire WSL session.
 
-### DevHub's Breadth-First Descendant Resolution
+### Runara's Breadth-First Descendant Resolution
 1. **Adjacency Map Construction**: Build `HashMap<parent_pid, Vec<child_pid>>` from the distribution's `/proc` snapshot.
 2. **Strict Descendant Traversal**: BFS queue is initialized **exclusively with immediate children of `target_pid`**:
    ```rust
@@ -5720,7 +5720,7 @@ If DevHub were to terminate process groups indiscriminately or signal parent PID
 
 After a termination signal is delivered, `ProcessControlService` executes post-termination verification against fresh OS snapshots:
 
-| Scenario | Post-Stop Condition | Result Status | DevHub User Experience |
+| Scenario | Post-Stop Condition | Result Status | Runara User Experience |
 | :--- | :--- | :--- | :--- |
 | **Clean Stop** | Target PID gone; expected port released. | `ControlStatus::Stopped` | Success toast: *"Server stopped. Port 3000 freed."* Server Card transitions to stopped. |
 | **Port Rebound by New Process** | Target PID gone; expected port is now bound by another PID (e.g. PID 4890 `python3`). | `ControlStatus::PortOwnerChanged` | Warning toast: *"Process exited, but port 3000 is now owned by python3 (PID 4890)."* UI auto-updates to reflect new owner. |
@@ -5731,7 +5731,7 @@ After a termination signal is delivered, `ProcessControlService` executes post-t
 
 ## 122. Concurrency & In-Flight Operation Locking
 
-To prevent race conditions, rapid double-clicks, and competing operations on the same server, DevHub implements composite operation locking:
+To prevent race conditions, rapid double-clicks, and competing operations on the same server, Runara implements composite operation locking:
 
 ```rust
 let op_key = match &env {
@@ -5761,7 +5761,7 @@ This guarantees that:
 
 ## 123. Server Profile & Project Lifecycle Unification
 
-With Milestone 11, the entire DevHub feature suite supports cross-environment orchestration:
+With Milestone 11, the entire Runara feature suite supports cross-environment orchestration:
 
 ### 1. Server Profile Restart Flow
 ```
@@ -5803,7 +5803,7 @@ graph TD
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│                             DEVHUB DESKTOP APPLICATION                           │
+│                             RUNARA DESKTOP APPLICATION                           │
 │                                                                                  │
 │  ┌────────────────────────────────────────────────────────────────────────────┐  │
 │  │                               PRESENTATION LAYER                           │  │
@@ -5996,10 +5996,10 @@ Let us trace the exact line-by-line execution flow when a developer clicks **"St
 
 ### Q1: Why is sending POSIX signals via `wsl.exe` preferable to running a persistent agent daemon inside the WSL distribution?
 **Answer**:
-1. **Zero-Installation Footprint**: DevHub requires zero guest-side agent daemons, systemd service units, or background open ports inside the developer's Linux distributions.
+1. **Zero-Installation Footprint**: Runara requires zero guest-side agent daemons, systemd service units, or background open ports inside the developer's Linux distributions.
 2. **Distribution Agnosticism**: Standard CLI tools (`/bin/kill`, `ps`, `ss`) exist identically across Ubuntu, Debian, Fedora, Arch, Alpine, and custom enterprise distributions.
 3. **Privilege Boundary Safety**: `wsl.exe -d <distro> -- <cmd>` runs in the context of the configured default Linux user, preventing accidental privilege escalation and matching the developer's exact execution identity.
-4. **Lifecycle Coherence**: If a distribution is stopped or suspended, DevHub detects the state from Windows without waking up or freezing daemon connections.
+4. **Lifecycle Coherence**: If a distribution is stopped or suspended, Runara detects the state from Windows without waking up or freezing daemon connections.
 
 ### Q2: Why is leaf-to-root termination critical when stopping modern web servers on Linux?
 **Answer**:
@@ -6009,11 +6009,11 @@ If the parent server process is terminated first (`SIGTERM` on parent):
 2. The orphaned workers remain active in the background, keeping file locks and listening sockets open.
 3. A subsequent startup attempt fails with `EADDRINUSE` (Port Already in Use).
 
-DevHub prevents this by resolving the descendant tree downwards and terminating child workers first before terminating the parent server process.
+Runara prevents this by resolving the descendant tree downwards and terminating child workers first before terminating the parent server process.
 
-### Q3: How does DevHub prevent command injection when executing `kill` commands inside WSL?
+### Q3: How does Runara prevent command injection when executing `kill` commands inside WSL?
 **Answer**:
-DevHub enforces strict argument vector passing through `std::process::Command`. Rather than constructing a single shell string (`format!("wsl -d {} kill -9 {}", distro, pids)`), DevHub passes:
+Runara enforces strict argument vector passing through `std::process::Command`. Rather than constructing a single shell string (`format!("wsl -d {} kill -9 {}", distro, pids)`), Runara passes:
 ```rust
 Command::new("wsl.exe")
     .arg("-d")
@@ -6064,7 +6064,7 @@ Standard web applications running in modern browsers operate inside strict secur
 - Does not expose the absolute filesystem path on disk (browsers sanitize it to a relative pseudo-path like `web-client/` or empty string to prevent client fingerprinting and filesystem reconnaissance).
 - Only streams file byte blobs into browser memory rather than configuring a persistent server execution working directory.
 
-In contrast, DevHub is a native desktop application powered by Tauri 2. The React 19 WebView communicates with the native Rust Core via a secure, asynchronous IPC bridge. The Core process has full Win32 OS privileges, allowing it to invoke the platform file dialog, receive the absolute canonical path selected by the user, and pass that path as structured data to the frontend state and SQLite storage layer.
+In contrast, Runara is a native desktop application powered by Tauri 2. The React 19 WebView communicates with the native Rust Core via a secure, asynchronous IPC bridge. The Core process has full Win32 OS privileges, allowing it to invoke the platform file dialog, receive the absolute canonical path selected by the user, and pass that path as structured data to the frontend state and SQLite storage layer.
 
 ### 130.3 Tauri 2 Dialog Architecture: IPC Security & Plugin Subsystems
 In Tauri 2, dialog functionality is decoupled into the official `tauri-plugin-dialog` subsystem. This architecture adheres strictly to the principle of least privilege:
@@ -6121,12 +6121,12 @@ A common engineering anti-pattern in developer tools is attempting to "magically
 - Translating `C:\Projects\app` to `/mnt/c/Projects/app` silently causes severe filesystem latency (WSL 2 accesses Windows drives via 9P virtualization protocols, which are up to $10\times$ slower than native ext4 virtual disks).
 - Paths in different environments may point to completely different codebases or repositories.
 
-**DevHub Invariant**: DevHub strictly maintains paths in their native, environment-specific representation:
+**Runara Invariant**: Runara strictly maintains paths in their native, environment-specific representation:
 - Windows profiles store native Windows paths: `C:\Projects\frontend`.
 - WSL profiles store native Linux guest paths: `/home/developer/projects/api`.
 
 ### 131.4 The $Environment \times FilesystemProvider \times Path$ Architecture Pattern
-To model this cleanly, DevHub implements a pluggable provider pattern:
+To model this cleanly, Runara implements a pluggable provider pattern:
 
 $$\text{Filesystem Operation} = f(\text{Target Environment}, \text{Filesystem Provider}, \text{Structured Path})$$
 
@@ -6154,13 +6154,13 @@ $$\text{Filesystem Operation} = f(\text{Target Environment}, \text{Filesystem Pr
 ### 132.1 Inside the WSL 2 Virtual Machine: VHDX, 9P / Plan 9 Protocols, and Guest File Trees
 In WSL 2, every Linux distribution runs inside a lightweight Hyper-V utility virtual machine backed by its own virtual hard disk file (`ext4.vhdx`). The native Windows desktop cannot directly execute Win32 filesystem enumeration APIs against the guest ext4 inode structure without crossing virtualization boundaries.
 
-To browse real Linux guest folders, DevHub communicates with the target running distribution via `wsl.exe -d <distro> -- <command>`.
+To browse real Linux guest folders, Runara communicates with the target running distribution via `wsl.exe -d <distro> -- <command>`.
 
 ### 132.2 Single-Directory Navigation Mechanics: Bounded $O(N)$ Traversal vs. Recursive Scanning
 A critical engineering pitfall when browsing filesystems is recursive scanning (`find /` or `dir /s`). Large developer workspaces (e.g. `node_modules/`, Python virtual environments `.venv/`, Cargo build directories `target/`) contain hundreds of thousands of nested folders. Recursive scanning freezes the UI, exhausts memory, and spams the host CPU.
 
-**DevHub Mechanics**:
-1. DevHub executes **single-level directory enumeration**:
+**Runara Mechanics**:
+1. Runara executes **single-level directory enumeration**:
    ```bash
    find <target_dir> -maxdepth 1 -mindepth 1 ( -type d -o -xtype d )
    ```
@@ -6179,8 +6179,8 @@ The navigation engine handles standard POSIX path transitions deterministically:
 ### 132.4 Handling Stopped Distributions: Liveness Verification Before VM Waking
 If a developer chooses a WSL distribution that is in the `Stopped` state (such as `Ubuntu`), executing arbitrary commands against it causes `wsl.exe` to boot the entire Linux virtual machine kernel in the background. This introduces unexpected system resource spikes, battery drain, and multi-second startup latency.
 
-DevHub enforces a strict pre-flight distribution check via `WslDistroDiscovery::enumerate()`. If the target distribution is `Stopped`:
-- DevHub immediately halts execution and returns a descriptive error:
+Runara enforces a strict pre-flight distribution check via `WslDistroDiscovery::enumerate()`. If the target distribution is `Stopped`:
+- Runara immediately halts execution and returns a descriptive error:
   `"WSL distribution 'Ubuntu' is stopped. Start the distribution before browsing."`
 - The directory browser displays an informative stopped state and guides the developer without silently waking the guest VM.
 
@@ -6201,9 +6201,9 @@ Invoking OS filesystem checks on every keystroke (`onChange`) in React creates s
 - WSL: Spams `wsl.exe` process spawns (spawning 10 `wsl.exe` processes per second while typing causes severe CPU spikes and sluggish typing latency).
 
 ### 133.3 Three-Stage Validation Lifecycle: Local Formatting, On-Blur OS Verification, Pre-Save Invariant Gate
-DevHub implements a high-performance 3-stage validation model:
+Runara implements a high-performance 3-stage validation model:
 1. **Stage 1 (On Keystroke - Instant $O(1)$)**: Fast local React state update and basic formatting check (clearing stale error banners). Zero IPC and zero subprocess spawns.
-2. **Stage 2 (On Blur / On Folder Select - $O(1)$ IPC)**: When the input field loses focus or a folder is selected via the native/WSL picker, DevHub dispatches `filesystemApi.validateDirectory(env, path)` to perform native OS verification.
+2. **Stage 2 (On Blur / On Folder Select - $O(1)$ IPC)**: When the input field loses focus or a folder is selected via the native/WSL picker, Runara dispatches `filesystemApi.validateDirectory(env, path)` to perform native OS verification.
 3. **Stage 3 (Pre-Save Gate - Strict Invariant)**: When the user submits the form, `ServerProfileService` or `ServerStartService` validates the working directory before persisting to SQLite or spawning processes.
 
 ---
@@ -6224,7 +6224,7 @@ let bad_cmd = format!("wsl.exe -d {} -- cd {} && npm start", distro, working_dir
 An unescaped quote or semicolon in `working_dir` allows arbitrary command execution.
 
 ### 134.2 Direct Argument Vector Passing (`execve`) vs. Shell Interpolation
-DevHub eliminates shell interpolation by passing argument vectors directly:
+Runara eliminates shell interpolation by passing argument vectors directly:
 ```rust
 let mut cmd = Command::new("wsl.exe");
 cmd.args(["-d", distro, "--", "find", target_path, "-maxdepth", "1", "-mindepth", "1", "(", "-type", "d", "-o", "-xtype", "d", ")"]);
@@ -6232,7 +6232,7 @@ cmd.args(["-d", distro, "--", "find", target_path, "-maxdepth", "1", "-mindepth"
 The Windows kernel and WSL subsystem pass the argument slice directly to the Linux guest `execve` syscall. Characters like `;`, `&`, `|`, and `$` are treated strictly as literal character bytes in the filename rather than shell control syntax.
 
 ### 134.3 Sanitizing Directory Parsing and Bounding Guest Command Execution Timeouts
-- **Bounded Timeouts**: All guest directory listing operations are capped at 4000ms (`WSL_FS_TIMEOUT_MS`). If a network mount inside WSL hangs, DevHub terminates the command safely without freezing the desktop UI.
+- **Bounded Timeouts**: All guest directory listing operations are capped at 4000ms (`WSL_FS_TIMEOUT_MS`). If a network mount inside WSL hangs, Runara terminates the command safely without freezing the desktop UI.
 - **Error Sanitization**: Guest `stderr` is parsed for known POSIX error strings (`Permission denied`, `No such file or directory`) and transformed into human-friendly messages, preventing kernel stack dumps from reaching the developer interface.
 
 ---
@@ -6240,7 +6240,7 @@ The Windows kernel and WSL subsystem pass the argument slice directly to the Lin
 ## 135. Milestone 12: Reusable Form Components & UI State Management
 
 ### 135.1 Component Composition: `WorkingDirectoryField`, `WslDirectoryBrowserModal`, `TruncatedPath`
-To eliminate duplication across profile creation, profile editing, and adoption flows, DevHub encapsulates path management into cohesive, single-responsibility components:
+To eliminate duplication across profile creation, profile editing, and adoption flows, Runara encapsulates path management into cohesive, single-responsibility components:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -6282,7 +6282,7 @@ The directory browser and path field adhere to desktop accessibility standards:
   - `Backspace`: Navigates to parent folder when focus is not inside an input.
 
 ### 135.4 Design Token Compliance: Dual-Theme Architecture (#101010 Dark / #F9F9F9 Light)
-All Milestone 12 components strictly utilize DevHub's theme tokens, preventing hardcoded color bugs:
+All Milestone 12 components strictly utilize Runara's theme tokens, preventing hardcoded color bugs:
 - Dark Mode: Surface `#101010` / `zinc-900`, text `zinc-100` / `#CCCCCC`, borders `zinc-700/80`.
 - Light Mode: Surface `#F9F9F9`, text `zinc-900` / `#101010`, borders `zinc-300`.
 
@@ -6320,13 +6320,13 @@ graph TD
 
     subgraph Storage & Launch Layer
         PFM -->|Create/Update Profile| SPS[ServerProfileService]
-        SPS --> SQLite[(SQLite devhub.db)]
+        SPS --> SQLite[(SQLite runara.db)]
         SPS --> SSS[ServerStartService]
     end
 ```
 
 ### 136.2 Decoupling Filesystem Browsing from Server Process Execution
-A fundamental architectural strength of DevHub is the strict separation between **Filesystem Services** and **Process Execution Launchers**:
+A fundamental architectural strength of Runara is the strict separation between **Filesystem Services** and **Process Execution Launchers**:
 - `FilesystemService` and its providers are solely responsible for inspecting paths, browsing folders, and performing validation.
 - `WindowsLauncher` and `WslLauncher` are solely responsible for process lifecycle, standard I/O redirection, and process group isolation.
 - This boundary ensures that browsing directories never triggers accidental process execution or side effects.
@@ -6403,7 +6403,7 @@ pub struct PathValidationResult {
 
 ### 138.3 Trace 3: Adoption Flow Working Directory Correction and Validation
 ```
-1. DISCOVERY: DevHub discovers unmanaged PID 18240 (`node.exe`) listening on port 3000 in `C:\Projects\app\dist`.
+1. DISCOVERY: Runara discovers unmanaged PID 18240 (`node.exe`) listening on port 3000 in `C:\Projects\app\dist`.
 2. USER ACTION: Developer clicks "Adopt" on the server card.
 3. ADOPTION DRAFT: `AdoptionFormModal` mounts pre-populated with `workingDirectory: "C:\\Projects\\app\\dist"`.
 4. CORRECTION: Developer needs the root project directory instead of `dist`. Clicks "[ Browse... ]".
@@ -6437,9 +6437,9 @@ By decoupling the environment representation from the filesystem implementation 
 2. **Permission & Symlink Mismatches**: Windows NTFS permissions do not map 1:1 with POSIX `chmod`/`chown` modes, leading to subtle build failures in tools like Docker, Git, or Webpack.
 3. **Loss of Developer Intent**: A developer working in WSL expects their service to reside in the Linux guest filesystem. Silently re-routing paths obscures the execution context and creates confusion.
 
-### Q4: How does DevHub prevent command and shell injection vulnerabilities when navigating arbitrary user paths in WSL?
+### Q4: How does Runara prevent command and shell injection vulnerabilities when navigating arbitrary user paths in WSL?
 **Answer**:
-DevHub enforces strict argument vector passing through `std::process::Command` without invoking intermediate shell interpreters (`sh -c` or `bash -c`):
+Runara enforces strict argument vector passing through `std::process::Command` without invoking intermediate shell interpreters (`sh -c` or `bash -c`):
 ```rust
 Command::new("wsl.exe")
     .arg("-d")
@@ -6459,7 +6459,7 @@ The arguments are passed directly to the Linux guest `execve` syscall. Semicolon
 
 ### Q6: What happens if a user tries to browse a stopped WSL distribution, and why shouldn't the app silently start it?
 **Answer**:
-Executing commands against a stopped WSL distribution causes Windows to automatically boot the guest Linux VM in the background. This consumes hundreds of megabytes of RAM and introduces battery drain. DevHub queries distribution states first; if stopped, it halts execution and presents an explicit warning, requiring intentional developer action before starting the VM.
+Executing commands against a stopped WSL distribution causes Windows to automatically boot the guest Linux VM in the background. This consumes hundreds of megabytes of RAM and introduces battery drain. Runara queries distribution states first; if stopped, it halts execution and presents an explicit warning, requiring intentional developer action before starting the VM.
 
 ---
 
@@ -6480,7 +6480,7 @@ Executing commands against a stopped WSL distribution causes Windows to automati
 | [`src/components/profiles/ProfileFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/ProfileFormModal.tsx) | Presentation | Server profile creation and editing modal integrated with `WorkingDirectoryField` | Profile UX, Environment Awareness | `Profiles.tsx`, `Servers.tsx` | `WorkingDirectoryField.tsx` |
 | [`src/components/adoption/AdoptionFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/AdoptionFormModal.tsx) | Presentation | Server adoption modal with editable/browsable working directory | Adoption Flow, Pre-Filled Paths | `Dashboard.tsx`, `Servers.tsx` | `WorkingDirectoryField.tsx` |
 | [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | Cumulative engineering master learning guide | Systems Engineering Blueprint | Developers, Interviewees | - |
-| [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | DevHub project overview highlighting native and WSL folder browsing | Product Overview | GitHub, Community | - |
+| [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | Runara project overview highlighting native and WSL folder browsing | Product Overview | GitHub, Community | - |
 
 ---
 
@@ -6496,7 +6496,7 @@ Modern software engineering rarely operates as a single isolated server process.
 
 ```
                   +----------------------------------------------+
-                  |               DevHub Project                 |
+                  |               Runara Project                 |
                   |         "E-Commerce Platform (Dev)"          |
                   +----------------------------------------------+
                                          |
@@ -6514,14 +6514,14 @@ Modern software engineering rarely operates as a single isolated server process.
 ```
 
 ### The Developer Pain Points Without Orchestration
-Prior to DevHub Milestone 13, developers had to manage this constellation manually:
+Prior to Runara Milestone 13, developers had to manage this constellation manually:
 - **Terminal Fragmentation**: Opening 4 to 6 separate PowerShell or WSL Bash windows, navigating to respective directories, and invoking commands manually.
 - **Port Collisions**: Forgetting which servers were already active, resulting in `EADDRINUSE` crashes.
 - **Orphaned Background Daemons**: Closing terminal tabs without terminating child worker processes, leaving CPU-intensive background tasks running undetected.
 - **Startup Race Conditions**: Starting the frontend client before the backend API is ready, triggering immediate API connection errors on load.
 
 ### Separation of Concerns: Project vs ServerProfile
-In DevHub's architectural model:
+In Runara's architectural model:
 - `ServerProfile` owns **execution specifications**: command line arguments, execution environment (`Windows` vs `WSL`), working directory on disk, expected TCP listening port, and runtime metadata.
 - `Project` owns **orchestration topology**: project grouping name, human-readable description, member profile associations, and explicit zero-indexed sequential startup/teardown order.
 
@@ -6529,7 +6529,7 @@ In DevHub's architectural model:
 
 ## 142. Inversion of Startup Semantics: "Start All" as Desired State vs "Restart Everything"
 
-A common architectural flaw in naive project orchestration tools is treating "Start All" as an imperative "Kill and Respawn Everything" script. DevHub inverts this into a **Declarative Desired State Engine**:
+A common architectural flaw in naive project orchestration tools is treating "Start All" as an imperative "Kill and Respawn Everything" script. Runara inverts this into a **Declarative Desired State Engine**:
 
 $$
 \text{StartAll}(P) \implies \forall s \in \text{Services}(P), \quad \text{Status}(s) = \text{Running}
@@ -6554,14 +6554,14 @@ Result:
 
 ### Pre-Flight Discovery & Skip Algorithm
 When `ProjectOrchestrator::start_project` is called:
-1. DevHub captures a fresh system discovery snapshot across Windows and active WSL distributions.
+1. Runara captures a fresh system discovery snapshot across Windows and active WSL distributions.
 2. It iterates through member profiles in strictly configured order ($i = 0 \dots N-1$).
 3. For each profile, it calls `ServerProfileService::find_matching_process`.
 4. If a live process already matches the profile's working directory and expected listening port:
    - The profile is marked as `already_running`.
    - The launcher skips spawning, avoiding port conflict errors.
 5. If the profile is stopped:
-   - DevHub invokes `ServerStartService::start_profile`, waiting for socket readiness before proceeding.
+   - Runara invokes `ServerStartService::start_profile`, waiting for socket readiness before proceeding.
 
 ---
 
@@ -6606,7 +6606,7 @@ Teardown Order (Reverse):
 If the Core Backend API is stopped while the Frontend Client and Background Worker are still active:
 1. The worker encounters broken socket connections (`ECONNREFUSED` / `SIGPIPE`), triggering exponential error logs and unhandled retry loops.
 2. In-flight write transactions to the backend are aborted mid-stream.
-3. DevHub enforces reverse teardown to allow higher-level consumers to disconnect cleanly before foundation services terminate.
+3. Runara enforces reverse teardown to allow higher-level consumers to disconnect cleanly before foundation services terminate.
 
 ---
 
@@ -6620,8 +6620,8 @@ Some naive orchestrators attempt transactional rollback: if service 3 of 4 fails
 - It kills the backend compiler/database whose logs the developer needs to inspect why service 3 could not connect.
 - It invalidates hot-reloading cache structures.
 
-### The DevHub Fail-Fast Orchestration Algorithm
-DevHub implements **Fail-Fast Sequential Execution without Rollback**:
+### The Runara Fail-Fast Orchestration Algorithm
+Runara implements **Fail-Fast Sequential Execution without Rollback**:
 
 ```
 Given Project Services: [ S_0, S_1, S_2, S_3 ]
@@ -6709,7 +6709,7 @@ CREATE TABLE IF NOT EXISTS project_profiles (
    WHERE project_id = ?1 AND order_index > ?3;
    ```
 3. **Atomic Reordering**:
-   When reordering $N$ services, DevHub executes an atomic transaction that clears the project's current memberships and re-inserts the new ID permutation $[ID_0, ID_1, \dots, ID_{N-1}]$ with indices $0 \dots N-1$, guaranteeing zero unique-constraint collisions.
+   When reordering $N$ services, Runara executes an atomic transaction that clears the project's current memberships and re-inserts the new ID permutation $[ID_0, ID_1, \dots, ID_{N-1}]$ with indices $0 \dots N-1$, guaranteeing zero unique-constraint collisions.
 
 ---
 
@@ -6719,10 +6719,10 @@ Multi-service orchestration takes time (subprocesses spawning, sockets opening, 
 
 ### Persistent vs Transient Concurrency Locks
 - **Persistent DB Locks (Anti-Pattern)**: Persisting locks in SQLite risks permanent application deadlock if the machine powers down or crashes mid-operation.
-- **Transient Memory Locks (DevHub Pattern)**: Storing active locks in `Arc<Mutex<HashMap<String, ProjectOperation>>>` ensures locks naturally clear if the application restarts.
+- **Transient Memory Locks (Runara Pattern)**: Storing active locks in `Arc<Mutex<HashMap<String, ProjectOperation>>>` ensures locks naturally clear if the application restarts.
 
 ### The RAII Lock Guard Pattern
-DevHub implements a custom Rust RAII struct `ProjectOperationGuard` that guarantees lock release upon `Drop`:
+Runara implements a custom Rust RAII struct `ProjectOperationGuard` that guarantees lock release upon `Drop`:
 
 ```rust
 // RAII Guard guaranteeing lock cleanup on success, error, or early return
@@ -6816,11 +6816,11 @@ $$
 
 ## 148. Cross-Environment Orchestration Across Windows and WSL Hyper-V Boundaries
 
-DevHub projects are first-class cross-environment orchestrators. A single project can unite Windows native processes and WSL guest Linux daemons.
+Runara projects are first-class cross-environment orchestrators. A single project can unite Windows native processes and WSL guest Linux daemons.
 
 ```
 +---------------------------------------------------------------------------+
-|                          DevHub Orchestrator                              |
+|                          Runara Orchestrator                              |
 +---------------------------------------------------------------------------+
                     |                                   |
            (Windows Service)                     (WSL Linux Service)
@@ -6834,7 +6834,7 @@ DevHub projects are first-class cross-environment orchestrators. A single projec
 ```
 
 ### Safe VM State Pre-Check
-Before orchestrating any WSL member profile, DevHub checks the WSL distribution state via `WslDistroDiscovery`. If the distribution is stopped, DevHub prevents accidental background boot overhead during read scans, but spins up the guest kernel cleanly during explicit project startup.
+Before orchestrating any WSL member profile, Runara checks the WSL distribution state via `WslDistroDiscovery`. If the distribution is stopped, Runara prevents accidental background boot overhead during read scans, but spins up the guest kernel cleanly during explicit project startup.
 
 ---
 
@@ -6890,7 +6890,7 @@ In early-stage software projects, developers frequently hardcode specific utilit
 3. **Impossibility of Runtime Theme Switching**: When colors are baked into static class names, dynamic light/dark mode transitions require duplicate utility strings (`dark:bg-zinc-900 bg-white dark:text-zinc-100 text-zinc-900`) on every single DOM node, bloating bundle sizes and multiplying maintenance complexity.
 
 ### 151.2 Semantic Design Token Architecture
-DevHub Milestone 14 replaces all hardcoded palette classes with a centralized, abstract **Design Token Hierarchy** powered by Tailwind CSS v4 `@theme` integration and native CSS Custom Properties (CSS variables).
+Runara Milestone 14 replaces all hardcoded palette classes with a centralized, abstract **Design Token Hierarchy** powered by Tailwind CSS v4 `@theme` integration and native CSS Custom Properties (CSS variables).
 
 ```
 +-------------------------------------------------------------------------------+
@@ -6963,7 +6963,7 @@ export function getStoredThemePreference(): ThemePreference {
 ```
 
 ### 152.4 Live OS Media Query Reactivity
-When in `'system'` mode, DevHub binds a listener to the window's media query event stream:
+When in `'system'` mode, Runara binds a listener to the window's media query event stream:
 ```ts
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const handleMediaChange = (e: MediaQueryListEvent) => {
@@ -6972,7 +6972,7 @@ const handleMediaChange = (e: MediaQueryListEvent) => {
 };
 mediaQuery.addEventListener('change', handleMediaChange);
 ```
-When Windows OS switches between Light and Dark mode schedules, DevHub updates immediately without requiring application restart.
+When Windows OS switches between Light and Dark mode schedules, Runara updates immediately without requiring application restart.
 
 ---
 
@@ -6982,7 +6982,7 @@ When Windows OS switches between Light and Dark mode schedules, DevHub updates i
 In web-based and hybrid desktop architectures (Tauri, Electron), modern single-page applications typically initialize state asynchronously inside React `useEffect` hooks. If theme application waits for React to mount, the browser engine will render the default HTML document background (usually `#FFFFFF` white) for 50–200 milliseconds before applying the user's stored `#101010` dark theme. This jarring strobe effect is known as **Flash of Unstyled Content (FOUC)** or **Theme Flash**.
 
 ### 153.2 Synchronous Pre-Mount Execution
-To eliminate Theme Flash entirely, DevHub executes `initThemeEarly()` synchronously in `src/main.tsx` before invoking `createRoot().render()`:
+To eliminate Theme Flash entirely, Runara executes `initThemeEarly()` synchronously in `src/main.tsx` before invoking `createRoot().render()`:
 
 ```tsx
 // src/main.tsx
@@ -7026,7 +7026,7 @@ This ensures complete keyboard navigation support for accessibility compliance w
 
 ## 155. Separation of User Configuration vs. Ephemeral Runtime State
 
-DevHub strictly separates state across three persistence tiers:
+Runara strictly separates state across three persistence tiers:
 
 ```
 +-------------------------------------------------------------------------------+
@@ -7057,7 +7057,7 @@ DevHub strictly separates state across three persistence tiers:
 ```mermaid
 flowchart TD
     subgraph Storage Layer
-        LS[(localStorage: devhub_theme_preference)]
+        LS[(localStorage: runara_theme_preference)]
         MQ[OS Media Query prefers-color-scheme]
     end
 
@@ -7096,7 +7096,7 @@ export interface ThemeContextValue {
 
 ### 157.2 Theme Helper Library (`src/lib/theme.ts`)
 ```ts
-export const THEME_STORAGE_KEY = 'devhub_theme_preference';
+export const THEME_STORAGE_KEY = 'runara_theme_preference';
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'dark';
 
 export function getStoredThemePreference(): ThemePreference;
@@ -7115,7 +7115,7 @@ export function initThemeEarly(): void;
 1. User clicks the "Light Mode" radio card in `src/pages/Settings.tsx`.
 2. `handleThemeChange('light')` triggers `setTheme('light')` on the `ThemeContext`.
 3. `ThemeContext` updates state `themePreference = 'light'` and invokes `saveThemePreference('light')`.
-4. `saveThemePreference` writes `'light'` to `localStorage` under key `devhub_theme_preference`.
+4. `saveThemePreference` writes `'light'` to `localStorage` under key `runara_theme_preference`.
 5. `ThemeContext` resolves `resolvedTheme = 'light'` and calls `applyThemeToDocument('light')`.
 6. `applyThemeToDocument` updates `document.documentElement`:
    - `data-theme="light"`
@@ -7221,13 +7221,13 @@ Desktop applications on Windows require standardized packaging to ensure clean i
 ```
 
 ### 163.1 NSIS (Nullsoft Scriptable Install System)
-The NSIS target generates `DevHub_0.1.0_x64-setup.exe`. It packages the executable, embedded WebView2 hooks, icon resources, and uninstallation scripts into a compressed executable. It provides single-click user installation, creating Start Menu shortcuts and Control Panel uninstall entries.
+The NSIS target generates `Runara_0.1.0_x64-setup.exe`. It packages the executable, embedded WebView2 hooks, icon resources, and uninstallation scripts into a compressed executable. It provides single-click user installation, creating Start Menu shortcuts and Control Panel uninstall entries.
 
 ### 163.2 MSI (WiX 3.14 Toolset)
-The MSI target generates `DevHub_0.1.0_x64_en-US.msi`. Built using the WiX toolset (`candle.exe` and `light.exe`), it creates a standard Windows Installer database containing explicit component GUIDs, file tables, and registry records. This enables enterprise system administrators to deploy DevHub silently via Group Policy Objects (GPO) or Microsoft Intune:
+The MSI target generates `Runara_0.1.0_x64_en-US.msi`. Built using the WiX toolset (`candle.exe` and `light.exe`), it creates a standard Windows Installer database containing explicit component GUIDs, file tables, and registry records. This enables enterprise system administrators to deploy Runara silently via Group Policy Objects (GPO) or Microsoft Intune:
 ```powershell
 # Silent Enterprise Installation
-msiexec /i DevHub_0.1.0_x64_en-US.msi /qn /norestart
+msiexec /i Runara_0.1.0_x64_en-US.msi /qn /norestart
 ```
 
 ---
@@ -7245,13 +7245,13 @@ When building desktop applications with multi-tier architectures (Rust backend, 
 If the version is bumped to `0.2.0`, a developer might update `package.json` but forget the Rust backend constant, leading to contradictory telemetry in diagnostics.
 
 ### 164.2 The `env!("CARGO_PKG_VERSION")` Compile-Time Invariant
-To guarantee absolute consistency, DevHub uses the compile-time macro `env!("CARGO_PKG_VERSION")` in Rust:
+To guarantee absolute consistency, Runara uses the compile-time macro `env!("CARGO_PKG_VERSION")` in Rust:
 
 ```rust
 #[tauri::command]
 pub fn get_system_info() -> SystemInfo {
     SystemInfo {
-        app: "DevHub".to_string(),
+        app: "Runara".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
         backend: "rust".to_string(),
         status: "ok".to_string(),
@@ -7270,19 +7270,19 @@ During compilation, `cargo` automatically injects the exact version declared in 
 Desktop development machines frequently have software installed that masks missing runtime dependencies:
 1. **Developer Toolchains**: MSVC Build Tools, Visual Studio, Windows SDK, Rust toolchain, Node.js, and Python are in the system `PATH`.
 2. **Dynamic Link Libraries (DLLs)**: The Visual C++ Redistributable runtime DLLs (`msvcp140.dll`, `vcruntime140.dll`) are registered globally in `C:\Windows\System32`.
-3. **Pre-Existing Application Data**: Existing SQLite databases with existing tables already exist in `%APPDATA%\DevHub`.
+3. **Pre-Existing Application Data**: Existing SQLite databases with existing tables already exist in `%APPDATA%\Runara`.
 4. **Active WSL Installations**: Pre-configured WSL distributions with pre-authenticated user accounts.
 
 ### 165.2 Clean-Machine Testing Protocol
-To validate release readiness, the distribution artifacts (`DevHub_0.1.0_x64-setup.exe` and `DevHub.exe`) must be tested in an environment that simulates a fresh developer machine:
+To validate release readiness, the distribution artifacts (`Runara_0.1.0_x64-setup.exe` and `Runara.exe`) must be tested in an environment that simulates a fresh developer machine:
 
 ```
 [Clean Machine / VM]
         │
         ├── 1. Install via NSIS / MSI
-        ├── 2. Launch DevHub from Start Menu
+        ├── 2. Launch Runara from Start Menu
         ├── 3. Verify First-Run Initialization:
-        │      ├── Creates %APPDATA%\com.devhub.desktop\
+        │      ├── Creates %APPDATA%\com.runara.desktop\
         │      ├── Initializes fresh SQLite database
         │      ├── Executes Migrations 1 & 2
         │      └── Starts Win32 IP Helper socket scanner
@@ -7304,10 +7304,10 @@ As software evolves across 15 distinct milestones, late-stage features introduce
 - **Project Orchestration (M10)**: Sequential state locks and reverse-order teardown could conflict with individual server stop controls (M5/M12).
 
 ### 166.2 The Dual-Engine Automated Test Suite (280 Tests)
-DevHub enforces a zero-regression invariant with a comprehensive automated test suite spanning both runtime layers:
+Runara enforces a zero-regression invariant with a comprehensive automated test suite spanning both runtime layers:
 
 ```
-                                  DEVHUB TEST SUITE (280 TESTS)
+                                  RUNARA TEST SUITE (280 TESTS)
                                                 │
                  ┌──────────────────────────────┴──────────────────────────────┐
                  ▼                                                             ▼
@@ -7333,9 +7333,9 @@ A local development control tool operates with standard user privileges but inte
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                              DEVHUB SECURITY THREAT MODEL                                   │
+│                              RUNARA SECURITY THREAT MODEL                                   │
 ├──────────────────────┬───────────────────────────────┬──────────────────────────────────────┤
-│ Threat Category      │ Potential Risk                │ DevHub Architectural Defense         │
+│ Threat Category      │ Potential Risk                │ Runara Architectural Defense         │
 ├──────────────────────┼───────────────────────────────┼──────────────────────────────────────┤
 │ Command Injection    │ Malicious strings in commands │ Structured argument vectors passed   │
 │                      │ or paths executing shell code │ directly to `wsl.exe` / `CreateProcess`│
@@ -7359,7 +7359,7 @@ In traditional shell scripts, developers frequently write vulnerable string inte
 $$\text{system}("wsl.exe -d " + distro + " -- /bin/kill " + pid)$$
 If `distro` contains `; rm -rf /;`, arbitrary commands are executed.
 
-DevHub eliminates this vulnerability by passing structured argument vectors directly to the operating system process creation API (`std::process::Command` in Rust):
+Runara eliminates this vulnerability by passing structured argument vectors directly to the operating system process creation API (`std::process::Command` in Rust):
 ```rust
 let mut cmd = std::process::Command::new("wsl.exe");
 cmd.args(["-d", distro, "--", "/bin/kill", &format!("-{}", signal), &pid.to_string()]);
@@ -7390,7 +7390,7 @@ In enterprise development environments, a developer's workstation may run over 1
 ```
 
 ### 168.2 Coordinated Polling vs. Timer Storms
-To prevent CPU spikes and resource exhaustion, DevHub avoids per-card or per-service polling timers. Instead:
+To prevent CPU spikes and resource exhaustion, Runara avoids per-card or per-service polling timers. Instead:
 - A single coordinated discovery loop orchestrates system snapshots.
 - UI components consume shared state from unified React state stores.
 - In-flight discovery cycles are guarded against overlapping execution.
@@ -7403,7 +7403,7 @@ A mature software project maintains distinct documentation layers tailored to sp
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                               DEVHUB DOCUMENTATION TAXONOMY                                 │
+│                               RUNARA DOCUMENTATION TAXONOMY                                 │
 ├──────────────────────┬──────────────────────┬───────────────────────────────────────────────┤
 │ Document             │ Target Audience      │ Purpose & Core Content                        │
 ├──────────────────────┼──────────────────────┼───────────────────────────────────────────────┤
@@ -7433,17 +7433,17 @@ A mature software project maintains distinct documentation layers tailored to sp
 
 ### 170.1 Trace 1: First-Run Production Bootstrap Sequence
 ```
-1. USER ACTION: Developer launches DevHub from Windows Start Menu.
+1. USER ACTION: Developer launches Runara from Windows Start Menu.
 2. TAURI BOOT: Tauri executable initializes native WebView2 runtime window (1200x800).
 3. RUST SETUP: `lib.rs` executes setup hook:
-   - Resolves `%APPDATA%\com.devhub.desktop\`.
-   - Opens/creates `devhub.db` SQLite database.
+   - Resolves `%APPDATA%\com.runara.desktop\`.
+   - Opens/creates `runara.db` SQLite database.
    - Configures `PRAGMA journal_mode = WAL`, `PRAGMA foreign_keys = ON`.
    - Executes `MigrationRunner`: applies `001_create_server_profiles` and `002_create_projects`.
    - Instantiates domain services and registers Tauri command handlers.
-4. FRONTEND PRE-MOUNT: `main.tsx` synchronously reads `localStorage['devhub-theme-preference']`.
+4. FRONTEND PRE-MOUNT: `main.tsx` synchronously reads `localStorage['runara-theme-preference']`.
    - Injects `data-theme="dark"` and `class="dark"` into `document.documentElement` before rendering React root.
-5. REACT MOUNT: `App.tsx` renders `<div className="Initializing DevHub">` spinner.
+5. REACT MOUNT: `App.tsx` renders `<div className="Initializing Runara">` spinner.
 6. HEALTH CHECK: `App.tsx` invokes `systemApi.getSystemInfo()`.
 7. READY TRANSITION: IPC confirms backend is healthy; `App.tsx` switches `isInitializing = false` to render `<Dashboard />`.
 8. INITIAL DISCOVERY: `Dashboard` triggers unified discovery; Win32 IP Helper and WSL subsystem enumerate live servers.
@@ -7455,7 +7455,7 @@ A mature software project maintains distinct documentation layers tailored to sp
 2. RUST BACKEND: `initialize_database` fails, returning an error string.
 3. FRONTEND HEALTH CHECK: `systemApi.getSystemInfo()` in `App.tsx` catches the rejected IPC promise.
 4. FATAL SCREEN: `App.tsx` sets `fatalError` state, rendering the recovery modal:
-   - Title: "DevHub could not initialize local storage"
+   - Title: "Runara could not initialize local storage"
    - Subtitle: "Unable to safely load your profiles and projects."
    - Displays exact error diagnostics in monospace card.
 5. USER RECOVERY:
@@ -7471,11 +7471,11 @@ A mature software project maintains distinct documentation layers tailored to sp
    - `vite build` bundles and minifies frontend into `dist/`.
 3. RUST RELEASE COMPILE: `cargo build --release`:
    - Compiles with MSVC toolchain, `opt-level = 3`, LTO enabled, symbols stripped.
-   - Generates optimized standalone binary `target/release/DevHub.exe` (8.19 MB).
+   - Generates optimized standalone binary `target/release/Runara.exe` (8.19 MB).
 4. MSI BUNDLE: Tauri invokes WiX Toolset (`candle.exe` + `light.exe`):
-   - Compiles WiX XML schema into `DevHub_0.1.0_x64_en-US.msi` (4.69 MB).
+   - Compiles WiX XML schema into `Runara_0.1.0_x64_en-US.msi` (4.69 MB).
 5. NSIS BUNDLE: Tauri invokes NSIS (`makensis.exe`):
-   - Generates installer executable `DevHub_0.1.0_x64-setup.exe` (3.44 MB).
+   - Generates installer executable `Runara_0.1.0_x64-setup.exe` (3.44 MB).
 6. CHECKSUM HASHING: Release pipeline computes SHA-256 hashes for all three release artifacts.
 7. ARTIFACT ATTACHMENT: Checksums recorded in `RELEASE_NOTES.md` ready for GitHub release tag `v0.1.0`.
 ```
@@ -7526,14 +7526,14 @@ A mature software project maintains distinct documentation layers tailored to sp
 
 ---
 
-## 173. Final Cumulative Master Synthesis — How DevHub Fits Together
+## 173. Final Cumulative Master Synthesis — How Runara Fits Together
 
 ### 173.1 The Unified System Vision
-DevHub is an engineered control center designed to solve local development visibility and process management. Over 15 comprehensive milestones, DevHub was built from foundational native OS primitives into a complete, hardened, and distributable desktop application.
+Runara is an engineered control center designed to solve local development visibility and process management. Over 15 comprehensive milestones, Runara was built from foundational native OS primitives into a complete, hardened, and distributable desktop application.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                  DEVHUB COMPLETE SYSTEM MAP                                      │
+│                                  RUNARA COMPLETE SYSTEM MAP                                      │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ 1. DISCOVERY & VISIBILITY PLANE                                                                  │
 │    • Win32 IP Helper (`GetExtendedTcpTable`) directly queries kernel TCP tables in $<1.5\text{ ms}$ │
@@ -7560,14 +7560,14 @@ DevHub is an engineered control center designed to solve local development visib
 │    • Global Keyboard Navigation (`Ctrl+1..5`, `Ctrl+R`, `Esc`) and live system telemetry panel   │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ 5. PACKAGING & DISTRIBUTION PLANE                                                                │
-│    • High-Performance Standalone Executable (`DevHub.exe` - 8.19 MB)                             │
-│    • Enterprise Windows Installer (`DevHub_0.1.0_x64_en-US.msi` - 4.69 MB)                       │
-│    • Standard Windows Setup (`DevHub_0.1.0_x64-setup.exe` - 3.44 MB)                             │
+│    • High-Performance Standalone Executable (`Runara.exe` - 8.19 MB)                             │
+│    • Enterprise Windows Installer (`Runara_0.1.0_x64_en-US.msi` - 4.69 MB)                       │
+│    • Standard Windows Setup (`Runara_0.1.0_x64-setup.exe` - 3.44 MB)                             │
 │    • 280 Automated Tests with 100% Green Verification across Rust and React                      │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-This completes the comprehensive architectural blueprint, technical specification, and pedagogical engineering guide for **DevHub v0.1.0**.
+This completes the comprehensive architectural blueprint, technical specification, and pedagogical engineering guide for **Runara v0.1.0**.
 
 
 

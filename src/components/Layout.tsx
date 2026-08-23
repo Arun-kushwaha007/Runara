@@ -37,7 +37,7 @@ const getPageMetadata = (page: NavPage): { title: string; subtitle: string } => 
         subtitle: 'Host environment telemetry, database persistence health, and engine configuration',
       };
     default:
-      return { title: 'DevHub', subtitle: 'Local Development Control Center' };
+      return { title: 'Runara', subtitle: 'Local Development Control Center' };
   }
 };
 

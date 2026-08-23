@@ -106,7 +106,7 @@ mod tests {
             p.name.eq_ignore_ascii_case("explorer.exe")
                 || p.name.eq_ignore_ascii_case("System")
                 || p.name.contains("cargo")
-                || p.name.contains("devhub")
+                || p.name.contains("runara")
         });
 
         assert!(

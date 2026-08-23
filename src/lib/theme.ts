@@ -1,6 +1,6 @@
 import type { ThemePreference, ResolvedTheme } from '../types/theme';
 
-export const THEME_STORAGE_KEY = 'devhub_theme_preference';
+export const THEME_STORAGE_KEY = 'runara_theme_preference';
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'dark';
 export const VALID_THEME_PREFERENCES: readonly ThemePreference[] = ['system', 'dark', 'light'] as const;
 

@@ -23,7 +23,7 @@ function App() {
       const msg = err instanceof Error ? err.message : String(err);
       setFatalError(
         msg ||
-          'DevHub could not initialize local storage or start native discovery services. The application cannot safely load your server profiles.'
+          'Runara could not initialize local storage or start native discovery services. The application cannot safely load your server profiles.'
       );
       setIsInitializing(false);
     }
@@ -53,7 +53,7 @@ function App() {
             </svg>
           </div>
           <div>
-            <h1 className="text-base font-bold text-app-fg tracking-tight">Initializing DevHub</h1>
+            <h1 className="text-base font-bold text-app-fg tracking-tight">Initializing Runara</h1>
             <p className="text-xs text-app-muted-fg mt-1">
               Loading local SQLite database, establishing IPC bridges, and preparing discovery engine...
             </p>
@@ -98,7 +98,7 @@ function App() {
           </div>
 
           <div>
-            <h2 className="text-lg font-bold text-red-500 dark:text-red-400">DevHub could not initialize local storage</h2>
+            <h2 className="text-lg font-bold text-red-500 dark:text-red-400">Runara could not initialize local storage</h2>
             <p className="text-xs text-app-muted-fg mt-1.5 leading-relaxed">
               Unable to safely load your profiles and projects.
             </p>

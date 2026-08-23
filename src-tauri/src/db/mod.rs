@@ -54,8 +54,8 @@ mod tests {
 
     #[test]
     fn test_initialize_database_file() {
-        let temp_dir = std::env::temp_dir().join(format!("devhub_test_{}", uuid::Uuid::new_v4()));
-        let db_file = temp_dir.join("test_devhub.db");
+        let temp_dir = std::env::temp_dir().join(format!("runara_test_{}", uuid::Uuid::new_v4()));
+        let db_file = temp_dir.join("test_runara.db");
 
         let repo = initialize_database(&db_file).expect("Database initialization failed");
         assert_eq!(repo.count().unwrap(), 0);

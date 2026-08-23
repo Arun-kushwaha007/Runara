@@ -23,7 +23,7 @@ pub struct ServerProfile {
     pub expected_port: Option<u16>,
     /// Optional expected host binding (e.g. "127.0.0.1", "0.0.0.0", "localhost").
     pub expected_host: Option<String>,
-    /// Whether the profile is currently active/enabled in DevHub.
+    /// Whether the profile is currently active/enabled in Runara.
     pub enabled: bool,
     /// ISO-8601 timestamp string when the profile was created.
     pub created_at: String,

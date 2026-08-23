@@ -44,7 +44,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => {
       </div>
 
       <div className="text-[11px] text-app-muted-fg max-w-md mt-2">
-        Ensure DevHub has standard permissions to query the Windows and WSL process and socket tables.
+        Ensure Runara has standard permissions to query the Windows and WSL process and socket tables.
       </div>
     </div>
   );

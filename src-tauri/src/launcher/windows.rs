@@ -102,7 +102,7 @@ mod tests {
     fn test_validate_working_directory_non_existent() {
         let launcher = WindowsLauncher::new();
         let err = launcher
-            .validate_working_directory("C:\\non_existent_dir_12345_devhub")
+            .validate_working_directory("C:\\non_existent_dir_12345_runara")
             .unwrap_err();
         assert_eq!(err.code, StartErrorCode::WorkingDirectoryNotFound);
     }

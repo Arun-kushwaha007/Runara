@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn test_validate_non_existent_path() {
         let provider = WindowsFilesystemProvider::new();
-        let res = provider.validate_directory("C:\\DevHubNonExistentPath_XYZ123").unwrap();
+        let res = provider.validate_directory("C:\\RunaraNonExistentPath_XYZ123").unwrap();
         assert!(!res.is_valid);
         assert!(res.error.unwrap().contains("does not exist"));
     }
@@ -108,7 +108,7 @@ mod tests {
     #[test]
     fn test_validate_file_instead_of_directory() {
         let provider = WindowsFilesystemProvider::new();
-        let temp_file = env::temp_dir().join("devhub_test_file.txt");
+        let temp_file = env::temp_dir().join("runara_test_file.txt");
         fs::write(&temp_file, "test").unwrap();
 
         let res = provider.validate_directory(&temp_file.to_string_lossy()).unwrap();

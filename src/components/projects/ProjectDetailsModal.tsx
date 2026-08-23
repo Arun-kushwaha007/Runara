@@ -233,7 +233,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <div>
                 <p className="font-semibold text-app-fg">Cross-Environment Services</p>
                 <p className="text-[11px] text-app-muted-fg mt-0.5 leading-relaxed">
-                  This project orchestrates both Windows and WSL guest Linux services. DevHub handles sequential startup, safe reverse teardown, and process discovery seamlessly across both boundaries.
+                  This project orchestrates both Windows and WSL guest Linux services. Runara handles sequential startup, safe reverse teardown, and process discovery seamlessly across both boundaries.
                 </p>
               </div>
             </div>

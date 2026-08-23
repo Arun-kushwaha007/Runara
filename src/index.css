@@ -20,7 +20,7 @@
 }
 
 :root {
-  /* Default dark foundation as per DevHub product specification */
+  /* Default dark foundation as per Runara product specification */
   --background: #101010;
   --foreground: #cccccc;
   --surface: #181818;

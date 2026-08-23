@@ -38,7 +38,7 @@ export const DeleteProjectModal: React.FC<DeleteProjectModalProps> = ({
               Are you sure you want to delete <span className="font-semibold text-app-fg">"{projectName}"</span>?
             </p>
             <p className="text-app-muted-fg text-[11px] leading-relaxed">
-              This only removes the project grouping. All member server profiles will remain available in DevHub, and running processes will not be stopped.
+              This only removes the project grouping. All member server profiles will remain available in Runara, and running processes will not be stopped.
             </p>
           </div>
 

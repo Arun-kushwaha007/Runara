@@ -1,7 +1,7 @@
-# DevHub Release Notes — Version 0.1.0 (First Public Release)
+# Runara Release Notes — Version 0.1.0 (First Public Release)
 
 ```
-Product Name:        DevHub
+Product Name:        Runara
 Release Version:     0.1.0
 Release Date:        2026-08-23
 Target Operating OS: Windows 10 (Build 19041+) / Windows 11 (64-bit)
@@ -11,13 +11,13 @@ Architecture:        Tauri 2 + Native Rust Backend + React 19 / TypeScript 5.8
 
 ---
 
-## 🌟 What is DevHub?
+## 🌟 What is Runara?
 
-**DevHub** is a native Windows desktop application that gives developers a centralized control center for local development servers across Windows and WSL.
+**Runara** is a native Windows desktop application that gives developers a centralized control center for local development servers across Windows and WSL.
 
 Modern software developers frequently run 5 to 15 concurrent local services: Next.js frontend applications, Express or FastAPI microservices, Python ML servers, background workers, and ephemeral servers spawned by AI coding agents. Managing these servers across multiple terminal tabs, VS Code windows, and WSL distributions leads to constant friction with port conflicts, orphaned processes, and blind process hunting.
 
-DevHub solves visibility and control by building a high-performance management plane above the operating system kernel.
+Runara solves visibility and control by building a high-performance management plane above the operating system kernel.
 
 ---
 
@@ -27,9 +27,9 @@ The production release artifacts are standalone binaries and installers that run
 
 | Artifact | File Name | Size | SHA-256 Checksum |
 | :--- | :--- | :--- | :--- |
-| **Windows NSIS Installer** | `DevHub_0.1.0_x64-setup.exe` | 3.44 MB | `E5968CA0038B8BF357C8776A38AA2E2B0F0253D822F877042894589DB15C6396` |
-| **Windows MSI Package** | `DevHub_0.1.0_x64_en-US.msi` | 4.69 MB | `1B71E775C965DA0517A770FBF427FE8BA9ED4F3A01CF689D1947BFD480A95ED7` |
-| **Standalone Executable** | `DevHub.exe` | 8.19 MB | `484888649807E1E8C18F66FCE727D78D50DDF80AA0BC28A06075B2A39F854462` |
+| **Windows NSIS Installer** | `Runara_0.1.0_x64-setup.exe` | 3.44 MB | `E5968CA0038B8BF357C8776A38AA2E2B0F0253D822F877042894589DB15C6396` |
+| **Windows MSI Package** | `Runara_0.1.0_x64_en-US.msi` | 4.69 MB | `1B71E775C965DA0517A770FBF427FE8BA9ED4F3A01CF689D1947BFD480A95ED7` |
+| **Standalone Executable** | `Runara.exe` | 8.19 MB | `484888649807E1E8C18F66FCE727D78D50DDF80AA0BC28A06075B2A39F854462` |
 
 ---
 

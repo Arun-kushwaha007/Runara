@@ -14,7 +14,7 @@ vi.mock('../lib/commands', () => ({
 }));
 
 const mockDiagnostics: SystemDiagnostics = {
-  appName: 'DevHub',
+  appName: 'Runara',
   appVersion: '0.1.0',
   backend: 'Rust (Win32 FFI + Native Sockets)',
   platform: 'windows',
@@ -34,7 +34,7 @@ const mockDiagnostics: SystemDiagnostics = {
 };
 
 const mockSystemInfo: SystemInfo = {
-  app: 'DevHub',
+  app: 'Runara',
   version: '0.1.0',
   backend: 'rust',
   status: 'ok',
@@ -81,7 +81,7 @@ describe('Settings & Appearance Page (Milestones 10 & 14)', () => {
       expect(screen.getByText(/Debian/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('DevHub MVP Release (v0.1.0)')).toBeInTheDocument();
+    expect(screen.getByText('Runara MVP Release (v0.1.0)')).toBeInTheDocument();
   });
 
   it('allows user to switch between Dark, Light, and System theme preferences', async () => {
@@ -120,7 +120,7 @@ describe('Settings & Appearance Page (Milestones 10 & 14)', () => {
     renderWithTheme();
 
     expect(screen.getByText('Theme Preview:')).toBeInTheDocument();
-    expect(screen.getByText('DevHub Control Center')).toBeInTheDocument();
+    expect(screen.getByText('Runara Control Center')).toBeInTheDocument();
     expect(screen.getByText('company-api')).toBeInTheDocument();
     expect(screen.getByText(':5000')).toBeInTheDocument();
     expect(screen.getByText('PID 14920')).toBeInTheDocument();

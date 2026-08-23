@@ -67,7 +67,7 @@ pub fn get_windows_listening_tcp_ports() -> Result<Vec<PortInfo>, String> {
 }
 
 fn log_or_warn(msg: &str) {
-    eprintln!("[DevHub PortDiscovery] {}", msg);
+    eprintln!("[Runara PortDiscovery] {}", msg);
 }
 
 /// Queries IPv4 TCP listening sockets using Win32 GetExtendedTcpTable

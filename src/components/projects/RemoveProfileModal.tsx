@@ -40,7 +40,7 @@ export const RemoveProfileModal: React.FC<RemoveProfileModalProps> = ({
               Remove <span className="font-semibold text-app-fg">"{profileName}"</span> from <span className="font-semibold text-app-fg">"{projectName}"</span>?
             </p>
             <p className="text-app-muted-fg text-[11px] leading-relaxed">
-              The server profile will remain available in DevHub. Any currently running process will not be stopped.
+              The server profile will remain available in Runara. Any currently running process will not be stopped.
             </p>
           </div>
 

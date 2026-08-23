@@ -123,7 +123,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({
             {server.managed ? (
               <span
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 shadow-xs"
-                title="Managed by DevHub Server Profile"
+                title="Managed by Runara Server Profile"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

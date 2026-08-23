@@ -1,4 +1,4 @@
-# DevHub
+# Runara
 
 ## Product Requirements Document
 
@@ -13,7 +13,7 @@ Primary Goal: Build a polished developer desktop application that discovers, ide
 
 # 1. Product Overview
 
-DevHub is a native Windows desktop application for managing local development servers.
+Runara is a native Windows desktop application for managing local development servers.
 
 The target user runs multiple frontend applications, backend services, workers, AI-generated development servers, and projects across Windows and WSL. Their current workflow depends on many VS Code windows, terminals, desktop workspaces, browser tabs, and AI coding agents.
 
@@ -38,7 +38,7 @@ The current workflow requires:
 7. Deal with Windows versus WSL differences.
 8. Repeat this several times during a workday.
 
-DevHub creates a centralized control layer above those processes.
+Runara creates a centralized control layer above those processes.
 
 The product should make local development environments visible and manageable from one desktop application.
 
@@ -46,7 +46,7 @@ The product should make local development environments visible and manageable fr
 
 # 2. Product Vision
 
-DevHub should feel like a control center for a developer’s local machine.
+Runara should feel like a control center for a developer’s local machine.
 
 The user should open the application and immediately understand:
 
@@ -67,7 +67,7 @@ The user should no longer need to search through terminals to find running serve
 
 # 3. Product Positioning
 
-DevHub is not primarily:
+Runara is not primarily:
 
 A port scanner.
 
@@ -186,7 +186,7 @@ After stopping a server, the user still has to find the repository and open a te
 
 Required solution:
 
-Allow saved server profiles to start development commands from DevHub.
+Allow saved server profiles to start development commands from Runara.
 
 ---
 
@@ -639,7 +639,7 @@ Path C:\Program Files\nodejs\node.exe
 
 ## Acceptance Criteria
 
-DevHub can retrieve real Windows processes.
+Runara can retrieve real Windows processes.
 
 At least node.exe, python.exe, npm-related processes, VS Code, terminals, and common developer processes appear when present.
 
@@ -804,7 +804,7 @@ Create the primary user experience.
 
 Header:
 
-DevHub
+Runara
 
 Local Development Control Center
 
@@ -1045,7 +1045,7 @@ npm run dev
 
 ## Acceptance Criteria
 
-DevHub detects active WSL development servers.
+Runara detects active WSL development servers.
 
 Windows and WSL servers appear in the same dashboard.
 
@@ -1053,7 +1053,7 @@ The same UI works for both.
 
 The application differentiates source and distribution.
 
-A WSL server can be stopped from DevHub.
+A WSL server can be stopped from Runara.
 
 The application handles multiple WSL distributions.
 
@@ -1065,7 +1065,7 @@ The application handles a distribution that is not running.
 
 ## Goal
 
-Allow the developer to start known servers directly from DevHub.
+Allow the developer to start known servers directly from Runara.
 
 ## Add Server Profile
 
@@ -1105,11 +1105,11 @@ Expected port:
 
 User clicks Start.
 
-DevHub starts the shell/process using the selected environment.
+Runara starts the shell/process using the selected environment.
 
-DevHub monitors the process.
+Runara monitors the process.
 
-DevHub waits for the server to begin listening.
+Runara waits for the server to begin listening.
 
 When detected:
 
@@ -1372,7 +1372,7 @@ After core functionality is stable, add a tray application mode.
 
 The application should support:
 
-Open DevHub.
+Open Runara.
 
 Refresh.
 

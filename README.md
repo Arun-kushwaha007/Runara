@@ -1,4 +1,4 @@
-# DevHub
+# Runara
 
 > **Local Development Control Center for Windows and WSL**
 
@@ -11,7 +11,7 @@
 [![Tests](https://img.shields.io/badge/Tests-280%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
 
-DevHub is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
+Runara is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
 
 ---
 
@@ -25,7 +25,7 @@ This leads to constant friction:
 * *"How do I safely restart a service without accidentally killing my VS Code window or PowerShell shell?"*
 * *"Why are my Linux microservices in WSL isolated from my Windows desktop tooling?"*
 
-**DevHub solves local environment visibility and control** by providing a native control center above operating system processes.
+**Runara solves local environment visibility and control** by providing a native control center above operating system processes.
 
 ---
 
@@ -33,7 +33,7 @@ This leads to constant friction:
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                               DEVHUB CAPABILITIES                                 │
+│                               RUNARA CAPABILITIES                                 │
 ├─────────────────────┬──────────────────────┬──────────────────────────────────────┤
 │ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration & Appearance        │
 │ • Win32 IP Helper   │ • 7-Signal Pre-Term  │ • Persistent Server Profiles (SQLite)│
@@ -62,7 +62,7 @@ This leads to constant friction:
 
 ## 🏛️ System Architecture
 
-DevHub decouples a **native Rust backend core** from a **React 19 + TypeScript WebView** connected via asynchronous, type-safe JSON-RPC IPC:
+Runara decouples a **native Rust backend core** from a **React 19 + TypeScript WebView** connected via asynchronous, type-safe JSON-RPC IPC:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -123,9 +123,9 @@ For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)*
 
 Download the latest release from [GitHub Releases](https://github.com/Arun-kushwaha007/DevHub/releases):
 
-* **Standard Setup Installer (NSIS)**: `DevHub_0.1.0_x64-setup.exe` (Self-contained installer with desktop shortcut and Start Menu entry).
-* **Enterprise MSI Package**: `DevHub_0.1.0_x64_en-US.msi` (Standard Windows Installer package for managed deployments).
-* **Standalone Portable Binary**: `DevHub.exe` (Run directly without installation).
+* **Standard Setup Installer (NSIS)**: `Runara_0.1.0_x64-setup.exe` (Self-contained installer with desktop shortcut and Start Menu entry).
+* **Enterprise MSI Package**: `Runara_0.1.0_x64_en-US.msi` (Standard Windows Installer package for managed deployments).
+* **Standalone Portable Binary**: `Runara.exe` (Run directly without installation).
 
 ### Option 2: Build from Source
 
@@ -158,7 +158,7 @@ npx tauri build
 
 ## 🧪 Testing & Verification
 
-DevHub enforces a strict test-driven quality standard with **280 automated tests**:
+Runara enforces a strict test-driven quality standard with **280 automated tests**:
 
 ```bash
 # Run Rust backend unit & integration tests (133 tests)

@@ -24,14 +24,14 @@ pub fn run() {
             let app_data_dir = app
                 .path()
                 .app_data_dir()
-                .unwrap_or_else(|_| std::env::temp_dir().join("DevHub"));
+                .unwrap_or_else(|_| std::env::temp_dir().join("Runara"));
 
-            let db_path = app_data_dir.join("devhub.db");
+            let db_path = app_data_dir.join("runara.db");
 
             // Initialize SQLite database and run versioned migrations
             let sqlite_repo = Arc::new(
                 db::initialize_database(&db_path)
-                    .expect("Failed to initialize DevHub SQLite database"),
+                    .expect("Failed to initialize Runara SQLite database"),
             );
 
             let profile_repo: Arc<dyn db::ServerProfileRepository> = sqlite_repo.clone();

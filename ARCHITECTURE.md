@@ -1,11 +1,11 @@
-# DevHub Systems Architecture Specification
+# Runara Systems Architecture Specification
 
 ```
-Product:            DevHub — Local Development Control Center
+Product:            Runara — Local Development Control Center
 Document Type:      Systems Architecture & Technical Design Document
 Version:            0.1.0 (Public Release)
 Target Platform:    Windows 10 / 11 + WSL 2 (x86_64 / aarch64)
-Author:             DevHub Engineering Team
+Author:             Runara Engineering Team
 ```
 
 ---
@@ -19,13 +19,13 @@ These servers are fragmented across:
 2. Heterogeneous operating environments (the native Windows host and various WSL Linux distributions).
 3. Transient process states where port ownership is ambiguous (e.g. *"Which process is holding port 3000?"*).
 
-**DevHub provides a native, low-overhead desktop control layer** that automatically discovers listening TCP endpoints, matches them to operating system process hierarchies, enriches them with runtime and project identity, safely manages process lifecycles without disturbing parent IDEs or shells, and orchestrates multi-service startup workflows.
+**Runara provides a native, low-overhead desktop control layer** that automatically discovers listening TCP endpoints, matches them to operating system process hierarchies, enriches them with runtime and project identity, safely manages process lifecycles without disturbing parent IDEs or shells, and orchestrates multi-service startup workflows.
 
 ---
 
 ## 2. High-Level System Architecture
 
-DevHub follows a decoupled, secure desktop architecture powered by **Tauri 2 (Rust core backend)** and **React 19 + TypeScript (WebView UI)** communicating over asynchronous, type-safe JSON-RPC IPC channels:
+Runara follows a decoupled, secure desktop architecture powered by **Tauri 2 (Rust core backend)** and **React 19 + TypeScript (WebView UI)** communicating over asynchronous, type-safe JSON-RPC IPC channels:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
@@ -103,7 +103,7 @@ Discovery combines socket enumeration and process table snapshots across two iso
 
 ### 3.2 Process Identity Engine
 
-Rather than relying solely on raw PIDs, DevHub constructs a 9-dimensional identity vector for each discovered process:
+Rather than relying solely on raw PIDs, Runara constructs a 9-dimensional identity vector for each discovered process:
 
 $$\text{Identity} = \langle \text{PID}, \text{PPID}, \text{Name}, \text{Image Path}, \text{Command Line}, \text{CWD}, \text{Runtime}, \text{Package Manager}, \text{Ancestry Tree} \rangle$$
 
@@ -115,7 +115,7 @@ $$\text{Identity} = \langle \text{PID}, \text{PPID}, \text{Name}, \text{Image Pa
 
 Terminating processes on an operating system without safety checks introduces Time-of-Check to Time-of-Use (TOCTOU) race conditions and PID reuse hazards.
 
-DevHub enforces a strict **Multi-Environment Verification Gate**:
+Runara enforces a strict **Multi-Environment Verification Gate**:
 1. Target PID must be alive at the exact millisecond of termination.
 2. Process name must match the expected image name.
 3. Executable binary path on disk must match the inspected path.
@@ -129,7 +129,7 @@ DevHub enforces a strict **Multi-Environment Verification Gate**:
 ### 3.4 POSIX Signal Control for WSL
 
 For processes inside WSL 2 Linux distributions:
-- **No Unescaped Shell Strings**: DevHub passes structured argument vectors directly to `wsl.exe -d <distro> -- /bin/kill -<sig> <pid>`.
+- **No Unescaped Shell Strings**: Runara passes structured argument vectors directly to `wsl.exe -d <distro> -- /bin/kill -<sig> <pid>`.
 - **Graceful Termination**: Dispatches `SIGTERM` (15), polling with `kill -0` for process exit.
 - **Forceful Termination**: Dispatches uncatchable `SIGKILL` (9) if graceful exit times out.
 - **Cross-Environment Disambiguation**: Windows PIDs and WSL Linux guest PIDs are explicitly partitioned by environment metadata.
@@ -198,7 +198,7 @@ Local application state is stored in an embedded SQLite database:
 - Standalone Virtual Machines
 
 ### Architectural Extension Strategy
-DevHub isolates platform-specific code behind clean trait boundaries (`WslDistroDiscovery`, `WslProcessDiscovery`, `WslPortDiscovery`, `WslProcessController`, `FilesystemProvider`). Adding support for native Linux or macOS host environments in future releases will require adding new adapter implementations without altering core domain models (`ServerProfile`, `Project`, `ProcessIdentity`, `PortInfo`) or UI components.
+Runara isolates platform-specific code behind clean trait boundaries (`WslDistroDiscovery`, `WslProcessDiscovery`, `WslPortDiscovery`, `WslProcessController`, `FilesystemProvider`). Adding support for native Linux or macOS host environments in future releases will require adding new adapter implementations without altering core domain models (`ServerProfile`, `Project`, `ProcessIdentity`, `PortInfo`) or UI components.
 
 ---
 

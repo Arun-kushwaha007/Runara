@@ -39,7 +39,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <p className="text-xs text-app-muted-fg mt-1.5 max-w-md mx-auto leading-relaxed">
         {isFiltered
           ? 'No active development servers matched your current search query or filter criteria. Try adjusting your query or resetting filters.'
-          : 'DevHub is actively monitoring your local Windows and WSL environments. Start a development server (e.g. npm run dev, vite, uvicorn, cargo run) or launch a Server Profile to begin.'}
+          : 'Runara is actively monitoring your local Windows and WSL environments. Start a development server (e.g. npm run dev, vite, uvicorn, cargo run) or launch a Server Profile to begin.'}
       </p>
 
       {isFiltered && onClearFilters && (

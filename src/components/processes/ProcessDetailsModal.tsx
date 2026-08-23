@@ -349,7 +349,7 @@ export const ProcessDetailsModal: React.FC<ProcessDetailsModalProps> = ({
         {/* Modal Footer */}
         <div className="px-6 py-3 border-t border-app-border bg-app-surface/90 flex items-center justify-between">
           <div className="text-[11px] text-app-muted-fg">
-            Process identity enriched via DevHub ProcessIdentityService
+            Process identity enriched via Runara ProcessIdentityService
           </div>
           <button
             onClick={onClose}

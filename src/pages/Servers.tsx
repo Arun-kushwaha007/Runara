@@ -455,7 +455,7 @@ export const Servers: React.FC = () => {
             Development Server Management
           </h2>
           <p className="text-app-muted-fg text-xs mt-1">
-            Configure persistent server profiles, start commands directly from DevHub, and monitor active server processes across Windows and WSL.
+            Configure persistent server profiles, start commands directly from Runara, and monitor active server processes across Windows and WSL.
           </p>
         </div>
 
@@ -588,7 +588,7 @@ export const Servers: React.FC = () => {
                   No Saved Server Profiles Yet
                 </h3>
                 <p className="text-xs text-app-muted-fg leading-relaxed">
-                  Save your frontend apps, API servers, and workers to start them with one click directly from DevHub without searching through terminals.
+                  Save your frontend apps, API servers, and workers to start them with one click directly from Runara without searching through terminals.
                 </p>
               </div>
               <button

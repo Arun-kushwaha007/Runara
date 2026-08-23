@@ -40,7 +40,7 @@ vi.mock('@tauri-apps/plugin-opener', () => ({
 }));
 
 const mockSystemInfo: SystemInfo = {
-  app: 'DevHub',
+  app: 'Runara',
   version: '0.1.0',
   backend: 'Rust',
   status: 'Ready',

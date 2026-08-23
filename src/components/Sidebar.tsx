@@ -80,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
               <path d="M2 12l10 5 10-5" />
             </svg>
           </div>
-          <span>DevHub</span>
+          <span>Runara</span>
         </div>
       </div>
 
@@ -121,7 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
       {/* Footer / Version */}
       <div className="p-3 border-t border-app-border flex items-center justify-between text-[11px] text-app-muted-fg">
         <span className="font-mono font-medium">v0.1.0 (MVP)</span>
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="DevHub Core Active"></span>
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Runara Core Active"></span>
       </div>
     </aside>
   );
