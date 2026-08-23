@@ -13,8 +13,8 @@ use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-/// Project-level workflow coordinator orchestrating sequential startup, safe Windows stop,
-/// WSL boundary reporting, and Windows-only restart sequencing.
+/// Project-level workflow coordinator orchestrating sequential startup, safe Windows/WSL stop,
+/// skip-running idempotency, reverse teardown, and clean restart sequencing.
 pub struct ProjectOrchestrator {
     project_repository: Arc<dyn ProjectRepository>,
     #[allow(dead_code)]
@@ -23,6 +23,20 @@ pub struct ProjectOrchestrator {
     process_control: Arc<ProcessControlService>,
     discovery: Arc<UnifiedDiscoveryService>,
     active_operations: Arc<Mutex<HashMap<String, ProjectOperation>>>,
+}
+
+/// RAII Guard ensuring active project operation locks are reliably released on drop.
+struct ProjectOperationGuard {
+    active_operations: Arc<Mutex<HashMap<String, ProjectOperation>>>,
+    project_id: String,
+}
+
+impl Drop for ProjectOperationGuard {
+    fn drop(&mut self) {
+        if let Ok(mut ops) = self.active_operations.lock() {
+            ops.remove(&self.project_id);
+        }
+    }
 }
 
 impl ProjectOrchestrator {
@@ -52,8 +66,16 @@ impl ProjectOrchestrator {
             .unwrap_or_default()
     }
 
+    /// Checks whether an operation is currently active for the given project ID.
+    pub fn is_project_operating(&self, project_id: &str) -> bool {
+        self.active_operations
+            .lock()
+            .map(|ops| ops.contains_key(project_id))
+            .unwrap_or(false)
+    }
+
     /// Sequentially starts all member profiles in configured order.
-    /// Implements fail-fast sequencing without automatic rollback.
+    /// Skips already-running services. Implements fail-fast sequencing without automatic rollback.
     pub fn start_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError> {
         // Step 1: Verify project exists
         let project = self
@@ -89,7 +111,7 @@ impl ProjectOrchestrator {
         }
 
         // Step 3: Concurrency Guard — prevent duplicate project operation
-        {
+        let _guard = {
             let mut ops = self.active_operations.lock().map_err(|e| ProjectError {
                 code: ProjectErrorCode::DatabaseError,
                 message: format!("Failed to acquire operations lock: {}", e),
@@ -125,9 +147,16 @@ impl ProjectOrchestrator {
             };
 
             ops.insert(project_id.to_string(), op);
-        }
 
-        // Step 4: Execute sequential startup
+            ProjectOperationGuard {
+                active_operations: self.active_operations.clone(),
+                project_id: project_id.to_string(),
+            }
+        };
+
+        // Step 4: Discover initial system runtime state to identify already-running services
+        let initial_snapshot = self.discovery.discover_all().unwrap_or_default();
+
         let mut started = Vec::new();
         let mut failed_name = None;
         let mut failed_err_msg = String::new();
@@ -145,6 +174,24 @@ impl ProjectOrchestrator {
                 }
             }
 
+            // Check if service is already running
+            let is_already_running = ServerProfileService::find_matching_process(
+                profile,
+                &initial_snapshot.processes,
+                &initial_snapshot.ports,
+            ).is_some();
+
+            if is_already_running {
+                // Skip already-running service without restarting or erroring
+                started.push(profile.name.clone());
+                if let Ok(mut ops) = self.active_operations.lock() {
+                    if let Some(op) = ops.get_mut(project_id) {
+                        op.started_profiles.push(profile.name.clone());
+                    }
+                }
+                continue;
+            }
+
             // Start individual profile via ServerStartService
             match self.start_service.start_profile(&profile.id) {
                 Ok(_result) => {
@@ -156,7 +203,7 @@ impl ProjectOrchestrator {
                     }
                 }
                 Err(err) => {
-                    // Fail-fast policy: Terminate remaining startup sequence
+                    // Fail-fast policy: Terminate remaining startup sequence without rollback
                     failed_name = Some(profile.name.clone());
                     failed_err_msg = err.message.clone();
 
@@ -169,17 +216,18 @@ impl ProjectOrchestrator {
             }
         }
 
-        // Step 5: Clean up active operation lock
-        if let Ok(mut ops) = self.active_operations.lock() {
-            ops.remove(project_id);
-        }
-
-        // Step 6: Construct structured result
+        // Construct structured result (guard drops automatically)
         if let Some(failed_prof) = failed_name {
+            let status = if started.is_empty() {
+                ProjectRuntimeStatus::Error
+            } else {
+                ProjectRuntimeStatus::Partial
+            };
+
             Ok(ProjectOperationResult {
                 project_id: project_id.to_string(),
                 operation_type: "start".to_string(),
-                status: ProjectRuntimeStatus::Error,
+                status,
                 started_profiles: started,
                 stopped_profiles: vec![],
                 failed_profile: Some(failed_prof.clone()),
@@ -205,9 +253,8 @@ impl ProjectOrchestrator {
         }
     }
 
-    /// Stops all running member services.
-    /// Windows services are stopped safely using `ProcessControlService`.
-    /// WSL services report unsupported status accurately, setting project status to Partial.
+    /// Stops all running member services in reverse start order.
+    /// Skips already-stopped services. Uses `ProcessControlService` for safe Windows and WSL teardown.
     pub fn stop_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError> {
         let project = self
             .project_repository
@@ -241,7 +288,7 @@ impl ProjectOrchestrator {
         }
 
         // Concurrency Guard
-        {
+        let _guard = {
             let mut ops = self.active_operations.lock().map_err(|e| ProjectError {
                 code: ProjectErrorCode::DatabaseError,
                 message: format!("Failed to acquire operations lock: {}", e),
@@ -272,7 +319,12 @@ impl ProjectOrchestrator {
             };
 
             ops.insert(project_id.to_string(), op);
-        }
+
+            ProjectOperationGuard {
+                active_operations: self.active_operations.clone(),
+                project_id: project_id.to_string(),
+            }
+        };
 
         let snapshot = self.discovery.discover_all().unwrap_or_default();
         let mut stopped = Vec::new();
@@ -280,7 +332,7 @@ impl ProjectOrchestrator {
         let mut failed_name = None;
         let mut failed_msg = String::new();
 
-        // Process in reverse start order for clean teardown
+        // Process in reverse start order for clean teardown (dependents before dependencies)
         for (profile, _) in member_tuples.iter().rev() {
             if let Some((proc, _port)) = ServerProfileService::find_matching_process(
                 profile,
@@ -304,24 +356,20 @@ impl ProjectOrchestrator {
                     Err(e) => {
                         failed_name = Some(profile.name.clone());
                         failed_msg = e.message;
+                        // Continue stopping remaining services rather than leaving them running
                     }
                 }
             } else {
-                // Profile is already stopped
+                // Profile is already stopped — skip safely
                 stopped.push(profile.name.clone());
             }
-        }
-
-        // Cleanup lock
-        if let Ok(mut ops) = self.active_operations.lock() {
-            ops.remove(project_id);
         }
 
         if let Some(failed_prof) = failed_name {
             Ok(ProjectOperationResult {
                 project_id: project_id.to_string(),
                 operation_type: "stop".to_string(),
-                status: ProjectRuntimeStatus::Error,
+                status: ProjectRuntimeStatus::Partial,
                 started_profiles: vec![],
                 stopped_profiles: stopped,
                 failed_profile: Some(failed_prof.clone()),
@@ -344,8 +392,8 @@ impl ProjectOrchestrator {
         }
     }
 
-    /// Restarts a project by stopping running services, waiting for port release,
-    /// and starting services again in order across Windows and WSL.
+    /// Restarts a project by stopping running services in reverse order,
+    /// settling sockets, and starting all member services in forward sequential order.
     pub fn restart_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError> {
         let project = self
             .project_repository
@@ -378,29 +426,155 @@ impl ProjectOrchestrator {
             });
         }
 
-        // Step 1: Stop running services
-        let stop_result = self.stop_project(project_id)?;
-        if stop_result.status == ProjectRuntimeStatus::Error {
-            return Ok(stop_result);
+        // Concurrency Guard for full restart lifecycle
+        let _guard = {
+            let mut ops = self.active_operations.lock().map_err(|e| ProjectError {
+                code: ProjectErrorCode::DatabaseError,
+                message: format!("Failed to acquire operations lock: {}", e),
+                project_id: Some(project_id.to_string()),
+            })?;
+
+            if ops.contains_key(project_id) {
+                return Err(ProjectError {
+                    code: ProjectErrorCode::ProjectOperationInProgress,
+                    message: format!("An operation is already in progress for project '{}'.", project.name),
+                    project_id: Some(project_id.to_string()),
+                });
+            }
+
+            let op = ProjectOperation {
+                operation_id: uuid::Uuid::new_v4().to_string(),
+                project_id: project_id.to_string(),
+                operation_type: "restart".to_string(),
+                current_profile_id: None,
+                started_profiles: Vec::new(),
+                stopped_profiles: Vec::new(),
+                failed_profile: None,
+                pending_profiles: member_tuples.iter().map(|(p, _)| p.name.clone()).collect(),
+                started_at_ms: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64,
+            };
+
+            ops.insert(project_id.to_string(), op);
+
+            ProjectOperationGuard {
+                active_operations: self.active_operations.clone(),
+                project_id: project_id.to_string(),
+            }
+        };
+
+        // Step 1: Teardown running services in reverse order
+        let snapshot = self.discovery.discover_all().unwrap_or_default();
+        let mut stopped = Vec::new();
+        let mut stop_failed_name = None;
+        let mut stop_failed_msg = String::new();
+
+        for (profile, _) in member_tuples.iter().rev() {
+            if let Some((proc, _port)) = ServerProfileService::find_matching_process(
+                profile,
+                &snapshot.processes,
+                &snapshot.ports,
+            ) {
+                let target = ProcessTarget {
+                    pid: proc.pid,
+                    process_name: proc.name.clone(),
+                    executable_path: proc.executable_path.clone(),
+                    working_directory: proc.working_directory.clone(),
+                    expected_ports: profile.expected_port.into_iter().collect(),
+                    force: false,
+                    environment: Some(profile.environment.clone()),
+                };
+
+                match self.process_control.stop_server(&target) {
+                    Ok(_) => {
+                        stopped.push(profile.name.clone());
+                    }
+                    Err(e) => {
+                        stop_failed_name = Some(profile.name.clone());
+                        stop_failed_msg = e.message;
+                    }
+                }
+            } else {
+                stopped.push(profile.name.clone());
+            }
+        }
+
+        if let Some(failed_prof) = stop_failed_name {
+            return Ok(ProjectOperationResult {
+                project_id: project_id.to_string(),
+                operation_type: "restart".to_string(),
+                status: ProjectRuntimeStatus::Error,
+                started_profiles: vec![],
+                stopped_profiles: stopped,
+                failed_profile: Some(failed_prof.clone()),
+                pending_profiles: vec![],
+                unsupported_profiles: vec![],
+                message: format!("Restart aborted because stopping '{}' failed: {}", failed_prof, stop_failed_msg),
+            });
         }
 
         // Settle delay for OS socket release
         sleep(Duration::from_millis(500));
 
-        // Step 2: Start services in defined order
-        let start_result = self.start_project(project_id)?;
+        // Step 2: Forward sequential startup of all project member profiles
+        let mut started = Vec::new();
+        let mut start_failed_name = None;
+        let mut start_failed_msg = String::new();
+        let mut pending = Vec::new();
 
-        Ok(ProjectOperationResult {
-            project_id: project_id.to_string(),
-            operation_type: "restart".to_string(),
-            status: start_result.status,
-            started_profiles: start_result.started_profiles,
-            stopped_profiles: stop_result.stopped_profiles,
-            failed_profile: start_result.failed_profile,
-            pending_profiles: start_result.pending_profiles,
-            unsupported_profiles: vec![],
-            message: format!("Project '{}' restarted successfully.", project.name),
-        })
+        for (i, (profile, _)) in member_tuples.iter().enumerate() {
+            match self.start_service.start_profile(&profile.id) {
+                Ok(_result) => {
+                    started.push(profile.name.clone());
+                }
+                Err(err) => {
+                    start_failed_name = Some(profile.name.clone());
+                    start_failed_msg = err.message.clone();
+
+                    for (remaining_profile, _) in &member_tuples[i + 1..] {
+                        pending.push(remaining_profile.name.clone());
+                    }
+                    break;
+                }
+            }
+        }
+
+        if let Some(failed_prof) = start_failed_name {
+            let status = if started.is_empty() {
+                ProjectRuntimeStatus::Error
+            } else {
+                ProjectRuntimeStatus::Partial
+            };
+
+            Ok(ProjectOperationResult {
+                project_id: project_id.to_string(),
+                operation_type: "restart".to_string(),
+                status,
+                started_profiles: started,
+                stopped_profiles: stopped,
+                failed_profile: Some(failed_prof.clone()),
+                pending_profiles: pending,
+                unsupported_profiles: vec![],
+                message: format!(
+                    "Project restart partially completed. Starting '{}' failed: {}",
+                    failed_prof, start_failed_msg
+                ),
+            })
+        } else {
+            Ok(ProjectOperationResult {
+                project_id: project_id.to_string(),
+                operation_type: "restart".to_string(),
+                status: ProjectRuntimeStatus::Running,
+                started_profiles: started,
+                stopped_profiles: stopped,
+                failed_profile: None,
+                pending_profiles: vec![],
+                unsupported_profiles: vec![],
+                message: format!("Project '{}' restarted successfully ({} services running).", project.name, member_tuples.len()),
+            })
+        }
     }
 }
 
@@ -550,5 +724,206 @@ mod tests {
         if let Err(e) = res {
             assert_ne!(e.code, ProjectErrorCode::UnsupportedOperation);
         }
+    }
+
+    #[test]
+    fn test_start_project_skips_already_running_services() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        MigrationRunner::run_migrations(&mut conn).unwrap();
+        let repo = Arc::new(SqliteServerProfileRepository::new(Arc::new(Mutex::new(conn))));
+
+        let running_proc = ProcessInfo {
+            pid: 1234,
+            parent_pid: None,
+            name: "node.exe".to_string(),
+            command_line: Some("npm run dev".to_string()),
+            executable_path: Some("C:\\bin\\node.exe".to_string()),
+            working_directory: Some("C:\\projects\\backend".to_string()),
+            status: crate::models::process::ProcessStatus::Running,
+            environment: Environment::windows(),
+        };
+        let running_port = PortInfo {
+            port: 5000,
+            protocol: "tcp".to_string(),
+            address: "127.0.0.1".to_string(),
+            state: "listening".to_string(),
+            pid: 1234,
+            environment: Environment::windows(),
+        };
+
+        let proc_disc = Arc::new(MockProcDiscovery { procs: Mutex::new(vec![running_proc]) });
+        let port_disc = Arc::new(MockPortDiscovery { ports: Mutex::new(vec![running_port]) });
+        let proc_ctrl = Arc::new(MockProcCtrl { alive: Mutex::new(true) });
+
+        let control_svc = Arc::new(ProcessControlService::with_dependencies(
+            proc_disc.clone(),
+            port_disc.clone(),
+            proc_ctrl,
+        ));
+
+        let unified_discovery = Arc::new(UnifiedDiscoveryService::with_adapters(
+            proc_disc,
+            port_disc,
+            Arc::new(crate::wsl::distro::DefaultWslDistroDiscovery::new()),
+            Arc::new(crate::wsl::process::DefaultWslProcessDiscovery::new()),
+            Arc::new(crate::wsl::port::DefaultWslPortDiscovery::new()),
+            Arc::new(crate::identity::ProcessIdentityService::new()),
+        ));
+
+        let start_svc = Arc::new(ServerStartService::with_custom_timeouts(
+            repo.clone(),
+            unified_discovery.clone(),
+            control_svc.clone(),
+            1000,
+            100,
+        ));
+
+        let orch = ProjectOrchestrator::new(
+            repo.clone(),
+            repo.clone(),
+            start_svc,
+            control_svc,
+            unified_discovery,
+        );
+
+        // Create project with 1 running profile (backend on port 5000)
+        let proj = crate::models::project::Project {
+            id: "proj-running".to_string(),
+            name: "Platform".to_string(),
+            description: None,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        repo.create_project(&proj).unwrap();
+
+        let profile1 = ServerProfile {
+            id: "prof-backend".to_string(),
+            name: "Backend".to_string(),
+            description: None,
+            environment: Environment::windows(),
+            working_directory: "C:\\projects\\backend".to_string(),
+            command: "npm run dev".to_string(),
+            expected_port: Some(5000),
+            expected_host: None,
+            enabled: true,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        repo.create(&profile1).unwrap();
+        repo.add_profile_to_project("proj-running", "prof-backend", None).unwrap();
+
+        // start_project should succeed and identify Backend as already running without throwing PortAlreadyInUse error
+        let result = orch.start_project("proj-running").expect("Start should succeed for already running profile");
+        assert_eq!(result.status, ProjectRuntimeStatus::Running);
+        assert_eq!(result.started_profiles, vec!["Backend"]);
+        assert!(result.failed_profile.is_none());
+    }
+
+    #[test]
+    fn test_stop_project_reverse_order_and_skips_already_stopped() {
+        let (orch, repo) = setup_test_orchestrator();
+
+        let proj = crate::models::project::Project {
+            id: "proj-stop".to_string(),
+            name: "Stop Test".to_string(),
+            description: None,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        repo.create_project(&proj).unwrap();
+
+        let p1 = ServerProfile {
+            id: "p1".to_string(),
+            name: "Backend".to_string(),
+            description: None,
+            environment: Environment::windows(),
+            working_directory: "C:\\app1".to_string(),
+            command: "npm start".to_string(),
+            expected_port: Some(3001),
+            expected_host: None,
+            enabled: true,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        let p2 = ServerProfile {
+            id: "p2".to_string(),
+            name: "Frontend".to_string(),
+            description: None,
+            environment: Environment::windows(),
+            working_directory: "C:\\app2".to_string(),
+            command: "npm start".to_string(),
+            expected_port: Some(3002),
+            expected_host: None,
+            enabled: true,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        repo.create(&p1).unwrap();
+        repo.create(&p2).unwrap();
+        repo.add_profile_to_project("proj-stop", "p1", Some(0)).unwrap();
+        repo.add_profile_to_project("proj-stop", "p2", Some(1)).unwrap();
+
+        // Both are stopped in mock discovery
+        let result = orch.stop_project("proj-stop").expect("Stop should succeed on already stopped project");
+        assert_eq!(result.status, ProjectRuntimeStatus::Stopped);
+        // Reverse order: Frontend then Backend
+        assert_eq!(result.stopped_profiles, vec!["Frontend", "Backend"]);
+    }
+
+    #[test]
+    fn test_operation_locking_rejects_concurrent_operations() {
+        let (orch, repo) = setup_test_orchestrator();
+
+        let proj = crate::models::project::Project {
+            id: "proj-lock".to_string(),
+            name: "Lock Test".to_string(),
+            description: None,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        repo.create_project(&proj).unwrap();
+
+        let p1 = ServerProfile {
+            id: "lock-p1".to_string(),
+            name: "Worker".to_string(),
+            description: None,
+            environment: Environment::windows(),
+            working_directory: "C:\\app".to_string(),
+            command: "npm start".to_string(),
+            expected_port: None,
+            expected_host: None,
+            enabled: true,
+            created_at: "2026-08-22T20:00:00Z".to_string(),
+            updated_at: "2026-08-22T20:00:00Z".to_string(),
+        };
+        repo.create(&p1).unwrap();
+        repo.add_profile_to_project("proj-lock", "lock-p1", None).unwrap();
+
+        // Artificially inject active operation
+        {
+            let mut ops = orch.active_operations.lock().unwrap();
+            ops.insert("proj-lock".to_string(), ProjectOperation {
+                operation_id: "op-1".to_string(),
+                project_id: "proj-lock".to_string(),
+                operation_type: "start".to_string(),
+                current_profile_id: None,
+                started_profiles: vec![],
+                stopped_profiles: vec![],
+                failed_profile: None,
+                pending_profiles: vec![],
+                started_at_ms: 123456,
+            });
+        }
+
+        assert!(orch.is_project_operating("proj-lock"));
+
+        let start_err = orch.start_project("proj-lock").unwrap_err();
+        assert_eq!(start_err.code, ProjectErrorCode::ProjectOperationInProgress);
+
+        let stop_err = orch.stop_project("proj-lock").unwrap_err();
+        assert_eq!(stop_err.code, ProjectErrorCode::ProjectOperationInProgress);
+
+        let restart_err = orch.restart_project("proj-lock").unwrap_err();
+        assert_eq!(restart_err.code, ProjectErrorCode::ProjectOperationInProgress);
     }
 }
