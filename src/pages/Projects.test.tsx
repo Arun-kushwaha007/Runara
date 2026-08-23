@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Projects from './Projects';
-import { projectApi, profileApi } from '../lib/commands';
+import { projectApi, profileApi, controlApi } from '../lib/commands';
 import type { ProjectView, ServerProfile, ProjectOperationResult } from '../types';
 
 vi.mock('../lib/commands', () => ({
@@ -22,6 +22,11 @@ vi.mock('../lib/commands', () => ({
   },
   profileApi: {
     getProfiles: vi.fn(),
+    startProfile: vi.fn(),
+    updateProfile: vi.fn(),
+  },
+  controlApi: {
+    stopServer: vi.fn(),
   },
 }));
 
@@ -132,7 +137,7 @@ const mockProjectViews: ProjectView[] = [
   },
 ];
 
-describe('Projects Page & Orchestration (Milestone 9)', () => {
+describe('Projects Page & Orchestration (Milestone 13)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(projectApi.getProjectViews).mockResolvedValue(mockProjectViews);
@@ -151,7 +156,9 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
 
     // Verify summary cards
     expect(screen.getByText('Total Projects')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument(); // total count
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Healthy')).toBeInTheDocument();
+    expect(screen.getByText('Partial')).toBeInTheDocument();
   });
 
   it('filters project cards by search query', async () => {
@@ -169,7 +176,7 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
     expect(screen.queryByText('Company Platform')).not.toBeInTheDocument();
   });
 
-  it('opens Create Project modal, validates, and creates a project', async () => {
+  it('opens Create Project modal with multi-service picker and creates project with member services', async () => {
     vi.mocked(projectApi.createProject).mockResolvedValue({
       id: 'proj-new',
       name: 'New Platform',
@@ -177,6 +184,7 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       createdAt: '2026-08-22T12:00:00Z',
       updatedAt: '2026-08-22T12:00:00Z',
     });
+    vi.mocked(projectApi.addProfileToProject).mockResolvedValue();
 
     render(<Projects />);
 
@@ -195,6 +203,14 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
     fireEvent.change(nameInput, { target: { value: 'New Platform' } });
     fireEvent.change(descInput, { target: { value: 'Microservices suite' } });
 
+    // Open available profiles picker inside creation form
+    const addServiceBtn = screen.getByRole('button', { name: /Add Service/i });
+    fireEvent.click(addServiceBtn);
+
+    // Pick Backend API (+ Add)
+    const addButtons = screen.getAllByRole('button', { name: /\+ Add/i });
+    fireEvent.click(addButtons[1]); // Backend API
+
     const submitBtn = screen.getByRole('button', { name: /^Create Project$/i });
     fireEvent.click(submitBtn);
 
@@ -203,10 +219,15 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
         name: 'New Platform',
         description: 'Microservices suite',
       });
+      expect(projectApi.addProfileToProject).toHaveBeenCalledWith({
+        projectId: 'proj-new',
+        profileId: 'prof-2',
+        orderIndex: 0,
+      });
     });
   });
 
-  it('opens Project Details modal and allows reordering services', async () => {
+  it('opens Project Details modal, shows service controls, and allows reordering services', async () => {
     vi.mocked(projectApi.reorderProjectProfiles).mockResolvedValue();
 
     render(<Projects />);
@@ -215,15 +236,15 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       expect(screen.getByText('Company Platform')).toBeInTheDocument();
     });
 
-    const inspectButtons = screen.getAllByRole('button', { name: /^Inspect$/i });
-    fireEvent.click(inspectButtons[0]);
+    const detailsButtons = screen.getAllByRole('button', { name: /^Open Details$/i });
+    fireEvent.click(detailsButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/Execution Order & Configured Services/i)).toBeInTheDocument();
+      expect(screen.getByText(/Services & Execution Sequence/i)).toBeInTheDocument();
     });
 
-    // Reorder: Move second service (Frontend App) UP
-    const moveUpButtons = screen.getAllByTitle('Move up in start order');
+    // Reorder: Move second service UP
+    const moveUpButtons = screen.getAllByTitle('Move up in startup order');
     // First element is disabled, second is enabled
     fireEvent.click(moveUpButtons[1]);
 
@@ -240,7 +261,7 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       projectId: 'proj-2',
       operationType: 'start',
       status: 'running',
-      startedProfiles: ['Frontend App', 'WSL Worker'],
+      startedProfiles: ['WSL Worker'],
       stoppedProfiles: [],
       failedProfile: null,
       pendingProfiles: [],
@@ -256,8 +277,8 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       expect(screen.getByText('Mixed Project')).toBeInTheDocument();
     });
 
-    // Click Start on Mixed Project (which is in partial state)
-    const startButtons = screen.getAllByRole('button', { name: /^Start$/i });
+    // Click Start All on Mixed Project
+    const startButtons = screen.getAllByRole('button', { name: /^Start All$/i });
     fireEvent.click(startButtons[0]);
 
     await waitFor(() => {
@@ -267,38 +288,19 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
     });
   });
 
-  it('handles fail-fast project startup and displays failure breakdown in progress modal', async () => {
-    const failResult: ProjectOperationResult = {
-      projectId: 'proj-2',
-      operationType: 'start',
-      status: 'error',
-      startedProfiles: ['Frontend App'],
-      stoppedProfiles: [],
-      failedProfile: 'WSL Worker',
+  it('opens Stop Confirmation modal with reverse order preview and stops all services', async () => {
+    const stopResult: ProjectOperationResult = {
+      projectId: 'proj-1',
+      operationType: 'stop',
+      status: 'stopped',
+      startedProfiles: [],
+      stoppedProfiles: ['Frontend App', 'Backend API'],
+      failedProfile: null,
       pendingProfiles: [],
       unsupportedProfiles: [],
-      message: "Project start halted because 'WSL Worker' failed: PROCESS_EXITED",
+      message: "Project 'Company Platform' stopped.",
     };
-    vi.mocked(projectApi.startProject).mockResolvedValue(failResult);
-
-    render(<Projects />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Company Platform')).toBeInTheDocument();
-      expect(screen.getByText('Mixed Project')).toBeInTheDocument();
-    });
-
-    const startButtons = screen.getAllByRole('button', { name: /^Start$/i });
-    fireEvent.click(startButtons[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Project start halted because 'WSL Worker' failed/i)).toBeInTheDocument();
-      expect(screen.getByText('Failed')).toBeInTheDocument();
-    });
-  });
-
-  it('opens Delete Project modal with safety explanation', async () => {
-    vi.mocked(projectApi.deleteProject).mockResolvedValue(true);
+    vi.mocked(projectApi.stopProject).mockResolvedValue(stopResult);
 
     render(<Projects />);
 
@@ -306,29 +308,27 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       expect(screen.getByText('Company Platform')).toBeInTheDocument();
     });
 
-    // Open details modal first
-    const inspectButtons = screen.getAllByRole('button', { name: /^Inspect$/i });
-    fireEvent.click(inspectButtons[0]);
+    // Click Stop All on Company Platform (proj-1)
+    const stopButtons = screen.getAllByRole('button', { name: /^Stop All$/i });
+    fireEvent.click(stopButtons[0]);
 
+    // Confirmation modal should appear with reverse sequence breakdown
     await waitFor(() => {
-      expect(screen.getByTitle('Delete project')).toBeInTheDocument();
+      expect(screen.getByText('Stop All Services?')).toBeInTheDocument();
+      expect(screen.getByText(/Reverse Teardown Sequence/i)).toBeInTheDocument();
     });
 
-    const deleteBtn = screen.getByTitle('Delete project');
-    fireEvent.click(deleteBtn);
-
-    expect(screen.getByText('Delete Project?')).toBeInTheDocument();
-    expect(screen.getByText(/This only removes the project grouping/i)).toBeInTheDocument();
-
-    const confirmDeleteBtn = screen.getAllByRole('button', { name: /^Delete Project$/i });
-    fireEvent.click(confirmDeleteBtn[confirmDeleteBtn.length - 1]);
+    // Confirm stop
+    const confirmStopBtn = screen.getByRole('button', { name: /^Stop All Services$/i });
+    fireEvent.click(confirmStopBtn);
 
     await waitFor(() => {
-      expect(projectApi.deleteProject).toHaveBeenCalledWith('proj-1');
+      expect(projectApi.stopProject).toHaveBeenCalledWith('proj-1');
+      expect(screen.getByText(/Execution Sequence Breakdown/i)).toBeInTheDocument();
     });
   });
 
-  it('supports restarting projects with WSL services in Milestone 11', async () => {
+  it('opens Restart Confirmation modal and restarts project', async () => {
     const restartResult: ProjectOperationResult = {
       projectId: 'proj-2',
       operationType: 'restart',
@@ -348,15 +348,93 @@ describe('Projects Page & Orchestration (Milestone 9)', () => {
       expect(screen.getByText('Mixed Project')).toBeInTheDocument();
     });
 
-    // In Milestone 11, the Restart button for Mixed Project should be enabled
-    const restartButtons = screen.getAllByRole('button', { name: /^Restart$/i });
-    expect(restartButtons.length).toBeGreaterThan(0);
-
     // Click restart button
-    fireEvent.click(restartButtons[restartButtons.length - 1]);
+    const restartButtons = screen.getAllByRole('button', { name: /^Restart$/i });
+    fireEvent.click(restartButtons[0]);
+
+    // Confirmation modal should appear
+    await waitFor(() => {
+      expect(screen.getByText('Restart Project?')).toBeInTheDocument();
+      expect(screen.getByText(/Startup Sequence Order/i)).toBeInTheDocument();
+    });
+
+    // Confirm restart
+    const confirmRestartBtn = screen.getByRole('button', { name: /^Restart Project$/i });
+    fireEvent.click(confirmRestartBtn);
 
     await waitFor(() => {
-      expect(projectApi.restartProject).toHaveBeenCalledWith('proj-2');
+      expect(projectApi.restartProject).toHaveBeenCalledWith('proj-1');
+    });
+  });
+
+  it('allows individual service control from within ProjectDetailsModal', async () => {
+    vi.mocked(controlApi.stopServer).mockResolvedValue({
+      status: 'stopped',
+      pid: 19200,
+      releasedPorts: [5000],
+      remainingChildren: [],
+      remainingOwner: null,
+      message: 'Server stopped successfully',
+    });
+
+    render(<Projects />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Company Platform')).toBeInTheDocument();
+    });
+
+    const detailsButtons = screen.getAllByRole('button', { name: /^Open Details$/i });
+    fireEvent.click(detailsButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Services & Execution Sequence/i)).toBeInTheDocument();
+    });
+
+    // In Company Platform, both services are running, so they have "Stop" buttons
+    const serviceStopBtns = screen.getAllByRole('button', { name: /^Stop$/i });
+    expect(serviceStopBtns.length).toBe(2);
+
+    fireEvent.click(serviceStopBtns[0]); // Stop Backend API
+
+    await waitFor(() => {
+      expect(controlApi.stopServer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pid: 19200,
+          processName: 'Backend API',
+        })
+      );
+    });
+  });
+
+  it('opens Delete Project modal with safety explanation and deletes project', async () => {
+    vi.mocked(projectApi.deleteProject).mockResolvedValue(true);
+
+    render(<Projects />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Company Platform')).toBeInTheDocument();
+    });
+
+    // Open details modal first
+    const detailsButtons = screen.getAllByRole('button', { name: /^Open Details$/i });
+    fireEvent.click(detailsButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Delete project')).toBeInTheDocument();
+    });
+
+    const deleteBtn = screen.getByTitle('Delete project');
+    fireEvent.click(deleteBtn);
+
+    expect(screen.getByText('Delete Project?')).toBeInTheDocument();
+    expect(screen.getByText(/This only removes the project grouping/i)).toBeInTheDocument();
+
+    const confirmDeleteBtn = screen.getAllByRole('button', { name: /^Delete Project$/i });
+    fireEvent.click(confirmDeleteBtn[confirmDeleteBtn.length - 1]);
+
+    await waitFor(() => {
+      expect(projectApi.deleteProject).toHaveBeenCalledWith('proj-1');
     });
   });
 });
+
