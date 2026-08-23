@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-222%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
+[![Tests](https://img.shields.io/badge/Tests-259%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
 
 DevHub is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
@@ -37,11 +37,11 @@ This leads to constant friction:
 ├─────────────────────┬──────────────────────┬──────────────────────────────────────┤
 │ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration                     │
 │ • Win32 IP Helper   │ • 7-Signal Pre-Term  │ • Persistent Server Profiles (SQLite)│
-│ • Sub-ms TCP Scan   │   Verification Gate  │ • Sequential Fail-Fast Startup       │
-│ • WSL 2 Multi-Distro│ • Ancestor Guardrail │ • Pre-Flight Port Conflict Resolv    │
-│ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Cross-Environment Restarts         │
-│ • 9D Process Ident  │ • Windows & WSL POSIX│ • Dynamic 8-Tier State Machine       │
-│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Unknown Server Adoption Heuristics │
+│ • Sub-ms TCP Scan   │   Verification Gate  │ • Multi-Service Projects Engine      │
+│ • WSL 2 Multi-Distro│ • Ancestor Guardrail │ • Desired-State Sequential Startup   │
+│ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Safe Reverse-Order Teardown        │
+│ • 9D Process Ident  │ • Windows & WSL POSIX│ • In-Memory Concurrency Guards (RAII)│
+│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Reverse Teardown Breakdown Modals  │
 └─────────────────────┴──────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -53,7 +53,7 @@ This leads to constant friction:
 * **Native Windows & WSL Folder Browsing**: Environment-aware directory selection replacing manual path typing. Features native Win32 folder chooser dialog for Windows profiles and a live, interactive Linux guest directory browser for WSL distributions.
 * **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution, non-blocking readiness polling, and live restart.
 * **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment with visual path adjustment.
-* **Project Groups & Sequential Orchestration**: Groups related microservices into logical projects with deterministic sequential startup, reverse-order teardown, concurrency locks, and aggregate health derivation across Windows and WSL.
+* **Multi-Service Projects & Complete Orchestration**: Groups related microservices into logical projects with declarative desired-state sequential startup (skips already-healthy services), safe reverse-order teardown, atomic SQLite gapless ordering, transient in-memory operation locks with RAII cleanup, and full confirmation modals with sequence breakdowns.
 * **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
 
 ---
@@ -82,7 +82,7 @@ DevHub decouples a **native Rust backend core** from a **React 19 + TypeScript W
 │  │ ├── ProcessControlService   ──► Win32 Kernel Controller + Safety Gates     │  │
 │  │ ├── ServerProfileService    ──► SQLite Profile Repository                  │  │
 │  │ ├── ServerStartService      ──► Windows/WSL Launchers + Readiness Polling  │  │
-│  │ └── ProjectOrchestrator     ──► Sequential Orchestration Engine            │  │
+│  │ └── ProjectOrchestrator     ──► Multi-Service Sequential Orchestrator      │  │
 │  └──────────────────────┬───────────────────────────────┬─────────────────────┘  │
 │                         ▼                               ▼                        │
 │          ┌─────────────────────────────┐  ┌───────────────────────────┐          │
@@ -111,7 +111,7 @@ For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)*
 | **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript 5.8](https://www.typescriptlang.org/) |
 | **Bundler & Tooling** | [Vite 7](https://vite.dev/) |
 | **Styling & UI Tokens** | [Tailwind CSS v4](https://tailwindcss.com/) (Dark Mode First) |
-| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (104 tests) & `cargo test` (118 tests) |
+| **Automated Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) (126 tests) & `cargo test` (133 tests) |
 
 ---
 
@@ -152,14 +152,14 @@ npm run dev
 
 ## 🧪 Testing & Verification
 
-DevHub enforces a strict test-driven quality standard with **222 automated tests**:
+DevHub enforces a strict test-driven quality standard with **259 automated tests**:
 
 ```bash
-# Run Rust backend unit & integration tests (118 tests)
+# Run Rust backend unit & integration tests (133 tests)
 cd src-tauri
 cargo test
 
-# Run frontend unit & component tests (104 tests)
+# Run frontend unit & component tests (126 tests across 14 suites)
 npm test
 
 # Run strict TypeScript typecheck and production build
@@ -175,12 +175,13 @@ DevHub/
 ├── src/                          # React 19 Frontend
 │   ├── components/               # UI Design System & Modals
 │   │   ├── adoption/             # AdoptionFormModal, DuplicateProfileWarning
-│   │   ├── common/               # Toast, CopyButton, EmptyState, LoadingState, ErrorState
+│   │   ├── common/               # Toast, CopyButton, WorkingDirectoryField, WslDirectoryBrowserModal
 │   │   ├── dashboard/            # ServerCard, ServerList, ServerToolbar, SummaryCards, 
 │   │   │                         # ServerDetailsModal, StopConfirmationModal, ProcessTree
 │   │   ├── profiles/             # ProfileCard, ProfileFormModal, DeleteProfileModal, PortConflictModal
 │   │   ├── projects/             # ProjectCard, ProjectDetailsModal, ProjectFormModal, 
-│   │   │                         # AddProfileModal, DeleteProjectModal, RemoveProfileModal, ProgressModal
+│   │   │                         # AddProfileModal, DeleteProjectModal, RemoveProfileModal,
+│   │   │                         # ProjectStopConfirmationModal, ProjectRestartConfirmationModal, ProgressModal
 │   │   ├── ports/                # PortTable, PortDetailsModal
 │   │   ├── processes/            # ProcessTable, ProcessDetailsModal
 │   │   ├── Sidebar.tsx           # 5-Route navigation sidebar with shortcut hints
@@ -193,9 +194,10 @@ DevHub/
 │   └── index.css                 # Tailwind CSS v4 styling & dark theme tokens
 ├── src-tauri/                    # Rust Native Backend Core
 │   ├── src/
-│   │   ├── commands/             # Tauri IPC controllers (system, control, profiles, project, wsl, ports, processes)
+│   │   ├── commands/             # Tauri IPC controllers (system, control, profiles, project, wsl, ports, processes, filesystem)
 │   │   ├── db/                   # SQLite persistence, schema migrations, and repository pattern
 │   │   ├── discovery/            # Win32 IP Helper, Toolhelp snapshot, and unified discovery
+│   │   ├── filesystem/           # Win32 & WSL filesystem exploration and validation providers
 │   │   ├── identity/             # Process identity engine, runtime classifier, ancestry tree builder
 │   │   ├── launcher/             # Cross-environment process launchers (Windows cmd.exe / WSL sh)
 │   │   ├── models/               # Strongly-typed domain models with Serde camelCase mapping
@@ -211,7 +213,7 @@ DevHub/
 ├── doc/
 │   └── PRD.md                    # Product Requirements Document
 ├── ARCHITECTURE.md               # Systems Architecture Specification
-├── LEARNING.md                   # Cumulative Engineering Learning Guide (129 Chapters)
+├── LEARNING.md                   # Cumulative Engineering Learning Guide (150 Chapters)
 ├── RELEASE_CHECKLIST.md          # MVP Release Verification Matrix
 ├── RELEASE_NOTES.md              # Version 0.1.0 Release Notes
 └── README.md                     # Project Presentation & Documentation
@@ -222,7 +224,7 @@ DevHub/
 ## 📚 Engineering Documentation
 
 * **[ARCHITECTURE.md](ARCHITECTURE.md)** — In-depth architectural blueprint covering domain invariants, Win32 FFI, POSIX signals, TOCTOU safety, sequential orchestration, and concurrency locks.
-* **[LEARNING.md](LEARNING.md)** — 129-chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
+* **[LEARNING.md](LEARNING.md)** — 150-chapter comprehensive engineering learning guide covering OS internals, networking theory, system design, HLD/LLD interview preparation, and code traces.
 * **[PRD.md](doc/PRD.md)** — Complete Product Requirements Document.
 * **[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)** — MVP verification matrix.
 * **[RELEASE_NOTES.md](RELEASE_NOTES.md)** — Release notes and changelog.

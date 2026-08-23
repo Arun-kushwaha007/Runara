@@ -6485,8 +6485,403 @@ Executing commands against a stopped WSL distribution causes Windows to automati
 | [`src/components/common/WorkingDirectoryField.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/common/WorkingDirectoryField.tsx) | Presentation | Reusable environment-aware working directory input with Browse/Clear/Copy | Controlled Inputs, Progressive Disclosure, Validation | `ProfileFormModal.tsx`, `AdoptionFormModal.tsx` | `WslDirectoryBrowserModal.tsx`, `filesystemApi` |
 | [`src/components/profiles/ProfileFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/profiles/ProfileFormModal.tsx) | Presentation | Server profile creation and editing modal integrated with `WorkingDirectoryField` | Profile UX, Environment Awareness | `Profiles.tsx`, `Servers.tsx` | `WorkingDirectoryField.tsx` |
 | [`src/components/adoption/AdoptionFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/adoption/AdoptionFormModal.tsx) | Presentation | Server adoption modal with editable/browsable working directory | Adoption Flow, Pre-Filled Paths | `Dashboard.tsx`, `Servers.tsx` | `WorkingDirectoryField.tsx` |
-| [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | 140-chapter cumulative engineering master learning guide | Systems Engineering Blueprint | Developers, Interviewees | - |
+| [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | Cumulative engineering master learning guide | Systems Engineering Blueprint | Developers, Interviewees | - |
 | [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | DevHub project overview highlighting native and WSL folder browsing | Product Overview | GitHub, Community | - |
+
+---
+
+# Milestone 13: Multi-Service Projects & Project Orchestration UX
+
+## 141. Multi-Service Development Environments vs Single Monolithic Servers
+
+Modern software engineering rarely operates as a single isolated server process. A standard cloud-native or full-stack web application is composed of multiple cooperating services running concurrently on a developer's workstation:
+1. **Client Applications**: Single Page Applications (React, Vite, Next.js) binding to port `3000` or `5173`.
+2. **API Gateways & Backends**: REST or GraphQL application servers (FastAPI, Express, NestJS, ASP.NET Core) binding to ports `5000` or `8000`.
+3. **Background Queues & Workers**: Message consumers (Celery, BullMQ, Kafka consumers) executing long-running asynchronous jobs.
+4. **Data Science & ML Services**: Python/PyTorch inference endpoints binding to port `8501` or `8080`.
+
+```
+                  +----------------------------------------------+
+                  |               DevHub Project                 |
+                  |         "E-Commerce Platform (Dev)"          |
+                  +----------------------------------------------+
+                                         |
+     +-------------------+---------------+-------------------+
+     |                   |                                   |
+     v                   v                                   v
++----------------+ +----------------+                +----------------+
+| Service 1:     | | Service 2:     |                | Service 3:     |
+| Backend API    | | Frontend Client|                | Worker Queue   |
+| Python FastAPI | | React Vite     |                | Python Celery  |
+| Windows        | | Windows        |                | WSL: Ubuntu    |
+| Port: 8000     | | Port: 3000     |                | Port: (None)   |
+| Order: 0       | | Order: 1       |                | Order: 2       |
++----------------+ +----------------+                +----------------+
+```
+
+### The Developer Pain Points Without Orchestration
+Prior to DevHub Milestone 13, developers had to manage this constellation manually:
+- **Terminal Fragmentation**: Opening 4 to 6 separate PowerShell or WSL Bash windows, navigating to respective directories, and invoking commands manually.
+- **Port Collisions**: Forgetting which servers were already active, resulting in `EADDRINUSE` crashes.
+- **Orphaned Background Daemons**: Closing terminal tabs without terminating child worker processes, leaving CPU-intensive background tasks running undetected.
+- **Startup Race Conditions**: Starting the frontend client before the backend API is ready, triggering immediate API connection errors on load.
+
+### Separation of Concerns: Project vs ServerProfile
+In DevHub's architectural model:
+- `ServerProfile` owns **execution specifications**: command line arguments, execution environment (`Windows` vs `WSL`), working directory on disk, expected TCP listening port, and runtime metadata.
+- `Project` owns **orchestration topology**: project grouping name, human-readable description, member profile associations, and explicit zero-indexed sequential startup/teardown order.
+
+---
+
+## 142. Inversion of Startup Semantics: "Start All" as Desired State vs "Restart Everything"
+
+A common architectural flaw in naive project orchestration tools is treating "Start All" as an imperative "Kill and Respawn Everything" script. DevHub inverts this into a **Declarative Desired State Engine**:
+
+$$
+\text{StartAll}(P) \implies \forall s \in \text{Services}(P), \quad \text{Status}(s) = \text{Running}
+$$
+
+### The Desired State Principle
+"Start All" means: *Bring the whole project into the fully running state without unnecessarily interrupting already-healthy services.*
+
+```
+Configured Startup Order: [ 1: Database/Backend, 2: Frontend, 3: Worker ]
+
+Live Snapshot:
+  - Database/Backend: Already Running (PID 19200, Port 8000) [UNTOUCHED]
+  - Frontend:         Stopped                                 [LAUNCHED]
+  - Worker:           Stopped                                 [LAUNCHED]
+
+Result:
+  - Database/Backend is NOT killed or re-spawned (in-memory cache preserved).
+  - Frontend & Worker are launched in sequence.
+  - Final Status: Running (3/3 Healthy).
+```
+
+### Pre-Flight Discovery & Skip Algorithm
+When `ProjectOrchestrator::start_project` is called:
+1. DevHub captures a fresh system discovery snapshot across Windows and active WSL distributions.
+2. It iterates through member profiles in strictly configured order ($i = 0 \dots N-1$).
+3. For each profile, it calls `ServerProfileService::find_matching_process`.
+4. If a live process already matches the profile's working directory and expected listening port:
+   - The profile is marked as `already_running`.
+   - The launcher skips spawning, avoiding port conflict errors.
+5. If the profile is stopped:
+   - DevHub invokes `ServerStartService::start_profile`, waiting for socket readiness before proceeding.
+
+---
+
+## 143. Reverse-Order Dependency Teardown: Why Dependents Must Stop Before Dependencies
+
+In multi-tier architectures, high-level consumers (dependents) depend on low-level services (dependencies). For example, a React Frontend and Celery Worker depend on a Backend API and Database.
+
+### The Inversion Law of System Teardown
+If the configured startup sequence is:
+
+$$
+S_{\text{start}} = \langle P_0, P_1, \dots, P_{n-1} \rangle
+$$
+
+Then the safe teardown sequence must be the exact reverse permutation:
+
+$$
+S_{\text{stop}} = S_{\text{start}}^{-1} = \langle P_{n-1}, P_{n-2}, \dots, P_0 \rangle
+$$
+
+```
+Startup Order (Forward):
+  [1] Core Backend API (Port 8000)
+       ↓ (Ready)
+  [2] ML Inference Engine (Port 8501)
+       ↓ (Ready)
+  [3] Frontend Web Client (Port 3000)
+       ↓ (Ready)
+  [4] Background Event Worker
+
+Teardown Order (Reverse):
+  [1] Background Event Worker       (Stop event ingestion first)
+       ↓
+  [2] Frontend Web Client           (Disconnect UI clients)
+       ↓
+  [3] ML Inference Engine           (Drain in-flight inference tasks)
+       ↓
+  [4] Core Backend API              (Close base database sockets last)
+```
+
+### Why Stopping Dependencies First Breaks Systems
+If the Core Backend API is stopped while the Frontend Client and Background Worker are still active:
+1. The worker encounters broken socket connections (`ECONNREFUSED` / `SIGPIPE`), triggering exponential error logs and unhandled retry loops.
+2. In-flight write transactions to the backend are aborted mid-stream.
+3. DevHub enforces reverse teardown to allow higher-level consumers to disconnect cleanly before foundation services terminate.
+
+---
+
+## 144. Non-Transactional Fail-Fast Orchestration vs Flawed Automatic Rollbacks
+
+A critical systems engineering question in local process orchestration is: **What happens when service $k$ fails during startup?**
+
+### The Fallacy of Automatic Rollback
+Some naive orchestrators attempt transactional rollback: if service 3 of 4 fails, they automatically kill services 1 and 2. In local development, **this is catastrophic**:
+- It destroys the debugging environment.
+- It kills the backend compiler/database whose logs the developer needs to inspect why service 3 could not connect.
+- It invalidates hot-reloading cache structures.
+
+### The DevHub Fail-Fast Orchestration Algorithm
+DevHub implements **Fail-Fast Sequential Execution without Rollback**:
+
+```
+Given Project Services: [ S_0, S_1, S_2, S_3 ]
+
+Iteration:
+  Step 0: Start S_0 -> Success (Started)
+  Step 1: Start S_1 -> Success (Started)
+  Step 2: Start S_2 -> FAILED (PortAlreadyInUse or ExecutionError)
+  Step 3: HALT IMMEDIATELY. Do not invoke S_3.
+
+State Outcome:
+  - S_0: Running
+  - S_1: Running
+  - S_2: Error (Failure Cause Preserved)
+  - S_3: Pending (Not Attempted)
+  - Project Overall Status: Error / Partial
+  - Diagnostic: "Project start halted because 'S_2' failed: Port 8000 already in use"
+```
+
+```rust
+// In src-tauri/src/project/orchestrator.rs
+for (profile, _order_idx) in member_tuples {
+    if is_already_running(&profile) {
+        started_names.push(profile.name);
+        continue;
+    }
+
+    match self.start_service.start_profile(&profile.id).await {
+        Ok(_) => {
+            started_names.push(profile.name);
+        }
+        Err(e) => {
+            // Fail-Fast: Record failure and halt sequence immediately.
+            // Do NOT rollback or stop previously started profiles.
+            return Ok(ProjectOperationResult {
+                project_id: project_id.to_string(),
+                operation_type: "start".to_string(),
+                status: ProjectOperationStatus::Error,
+                started_profiles: started_names,
+                stopped_profiles: vec![],
+                failed_profile: Some(profile.name.clone()),
+                pending_profiles: remaining_names,
+                unsupported_profiles: vec![],
+                message: format!("Project start halted because '{}' failed: {}", profile.name, e),
+            });
+        }
+    }
+}
+```
+
+---
+
+## 145. Gapless Service Ordering and Persistent Sequential Invariants in Relational Databases
+
+To maintain deterministic startup and teardown, the `project_profiles` join table enforces a strict gapless permutation constraint:
+
+$$
+\text{OrderIndices}(P) = \{0, 1, 2, \dots, |P|-1\}
+$$
+
+```sql
+CREATE TABLE IF NOT EXISTS project_profiles (
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    profile_id TEXT NOT NULL REFERENCES server_profiles(id) ON DELETE CASCADE,
+    order_index INTEGER NOT NULL,
+    PRIMARY KEY (project_id, profile_id),
+    UNIQUE (project_id, order_index)
+);
+```
+
+### Atomic Invariant Maintenance in SQLite
+1. **Append Service**:
+   ```sql
+   INSERT INTO project_profiles (project_id, profile_id, order_index)
+   VALUES (?1, ?2, (SELECT COALESCE(MAX(order_index) + 1, 0) FROM project_profiles WHERE project_id = ?1));
+   ```
+2. **Remove Service (Gapless Compaction)**:
+   ```sql
+   -- Inside an atomic SQLite transaction
+   DELETE FROM project_profiles WHERE project_id = ?1 AND profile_id = ?2;
+   
+   -- Shift down all subsequent order indices
+   UPDATE project_profiles 
+   SET order_index = order_index - 1 
+   WHERE project_id = ?1 AND order_index > ?3;
+   ```
+3. **Atomic Reordering**:
+   When reordering $N$ services, DevHub executes an atomic transaction that clears the project's current memberships and re-inserts the new ID permutation $[ID_0, ID_1, \dots, ID_{N-1}]$ with indices $0 \dots N-1$, guaranteeing zero unique-constraint collisions.
+
+---
+
+## 146. Transient Operation Locking and Concurrency Guards with RAII in Rust
+
+Multi-service orchestration takes time (subprocesses spawning, sockets opening, port polling). If a developer double-clicks "Start All" or triggers "Stop All" while a start operation is in-flight, uncoordinated subprocess spawning will cause race conditions and corrupted process tables.
+
+### Persistent vs Transient Concurrency Locks
+- **Persistent DB Locks (Anti-Pattern)**: Persisting locks in SQLite risks permanent application deadlock if the machine powers down or crashes mid-operation.
+- **Transient Memory Locks (DevHub Pattern)**: Storing active locks in `Arc<Mutex<HashMap<String, ProjectOperation>>>` ensures locks naturally clear if the application restarts.
+
+### The RAII Lock Guard Pattern
+DevHub implements a custom Rust RAII struct `ProjectOperationGuard` that guarantees lock release upon `Drop`:
+
+```rust
+// RAII Guard guaranteeing lock cleanup on success, error, or early return
+pub struct ProjectOperationGuard {
+    active_operations: Arc<Mutex<HashMap<String, ProjectOperation>>>,
+    project_id: String,
+}
+
+impl Drop for ProjectOperationGuard {
+    fn drop(&mut self) {
+        if let Ok(mut ops) = self.active_operations.lock() {
+            ops.remove(&self.project_id);
+        }
+    }
+}
+```
+
+```rust
+// Usage in orchestrator
+pub async fn start_project(&self, project_id: &str) -> Result<ProjectOperationResult, ProjectError> {
+    // 1. Acquire transient lock
+    let guard = {
+        let mut ops = self.active_operations.lock().unwrap();
+        if let Some(existing) = ops.get(project_id) {
+            return Err(ProjectError {
+                code: ProjectErrorCode::OperationInProgress,
+                message: format!("Project operation '{}' is already in progress.", existing.operation_type),
+                project_id: Some(project_id.to_string()),
+            });
+        }
+        ops.insert(project_id.to_string(), ProjectOperation {
+            project_id: project_id.to_string(),
+            operation_type: "start".to_string(),
+            started_at: Utc::now().to_rfc3339(),
+        });
+        ProjectOperationGuard {
+            active_operations: Arc::clone(&self.active_operations),
+            project_id: project_id.to_string(),
+        }
+    };
+
+    // 2. Perform sequential startup...
+    // When start_project completes or returns Err(?), guard is dropped automatically!
+}
+```
+
+---
+
+## 147. Deterministic Project Health Aggregation and Status Precedence Algebra
+
+A project's runtime status is not stored in SQLite; it is dynamically calculated by folding the live runtime statuses of all member services:
+
+$$
+f: ([\text{ProfileRuntimeStatus}], \text{Option}\langle\text{Operation}\rangle) \longrightarrow \text{ProjectRuntimeStatus}
+$$
+
+```
++-----------------------------------------------------------------+
+|                       Status Precedence                         |
++-----------------------------------------------------------------+
+| 1. Active Operation Guard (Starting / Stopping)                 |
+|    ↓ (No active operation)                                      |
+| 2. Empty Project (|Services| == 0) -> Stopped                   |
+|    ↓ (Non-empty)                                                |
+| 3. Any Member Starting -> Starting                              |
+|    ↓                                                            |
+| 4. Any Member in Error State -> Error                           |
+|    ↓                                                            |
+| 5. All Members Running (RunningCount == Total) -> Running       |
+|    ↓                                                            |
+| 6. All Members Stopped (StoppedCount == Total) -> Stopped       |
+|    ↓                                                            |
+| 7. Mixed Running & Stopped -> Partial                           |
++-----------------------------------------------------------------+
+```
+
+### Mathematical Precedence Table
+
+| Condition | Aggregated Project Status | Badge Style | Action Available |
+| :--- | :--- | :--- | :--- |
+| `active_operation == Some("start")` | `Starting` | Blue Spinner | Disabled (Locked) |
+| `active_operation == Some("stop")` | `Stopping` | Blue Spinner | Disabled (Locked) |
+| `profiles.is_empty()` | `Stopped` | Zinc Neutral | Add Services |
+| $\exists s \in \text{profiles}: s = \text{Starting}$ | `Starting` | Blue Spinner | Disabled |
+| $\exists s \in \text{profiles}: s = \text{Error}$ | `Error` | Rose Alert | Start All / Inspect |
+| $\forall s \in \text{profiles}: s = \text{Running}$ | `Running` (Healthy) | Emerald Glow | Stop All / Restart All |
+| $\forall s \in \text{profiles}: s = \text{Stopped}$ | `Stopped` | Zinc Neutral | Start All |
+| $\exists s_1, s_2 : s_1 = \text{Running} \land s_2 = \text{Stopped}$ | `Partial` | Amber Warning | Start All / Stop All / Restart All |
+
+---
+
+## 148. Cross-Environment Orchestration Across Windows and WSL Hyper-V Boundaries
+
+DevHub projects are first-class cross-environment orchestrators. A single project can unite Windows native processes and WSL guest Linux daemons.
+
+```
++---------------------------------------------------------------------------+
+|                          DevHub Orchestrator                              |
++---------------------------------------------------------------------------+
+                    |                                   |
+           (Windows Service)                     (WSL Linux Service)
+                    v                                   v
++---------------------------------------+ +---------------------------------+
+| Win32 Job Object & CreateProcessW     | | wsl.exe -d Ubuntu -- find/ss/ps |
+| - Native win32 executable invocation  | | - Bounded Posix arg vector      |
+| - TCP table socket inspection via Win | | - /proc & ss socket mapping     |
+|   IP Helper API (GetExtendedTcpTable) | | - Graceful SIGTERM -> SIGKILL   |
++---------------------------------------+ +---------------------------------+
+```
+
+### Safe VM State Pre-Check
+Before orchestrating any WSL member profile, DevHub checks the WSL distribution state via `WslDistroDiscovery`. If the distribution is stopped, DevHub prevents accidental background boot overhead during read scans, but spins up the guest kernel cleanly during explicit project startup.
+
+---
+
+## 149. Confirmation Modals for Destructive Orchestration: Designing Clear Reverse Teardown Breakdowns
+
+In systems UX design, operations have distinct risk profiles:
+- **Non-Destructive Operations (Start All)**: Starting missing services does not interrupt or kill existing running workloads. Therefore, "Start All" executes immediately without a blocking confirmation dialog.
+- **Destructive Operations (Stop All / Restart All)**: Terminating active developer processes drops live network connections, cancels unsaved in-memory states, and stops background consumers.
+
+### Stop All Confirmation Modal Architecture
+The `ProjectStopConfirmationModal` provides a concrete, non-abstract explanation before teardown:
+1. **Target Summary**: Displays project name and exact number of running services to be terminated.
+2. **Reverse Sequence Breakdown**: Renders the ordered list of processes in their exact teardown order ($S^{-1}$), showing process names, environment badges (`Windows` / `WSL:Distro`), and listening ports.
+3. **Execution Guard**: Disables buttons with loading spinners while teardown executes.
+
+```tsx
+// Excerpt from ProjectStopConfirmationModal.tsx
+const runningProfilesReverse = [...profiles]
+  .reverse()
+  .filter((p) => p.status === 'running');
+```
+
+---
+
+## 150. Milestone 13 Complete Repository File Inventory & Architecture Matrix
+
+| File Path | Layer | Purpose & Responsibility | Key Concepts | Callers | Callees |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [`src-tauri/src/models/project.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/models/project.rs) | Domain Models | Data transfer models (`Project`, `ProjectProfileView`, `ProjectView`, `ProjectRuntimeStatus`, `ProjectOperationResult`) | Strong Typing, Serde `camelCase` | IPC, Services | - |
+| [`src-tauri/src/project/orchestrator.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/project/orchestrator.rs) | Core Orchestration | Implements sequential `start_project`, reverse `stop_project`, and forward `restart_project` with RAII locking | Desired State Startup, Reverse Teardown, RAII `ProjectOperationGuard` | `commands/project.rs` | `ServerStartService`, `ProcessControlService`, `ServerProfileService` |
+| [`src-tauri/src/project/service.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/project/service.rs) | Project Management | CRUD repository coordination and `calculate_project_status` precedence algebra | Status Lattice Precedence, View Assembly | `commands/project.rs` | `ProjectRepository` |
+| [`src-tauri/src/db/repository.rs`](file:///d:/ak/project/devhub/DevHub/src-tauri/src/db/repository.rs) | Data Persistence | SQLite persistent storage for projects and gapless `project_profiles` join table | Relational Integrity, Compaction, Atomic Transactions | `ProjectService` | SQLite DB |
+| [`src/components/projects/ProjectFormModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectFormModal.tsx) | Presentation | Multi-service project creation modal with profile selection and initial ordering | Multi-Service Picker, Move Up/Down, Conflict Badges | `Projects.tsx` | `projectApi` |
+| [`src/components/projects/ProjectDetailsModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectDetailsModal.tsx) | Presentation | Detailed view with individual service Start/Stop/Inspect controls and reordering | Service Controls, Operation Locking, Metric Badges | `Projects.tsx` | `controlApi`, `profileApi` |
+| [`src/components/projects/ProjectStopConfirmationModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectStopConfirmationModal.tsx) | Presentation | Destructive stop confirmation modal showing reverse sequence breakdown | Reverse Teardown Preview, Safe Confirmation | `Projects.tsx` | `projectApi` |
+| [`src/components/projects/ProjectRestartConfirmationModal.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectRestartConfirmationModal.tsx) | Presentation | Restart confirmation explaining reverse stop followed by forward start | 3-Phase Restart Explanation, Forward Order Preview | `Projects.tsx` | `projectApi` |
+| [`src/components/projects/ProjectCard.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectCard.tsx) | Presentation | Dashboard card with environment summaries, healthy status badges, and action triggers | Summary Metrics, Environment String Formatting | `Projects.tsx` | `Projects.tsx` |
+| [`src/pages/Projects.tsx`](file:///d:/ak/project/devhub/DevHub/src/pages/Projects.tsx) | Presentation Controller | Main Projects page container coordinating discovery polling, orchestration, and modals | State Synchronization, Single Summary Toasts | App Router | Modals, APIs |
+| [`src/components/projects/ProjectConfirmationModals.test.tsx`](file:///d:/ak/project/devhub/DevHub/src/components/projects/ProjectConfirmationModals.test.tsx) | Testing | Unit test suite for Stop and Restart confirmation modals | Component Unit Tests, Sequence Order Verification | Vitest Runner | `ProjectStopConfirmationModal`, `ProjectRestartConfirmationModal` |
+| [`LEARNING.md`](file:///d:/ak/project/devhub/DevHub/LEARNING.md) | Documentation | 150-chapter cumulative master engineering knowledge guide | Architectural Reference | Developers | - |
+| [`README.md`](file:///d:/ak/project/devhub/DevHub/README.md) | Documentation | Project overview and quick start instructions | Documentation | Users | - |
 
 
 
