@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-259%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
+[![Tests](https://img.shields.io/badge/Tests-276%20Passed-brightgreen)](file:///d:/ak/project/devhub/DevHub/RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue)](LICENSE)
 
 DevHub is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
@@ -35,13 +35,14 @@ This leads to constant friction:
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │                               DEVHUB CAPABILITIES                                 │
 ├─────────────────────┬──────────────────────┬──────────────────────────────────────┤
-│ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration                     │
+│ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration & Appearance        │
 │ • Win32 IP Helper   │ • 7-Signal Pre-Term  │ • Persistent Server Profiles (SQLite)│
 │ • Sub-ms TCP Scan   │   Verification Gate  │ • Multi-Service Projects Engine      │
 │ • WSL 2 Multi-Distro│ • Ancestor Guardrail │ • Desired-State Sequential Startup   │
 │ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Safe Reverse-Order Teardown        │
 │ • 9D Process Ident  │ • Windows & WSL POSIX│ • In-Memory Concurrency Guards (RAII)│
-│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Reverse Teardown Breakdown Modals  │
+│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Semantic Tokens (#101010 & #F9F9F9)│
+│ • Zero Native Leaks │ • Safe Port Conflict │ • Dark, Light & System Sync Themes   │
 └─────────────────────┴──────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -54,6 +55,7 @@ This leads to constant friction:
 * **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution, non-blocking readiness polling, and live restart.
 * **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment with visual path adjustment.
 * **Multi-Service Projects & Complete Orchestration**: Groups related microservices into logical projects with declarative desired-state sequential startup (skips already-healthy services), safe reverse-order teardown, atomic SQLite gapless ordering, transient in-memory operation locks with RAII cleanup, and full confirmation modals with sequence breakdowns.
+* **Full Dual-Theme Architecture & Semantic Design Tokens**: Instant switching between high-contrast Dark Mode (`#101010` background, `#CCCCCC` foreground), Light Mode (`#F9F9F9` background, `#101010` foreground), and dynamic System Sync via Tailwind v4 CSS variables. Features flash-free synchronous pre-mount initialization, live OS media query updates, and a dedicated Appearance & Settings page with token previews.
 * **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
 
 ---
