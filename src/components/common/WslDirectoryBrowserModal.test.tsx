@@ -6,7 +6,7 @@ import { filesystemApi } from '../../lib/commands';
 vi.mock('../../lib/commands', () => ({
   filesystemApi: {
     pickFolder: vi.fn(),
-    listWslDirectories: vi.fn(),
+    browseWslDirectory: vi.fn(),
     validateDirectory: vi.fn(),
   },
 }));
@@ -17,7 +17,7 @@ describe('WslDirectoryBrowserModal Component', () => {
   });
 
   it('renders directory listing from WSL distribution', async () => {
-    vi.mocked(filesystemApi.listWslDirectories).mockResolvedValue({
+    vi.mocked(filesystemApi.browseWslDirectory).mockResolvedValue({
       currentPath: '/home/developer',
       parentPath: '/home',
       entries: [
@@ -48,7 +48,7 @@ describe('WslDirectoryBrowserModal Component', () => {
   });
 
   it('navigates to parent directory when Parent button is clicked', async () => {
-    vi.mocked(filesystemApi.listWslDirectories)
+    vi.mocked(filesystemApi.browseWslDirectory)
       .mockResolvedValueOnce({
         currentPath: '/home/developer',
         parentPath: '/home',
@@ -78,13 +78,13 @@ describe('WslDirectoryBrowserModal Component', () => {
     fireEvent.click(parentBtn);
 
     await waitFor(() => {
-      expect(filesystemApi.listWslDirectories).toHaveBeenCalledWith('Fedora', '/home');
+      expect(filesystemApi.browseWslDirectory).toHaveBeenCalledWith('Fedora', '/home');
       expect(screen.getByText('developer')).toBeInTheDocument();
     });
   });
 
   it('selects current directory when Select Folder button is clicked', async () => {
-    vi.mocked(filesystemApi.listWslDirectories).mockResolvedValue({
+    vi.mocked(filesystemApi.browseWslDirectory).mockResolvedValue({
       currentPath: '/home/developer/api',
       parentPath: '/home/developer',
       entries: [],
@@ -115,7 +115,7 @@ describe('WslDirectoryBrowserModal Component', () => {
   });
 
   it('displays warning when WSL distribution is stopped', async () => {
-    vi.mocked(filesystemApi.listWslDirectories).mockRejectedValue(
+    vi.mocked(filesystemApi.browseWslDirectory).mockRejectedValue(
       "WSL distribution 'Ubuntu' is stopped. Start the distribution before browsing."
     );
 
