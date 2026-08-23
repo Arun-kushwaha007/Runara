@@ -1,10 +1,109 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-app-bg: var(--background);
+  --color-app-fg: var(--foreground);
+  --color-app-surface: var(--surface);
+  --color-app-surface-hover: var(--surface-hover);
+  --color-app-surface-active: var(--surface-active);
+  --color-app-border: var(--border);
+  --color-app-border-subtle: var(--border-subtle);
+  --color-app-muted: var(--muted);
+  --color-app-muted-fg: var(--muted-foreground);
+  --color-app-input: var(--input-background);
+  --color-app-primary: var(--primary);
+  --color-app-primary-fg: var(--primary-foreground);
+  --color-app-success: var(--success);
+  --color-app-warning: var(--warning);
+  --color-app-danger: var(--danger);
+  --color-app-focus: var(--focus);
+}
+
+:root {
+  /* Default dark foundation as per DevHub product specification */
+  --background: #101010;
+  --foreground: #cccccc;
+  --surface: #181818;
+  --surface-hover: #222222;
+  --surface-active: #2c2c2c;
+  --border: #2a2a2a;
+  --border-subtle: #1f1f1f;
+  --muted: #1e1e1e;
+  --muted-foreground: #888888;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --focus: #3b82f6;
+  --input-background: #141414;
+}
+
+[data-theme="light"], .light {
+  /* Light mode palette matching exact specifications */
+  --background: #f9f9f9;
+  --foreground: #101010;
+  --surface: #ffffff;
+  --surface-hover: #f0f0f0;
+  --surface-active: #e5e5e5;
+  --border: #e0e0e0;
+  --border-subtle: #eeeeee;
+  --muted: #f3f4f6;
+  --muted-foreground: #666666;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --focus: #2563eb;
+  --input-background: #ffffff;
+}
+
+[data-theme="dark"], .dark {
+  /* Dark mode palette matching exact specifications */
+  --background: #101010;
+  --foreground: #cccccc;
+  --surface: #181818;
+  --surface-hover: #222222;
+  --surface-active: #2c2c2c;
+  --border: #2a2a2a;
+  --border-subtle: #1f1f1f;
+  --muted: #1e1e1e;
+  --muted-foreground: #888888;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --focus: #3b82f6;
+  --input-background: #141414;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #09090b; /* zinc-950 */
-  color: #f4f4f5; /* zinc-100 */
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Custom scrollbars that adapt to dark and light modes */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
 }
