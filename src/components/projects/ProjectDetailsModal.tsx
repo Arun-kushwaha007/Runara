@@ -14,6 +14,10 @@ interface ProjectDetailsModalProps {
   onRemoveProfile: (project: ProjectView, profileView: ProjectProfileView) => void;
   onMoveUp: (project: ProjectView, profileIndex: number) => void;
   onMoveDown: (project: ProjectView, profileIndex: number) => void;
+  onStartService?: (profileId: string) => void;
+  onStopService?: (profileView: ProjectProfileView) => void;
+  onInspectService?: (profileView: ProjectProfileView) => void;
+  operatingProfileId?: string | null;
   isOperating?: boolean;
 }
 
@@ -30,11 +34,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   onRemoveProfile,
   onMoveUp,
   onMoveDown,
+  onStartService,
+  onStopService,
+  onInspectService,
+  operatingProfileId,
   isOperating = false,
 }) => {
   if (!isOpen || !projectView) return null;
 
-  const { project, status, profiles, totalServices, runningServices } = projectView;
+  const { project, status, profiles, totalServices, runningServices, stoppedServices } = projectView;
 
   const hasWsl = profiles.some((p) => p.profile.environment.type === 'wsl');
   const isRunning = status === 'running';
@@ -49,7 +57,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            Running ({runningServices}/{totalServices})
+            Healthy ({runningServices}/{totalServices})
           </span>
         );
       case 'partial':
@@ -99,7 +107,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-6 py-5 border-b border-zinc-800 flex items-start justify-between gap-4">
           <div>
@@ -110,12 +118,21 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             {project.description && (
               <p className="text-xs text-zinc-400 mt-1 max-w-lg">{project.description}</p>
             )}
+            {/* Metric counters */}
+            <div className="flex items-center gap-3 mt-2 text-[11px] text-zinc-400">
+              <span>Services: <strong className="text-zinc-200 font-mono">{totalServices}</strong></span>
+              <span>&bull;</span>
+              <span className="text-emerald-400 font-medium">Running: <strong className="font-mono">{runningServices}</strong></span>
+              <span>&bull;</span>
+              <span className="text-zinc-400">Stopped: <strong className="font-mono">{stoppedServices}</strong></span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => onEdit(projectView)}
-              className="p-2 text-zinc-400 hover:text-zinc-200 bg-zinc-800/60 hover:bg-zinc-800 rounded-xl transition-colors"
+              disabled={isOperating}
+              className="p-2 text-zinc-400 hover:text-zinc-200 bg-zinc-800/60 hover:bg-zinc-800 disabled:opacity-40 rounded-xl transition-colors"
               title="Edit project name / description"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -125,7 +142,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             </button>
             <button
               onClick={() => onDelete(projectView)}
-              className="p-2 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl transition-colors"
+              disabled={isOperating}
+              className="p-2 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 disabled:opacity-40 rounded-xl transition-colors"
               title="Delete project"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -144,18 +162,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         </div>
 
         {/* Action Toolbar */}
-        <div className="px-6 py-3 bg-zinc-950/40 border-b border-zinc-800/80 flex items-center justify-between gap-3">
+        <div className="px-6 py-3 bg-zinc-950/40 border-b border-zinc-800/80 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             {(!isRunning || isPartial || isError) && (
               <button
                 onClick={() => onStart(project.id)}
                 disabled={isOperating || isStarting || isStopping || totalServices === 0}
                 className="px-3.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/70 border border-emerald-800/60 hover:bg-emerald-900 hover:text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                title={isOperating ? 'Project operation in progress' : 'Start all stopped services in sequence'}
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
                 </svg>
-                Start Project
+                Start All
               </button>
             )}
 
@@ -164,11 +183,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 onClick={() => onStop(project.id)}
                 disabled={isOperating || isStarting || isStopping}
                 className="px-3.5 py-1.5 text-xs font-semibold text-rose-300 bg-rose-950/70 border border-rose-800/60 hover:bg-rose-900 hover:text-white rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                title={isOperating ? 'Project operation in progress' : 'Stop all running services in reverse order'}
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M6 6h12v12H6z" />
                 </svg>
-                Stop Project
+                Stop All
               </button>
             )}
 
@@ -176,26 +196,27 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <button
                 onClick={() => onRestart(project.id)}
                 disabled={isOperating || isStarting || isStopping}
-                title="Restart all services"
+                title={isOperating ? 'Project operation in progress' : 'Stop and restart all project services'}
                 className="px-3.5 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700 hover:text-white rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
-                Restart Project
+                Restart All
               </button>
             )}
           </div>
 
           <button
             onClick={() => onAddProfile(projectView)}
-            className="px-3.5 py-1.5 text-xs font-medium text-indigo-300 bg-indigo-950/50 border border-indigo-800/50 hover:bg-indigo-900/80 hover:text-white rounded-xl transition-colors flex items-center gap-1.5"
+            disabled={isOperating}
+            className="px-3.5 py-1.5 text-xs font-medium text-indigo-300 bg-indigo-950/50 border border-indigo-800/50 hover:bg-indigo-900/80 hover:text-white disabled:opacity-40 rounded-xl transition-colors flex items-center gap-1.5"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add Server Profile
+            Add Service
           </button>
         </div>
 
@@ -210,9 +231,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
               <div>
-                <p className="font-semibold text-zinc-300">WSL Services in Project</p>
+                <p className="font-semibold text-zinc-300">Cross-Environment Services</p>
                 <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">
-                  This project contains WSL services. DevHub provides full lifecycle orchestration (start, graceful stop, and restart) across both Windows and WSL environments.
+                  This project orchestrates both Windows and WSL guest Linux services. DevHub handles sequential startup, safe reverse teardown, and process discovery seamlessly across both boundaries.
                 </p>
               </div>
             </div>
@@ -222,10 +243,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                Execution Order & Configured Services ({totalServices})
+                Services & Execution Sequence ({totalServices})
               </h4>
               <span className="text-[11px] text-zinc-500 italic">
-                Execution order: 1 &rarr; 2 &rarr; 3
+                Startup order: 1 &rarr; 2 &rarr; 3 &bull; Teardown: 3 &rarr; 2 &rarr; 1
               </span>
             </div>
 
@@ -234,9 +255,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 <svg className="mx-auto h-8 w-8 text-zinc-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                   <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                <p className="text-sm font-medium text-zinc-300">No server profiles assigned</p>
+                <p className="text-sm font-medium text-zinc-300">No services configured</p>
                 <p className="text-xs text-zinc-500 mt-1 max-w-xs mx-auto">
-                  Click "Add Server Profile" to assign existing development servers to this project.
+                  Add server profiles before starting the project.
                 </p>
                 <button
                   onClick={() => onAddProfile(projectView)}
@@ -246,7 +267,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Add First Profile
+                  Add First Service
                 </button>
               </div>
             ) : (
@@ -254,12 +275,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 {profiles.map((item, idx) => {
                   const isItemRunning = item.status === 'running';
                   const isItemError = item.status === 'error';
-                  const isItemStarting = item.status === 'starting';
+                  const isItemStarting = item.status === 'starting' || operatingProfileId === item.profile.id;
 
                   return (
                     <div
                       key={item.profile.id}
-                      className="p-3.5 bg-zinc-950/60 border border-zinc-800/90 rounded-xl flex items-center justify-between gap-3 hover:border-zinc-700/80 transition-all"
+                      className="p-3.5 bg-zinc-950/60 border border-zinc-800/90 rounded-xl flex items-center justify-between gap-3 hover:border-zinc-700/80 transition-all flex-wrap sm:flex-nowrap"
                     >
                       <div className="flex items-start gap-3 min-w-0 flex-1">
                         {/* Order Index Badge */}
@@ -304,7 +325,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                                     : 'bg-zinc-600'
                                 }`}
                               />
-                              {item.status}
+                              {isItemStarting ? 'starting...' : item.status}
                             </span>
                           </div>
 
@@ -330,37 +351,83 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Reordering and removal actions */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={() => onMoveUp(projectView, idx)}
-                          disabled={idx === 0}
-                          className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 disabled:hover:bg-transparent rounded-lg transition-colors"
-                          title="Move up in start order"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M18 15l-6-6-6 6" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => onMoveDown(projectView, idx)}
-                          disabled={idx === profiles.length - 1}
-                          className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 disabled:hover:bg-transparent rounded-lg transition-colors"
-                          title="Move down in start order"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M6 9l6 6 6-6" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => onRemoveProfile(projectView, item)}
-                          className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors ml-1"
-                          title="Remove from project"
-                        >
-                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M18 6L6 18M6 6l12 12" />
-                          </svg>
-                        </button>
+                      {/* Service Actions & Ordering */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* Inspect Profile Button */}
+                        {onInspectService && (
+                          <button
+                            onClick={() => onInspectService(item)}
+                            className="px-2.5 py-1 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-lg transition-colors"
+                            title="Inspect server configuration"
+                          >
+                            Inspect
+                          </button>
+                        )}
+
+                        {/* Individual Start / Stop Controls */}
+                        {isItemRunning ? (
+                          onStopService && (
+                            <button
+                              onClick={() => onStopService(item)}
+                              disabled={isOperating || isItemStarting}
+                              className="px-2.5 py-1 text-xs font-medium text-rose-400 hover:text-rose-200 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 disabled:opacity-40 rounded-lg transition-colors"
+                              title={isOperating ? 'Project operation in progress' : 'Stop this service'}
+                            >
+                              Stop
+                            </button>
+                          )
+                        ) : (
+                          onStartService && (
+                            <button
+                              onClick={() => onStartService(item.profile.id)}
+                              disabled={isOperating || isItemStarting}
+                              className="px-2.5 py-1 text-xs font-medium text-emerald-400 hover:text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 disabled:opacity-40 rounded-lg transition-colors flex items-center gap-1"
+                              title={isOperating ? 'Project operation in progress' : 'Start this service'}
+                            >
+                              {isItemStarting && (
+                                <svg className="animate-spin h-3 w-3 text-emerald-400" viewBox="0 0 24 24" fill="none">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                              )}
+                              Start
+                            </button>
+                          )
+                        )}
+
+                        {/* Reordering and removal actions */}
+                        <div className="flex items-center gap-0.5 border-l border-zinc-800 pl-1.5 ml-1">
+                          <button
+                            onClick={() => onMoveUp(projectView, idx)}
+                            disabled={idx === 0 || isOperating}
+                            className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 disabled:hover:bg-transparent rounded-lg transition-colors"
+                            title="Move up in startup order"
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M18 15l-6-6-6 6" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => onMoveDown(projectView, idx)}
+                            disabled={idx === profiles.length - 1 || isOperating}
+                            className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 disabled:hover:bg-transparent rounded-lg transition-colors"
+                            title="Move down in startup order"
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M6 9l6 6 6-6" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => onRemoveProfile(projectView, item)}
+                            disabled={isOperating}
+                            className="p-1 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30 rounded-lg transition-colors ml-0.5"
+                            title="Remove from project"
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -384,3 +451,4 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     </div>
   );
 };
+

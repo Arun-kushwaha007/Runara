@@ -4,17 +4,23 @@ import type {
   ServerProfile,
   CreateProjectRequest,
   UpdateProjectRequest,
+  CreateProfileRequest,
+  UpdateProfileRequest,
   ProjectOperationResult,
   ProjectProfileView,
+  ProcessTarget,
 } from '../types';
-import { projectApi, profileApi } from '../lib/commands';
+import { projectApi, profileApi, controlApi } from '../lib/commands';
 import { ProjectCard } from '../components/projects/ProjectCard';
 import { ProjectDetailsModal } from '../components/projects/ProjectDetailsModal';
 import { ProjectFormModal } from '../components/projects/ProjectFormModal';
 import { AddProfileModal } from '../components/projects/AddProfileModal';
 import { DeleteProjectModal } from '../components/projects/DeleteProjectModal';
 import { RemoveProfileModal } from '../components/projects/RemoveProfileModal';
+import { ProjectStopConfirmationModal } from '../components/projects/ProjectStopConfirmationModal';
+import { ProjectRestartConfirmationModal } from '../components/projects/ProjectRestartConfirmationModal';
 import { ProjectOperationProgressModal } from '../components/projects/ProjectOperationProgressModal';
+import { ProfileFormModal } from '../components/profiles/ProfileFormModal';
 import { Toast, type ToastMessage } from '../components/common/Toast';
 
 const Projects: React.FC = () => {
@@ -25,6 +31,7 @@ const Projects: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'running' | 'partial' | 'stopped' | 'error'>('all');
   const [isOperating, setIsOperating] = useState(false);
+  const [operatingProfileId, setOperatingProfileId] = useState<string | null>(null);
 
   // Modal States
   const [detailsProject, setDetailsProject] = useState<ProjectView | null>(null);
@@ -39,6 +46,13 @@ const Projects: React.FC = () => {
     project: ProjectView;
     profileView: ProjectProfileView;
   } | null>(null);
+
+  // Confirmation Modals
+  const [projectToStop, setProjectToStop] = useState<ProjectView | null>(null);
+  const [projectToRestart, setProjectToRestart] = useState<ProjectView | null>(null);
+
+  // Service Inspection / Edit Modal
+  const [profileToInspect, setProfileToInspect] = useState<ServerProfile | null>(null);
 
   // Progress / Operation Modal State
   const [isProgressOpen, setIsProgressOpen] = useState(false);
@@ -136,14 +150,31 @@ const Projects: React.FC = () => {
   }, [projectViews]);
 
   // Handlers
-  const handleCreateOrUpdateProject = async (data: CreateProjectRequest | UpdateProjectRequest) => {
+  const handleCreateOrUpdateProject = async (
+    data: CreateProjectRequest | UpdateProjectRequest,
+    selectedProfileIds?: string[]
+  ) => {
     try {
       if ('id' in data) {
         await projectApi.updateProject(data);
         setToast({ type: 'success', message: `Project '${data.name}' updated.` });
       } else {
-        await projectApi.createProject(data);
-        setToast({ type: 'success', message: `Project '${data.name}' created.` });
+        const created = await projectApi.createProject(data);
+        if (selectedProfileIds && selectedProfileIds.length > 0) {
+          for (let i = 0; i < selectedProfileIds.length; i++) {
+            await projectApi.addProfileToProject({
+              projectId: created.id,
+              profileId: selectedProfileIds[i],
+              orderIndex: i,
+            });
+          }
+        }
+        setToast({
+          type: 'success',
+          message: selectedProfileIds && selectedProfileIds.length > 0
+            ? `Project '${data.name}' created with ${selectedProfileIds.length} services.`
+            : `Project '${data.name}' created.`,
+        });
       }
       await fetchAll();
     } catch (err: unknown) {
@@ -242,6 +273,7 @@ const Projects: React.FC = () => {
     }
   };
 
+  // Direct Start All (No confirmation required as starting is non-destructive)
   const handleStartProject = async (projectId: string) => {
     const proj = projectViews.find((p) => p.project.id === projectId);
     const projName = proj ? proj.project.name : 'Project';
@@ -252,51 +284,138 @@ const Projects: React.FC = () => {
       const res = await projectApi.startProject(projectId);
       setOperationResult(res);
       setIsProgressOpen(true);
+      if (res.status === 'running') {
+        setToast({ type: 'success', message: `Project '${projName}' started successfully.` });
+      } else if (res.status === 'partial') {
+        setToast({ type: 'warning', message: `Project '${projName}' partially started.` });
+      } else {
+        setToast({ type: 'error', message: res.message });
+      }
       await fetchAll();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || 'Failed to start project.');
+      setToast({ type: 'error', message: `Failed to start project: ${msg}` });
     } finally {
       setIsOperating(false);
     }
   };
 
-  const handleStopProject = async (projectId: string) => {
+  // Stop All trigger with confirmation modal
+  const handleRequestStopProject = (projectId: string) => {
     const proj = projectViews.find((p) => p.project.id === projectId);
-    const projName = proj ? proj.project.name : 'Project';
+    if (proj) {
+      setProjectToStop(proj);
+    }
+  };
+
+  const handleConfirmStopProject = async () => {
+    if (!projectToStop) return;
+    const projName = projectToStop.project.name;
+    const projId = projectToStop.project.id;
     try {
       setIsOperating(true);
       setOperationType('stop');
       setOperationProjectName(projName);
-      const res = await projectApi.stopProject(projectId);
+      const res = await projectApi.stopProject(projId);
       setOperationResult(res);
+      setProjectToStop(null);
       setIsProgressOpen(true);
+      if (res.status === 'stopped') {
+        setToast({ type: 'success', message: `Project '${projName}' stopped.` });
+      } else {
+        setToast({ type: 'warning', message: `Project '${projName}' stop partially completed.` });
+      }
       await fetchAll();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || 'Failed to stop project.');
+      setToast({ type: 'error', message: `Failed to stop project: ${msg}` });
     } finally {
       setIsOperating(false);
     }
   };
 
-  const handleRestartProject = async (projectId: string) => {
+  // Restart All trigger with confirmation modal
+  const handleRequestRestartProject = (projectId: string) => {
     const proj = projectViews.find((p) => p.project.id === projectId);
-    const projName = proj ? proj.project.name : 'Project';
+    if (proj) {
+      setProjectToRestart(proj);
+    }
+  };
+
+  const handleConfirmRestartProject = async () => {
+    if (!projectToRestart) return;
+    const projName = projectToRestart.project.name;
+    const projId = projectToRestart.project.id;
     try {
       setIsOperating(true);
       setOperationType('restart');
       setOperationProjectName(projName);
-      const res = await projectApi.restartProject(projectId);
+      const res = await projectApi.restartProject(projId);
       setOperationResult(res);
+      setProjectToRestart(null);
       setIsProgressOpen(true);
+      if (res.status === 'running') {
+        setToast({ type: 'success', message: `Project '${projName}' restarted successfully.` });
+      } else {
+        setToast({ type: 'warning', message: `Project '${projName}' restart partially completed.` });
+      }
       await fetchAll();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || 'Failed to restart project.');
+      setToast({ type: 'error', message: `Failed to restart project: ${msg}` });
     } finally {
       setIsOperating(false);
     }
+  };
+
+  // Individual Service Controls inside Project
+  const handleStartService = async (profileId: string) => {
+    const prof = allProfiles.find((p) => p.id === profileId);
+    const profName = prof ? prof.name : 'Service';
+    try {
+      setOperatingProfileId(profileId);
+      await profileApi.startProfile(profileId);
+      setToast({ type: 'success', message: `Service '${profName}' started.` });
+      await fetchAll();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToast({ type: 'error', message: `Failed to start service: ${msg}` });
+    } finally {
+      setOperatingProfileId(null);
+    }
+  };
+
+  const handleStopService = async (profileView: ProjectProfileView) => {
+    const prof = profileView.profile;
+    try {
+      setOperatingProfileId(prof.id);
+      if (profileView.activePid) {
+        const target: ProcessTarget = {
+          pid: profileView.activePid,
+          processName: prof.name,
+          executablePath: undefined,
+          workingDirectory: prof.workingDirectory,
+          expectedPorts: prof.expectedPort ? [prof.expectedPort] : [],
+          force: false,
+          environment: prof.environment,
+        };
+        await controlApi.stopServer(target);
+      }
+      setToast({ type: 'success', message: `Service '${prof.name}' stopped.` });
+      await fetchAll();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setToast({ type: 'error', message: `Failed to stop service: ${msg}` });
+    } finally {
+      setOperatingProfileId(null);
+    }
+  };
+
+  const handleInspectService = (profileView: ProjectProfileView) => {
+    setProfileToInspect(profileView.profile);
   };
 
   return (
@@ -306,7 +425,7 @@ const Projects: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-zinc-100 tracking-tight">Project Groups</h2>
           <p className="text-sm text-zinc-400 mt-0.5">
-            Organize and orchestrate multiple local server profiles as unified projects.
+            Organize and orchestrate multiple local server profiles as unified development projects.
           </p>
         </div>
 
@@ -343,7 +462,7 @@ const Projects: React.FC = () => {
           <div className="text-2xl font-bold text-zinc-100 mt-1 font-mono">{summary.total}</div>
         </div>
         <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
-          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Running</div>
+          <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">Healthy</div>
           <div className="text-2xl font-bold text-emerald-400 mt-1 font-mono">{summary.running}</div>
         </div>
         <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5">
@@ -452,8 +571,8 @@ const Projects: React.FC = () => {
               projectView={pv}
               onInspect={(view) => setDetailsProject(view)}
               onStart={handleStartProject}
-              onStop={handleStopProject}
-              onRestart={handleRestartProject}
+              onStop={handleRequestStopProject}
+              onRestart={handleRequestRestartProject}
               isOperating={isOperating}
             />
           ))}
@@ -466,8 +585,8 @@ const Projects: React.FC = () => {
         onClose={() => setDetailsProject(null)}
         projectView={detailsProject}
         onStart={handleStartProject}
-        onStop={handleStopProject}
-        onRestart={handleRestartProject}
+        onStop={handleRequestStopProject}
+        onRestart={handleRequestRestartProject}
         onEdit={(pv) => {
           setProjectToEdit(pv);
           setIsFormOpen(true);
@@ -486,6 +605,10 @@ const Projects: React.FC = () => {
         }}
         onMoveUp={handleMoveUp}
         onMoveDown={handleMoveDown}
+        onStartService={handleStartService}
+        onStopService={handleStopService}
+        onInspectService={handleInspectService}
+        operatingProfileId={operatingProfileId}
         isOperating={isOperating}
       />
 
@@ -498,6 +621,8 @@ const Projects: React.FC = () => {
         }}
         onSubmit={handleCreateOrUpdateProject}
         projectToEdit={projectToEdit ? projectToEdit.project : null}
+        allProfiles={allProfiles}
+        allProjects={projectViews}
       />
 
       {/* Add Profile Modal */}
@@ -537,6 +662,40 @@ const Projects: React.FC = () => {
         profileName={profileToRemove ? profileToRemove.profileView.profile.name : ''}
         projectName={profileToRemove ? profileToRemove.project.project.name : ''}
       />
+
+      {/* Stop All Confirmation Modal */}
+      <ProjectStopConfirmationModal
+        isOpen={!!projectToStop}
+        onClose={() => setProjectToStop(null)}
+        onConfirm={handleConfirmStopProject}
+        projectView={projectToStop}
+        isOperating={isOperating}
+      />
+
+      {/* Restart All Confirmation Modal */}
+      <ProjectRestartConfirmationModal
+        isOpen={!!projectToRestart}
+        onClose={() => setProjectToRestart(null)}
+        onConfirm={handleConfirmRestartProject}
+        projectView={projectToRestart}
+        isOperating={isOperating}
+      />
+
+      {/* Profile Inspection / Edit Modal */}
+      {profileToInspect && (
+        <ProfileFormModal
+          initialProfile={profileToInspect}
+          wslDistros={[]}
+          onClose={() => setProfileToInspect(null)}
+          onSave={async (data: CreateProfileRequest | UpdateProfileRequest) => {
+            await profileApi.updateProfile(data as UpdateProfileRequest);
+            setToast({ type: 'success', message: `Server profile updated.` });
+            setProfileToInspect(null);
+            await fetchAll();
+          }}
+          isSaving={false}
+        />
+      )}
 
       {/* Progress / Result Modal */}
       <ProjectOperationProgressModal

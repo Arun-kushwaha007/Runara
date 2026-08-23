@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ProjectView } from '../../types';
 
 interface ProjectCardProps {
@@ -26,13 +26,26 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const isStarting = status === 'starting';
   const isStopping = status === 'stopping';
 
+  // Extract distinct environments represented in this project
+  const environmentsSummary = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of profiles) {
+      if (p.profile.environment.type === 'wsl') {
+        set.add(`WSL / ${p.profile.environment.distro}`);
+      } else {
+        set.add('Windows');
+      }
+    }
+    return Array.from(set).join(' &bull; ');
+  }, [profiles]);
+
   const getStatusBadge = () => {
     switch (status) {
       case 'running':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Running ({runningServices}/{totalServices})
+            Healthy ({runningServices}/{totalServices})
           </span>
         );
       case 'partial':
@@ -92,6 +105,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             {project.description && (
               <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2">{project.description}</p>
             )}
+            {environmentsSummary && (
+              <div
+                className="text-[11px] text-zinc-500 mt-1 font-mono"
+                dangerouslySetInnerHTML={{ __html: environmentsSummary }}
+              />
+            )}
           </div>
           {getStatusBadge()}
         </div>
@@ -103,7 +122,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
           {profiles.length === 0 ? (
             <div className="text-xs text-zinc-500 italic bg-zinc-950/40 p-2.5 rounded-lg border border-dashed border-zinc-800">
-              No server profiles assigned yet.
+              No services configured yet.
             </div>
           ) : (
             <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
@@ -152,44 +171,46 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           onClick={() => onInspect(projectView)}
           className="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-lg transition-colors"
         >
-          Inspect
+          Open Details
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Start Button */}
+          {/* Start All Button */}
           {(!isRunning || isPartial || isError) && (
             <button
               onClick={() => onStart(project.id)}
               disabled={isOperating || isStarting || isStopping || totalServices === 0}
+              title={isOperating ? 'Project operation in progress' : 'Start all stopped services'}
               className="px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/60 border border-emerald-800/50 hover:bg-emerald-900/80 hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5v14l11-7z" />
               </svg>
-              Start
+              Start All
             </button>
           )}
 
-          {/* Stop Button */}
+          {/* Stop All Button */}
           {(isRunning || isPartial) && (
             <button
               onClick={() => onStop(project.id)}
               disabled={isOperating || isStarting || isStopping}
+              title={isOperating ? 'Project operation in progress' : 'Stop all running services'}
               className="px-3 py-1.5 text-xs font-medium text-rose-300 bg-rose-950/60 border border-rose-800/50 hover:bg-rose-900/80 hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M6 6h12v12H6z" />
               </svg>
-              Stop
+              Stop All
             </button>
           )}
 
-          {/* Restart Button */}
+          {/* Restart All Button */}
           {(isRunning || isPartial) && (
             <button
               onClick={() => onRestart(project.id)}
               disabled={isOperating || isStarting || isStopping}
-              title="Restart all services"
+              title={isOperating ? 'Project operation in progress' : 'Restart all services'}
               className="px-3 py-1.5 text-xs font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 hover:text-white rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -203,3 +224,4 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     </div>
   );
 };
+
