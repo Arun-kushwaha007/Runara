@@ -1,4 +1,4 @@
-﻿# Runara Engineering Learning Guide
+# Runara Engineering Learning Guide
 
 ```
 Project:           Runara — Local Development Control Center
@@ -7563,11 +7563,269 @@ Runara is an engineered control center designed to solve local development visib
 │    • High-Performance Standalone Executable (`Runara.exe` - 8.19 MB)                             │
 │    • Enterprise Windows Installer (`Runara_0.1.0_x64_en-US.msi` - 4.69 MB)                       │
 │    • Standard Windows Setup (`Runara_0.1.0_x64-setup.exe` - 3.44 MB)                             │
-│    • 280 Automated Tests with 100% Green Verification across Rust and React                      │
+│    • 294 Automated Tests with 100% Green Verification across Rust and React                      │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 This completes the comprehensive architectural blueprint, technical specification, and pedagogical engineering guide for **Runara v0.1.0**.
+
+---
+
+# PART XVII: PROJECT SERVICE LOG PREVIEWS & REAL-TIME STREAMING (MILESTONE 16)
+
+---
+
+## 174. Process Output Streams in Operating Systems & Systems Programming
+
+### 174.1 Standard I/O Descriptors: `stdin`, `stdout`, and `stderr`
+In POSIX and Windows NT operating systems, when a process is spawned, the kernel provides three standard I/O streams bound to default numeric file descriptors (or OS standard handles in Win32):
+1. **`stdin` (Descriptor 0 / `STD_INPUT_HANDLE`)**: Standard input stream, typically bound to the controlling terminal keyboard or piped input.
+2. **`stdout` (Descriptor 1 / `STD_OUTPUT_HANDLE`)**: Standard output stream, dedicated to normal program output, informational logs, and pipeline data.
+3. **`stderr` (Descriptor 2 / `STD_ERROR_HANDLE`)**: Standard error stream, dedicated to diagnostic messages, operational warnings, panic backtraces, and failure traces.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                            STANDARD PROCESS I/O & BUFFERING ARCHITECTURE                         │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                  │
+│       ┌───────────────┐               ┌──────────────────────────────────────────────────┐       │
+│       │               │── stdout (1) ─► [ OS Pipe Buffer: 64KB on Win / 4KB-64KB on Linux]──► Worker 1   │
+│       │ Child Process │               └──────────────────────────────────────────────────┘       │
+│       │  (Node/Python)│               ┌──────────────────────────────────────────────────┐       │
+│       │               │── stderr (2) ─► [ OS Pipe Buffer: 64KB on Win / 4KB-64KB on Linux]──► Worker 2   │
+│       └───────────────┘               └──────────────────────────────────────────────────┘       │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 174.2 C Runtime (CRT) Buffering Dynamics & The Pipe Block Deadlock
+A fundamental systems programming concern when capturing standard I/O is **CRT buffering**:
+- When a process's stdout is attached to a real interactive TTY/terminal, standard libraries (glibc, musl, MSVC CRT) configure **line buffering** (`_IOLBF`): each `\n` flushes the internal CRT buffer to the OS pipe immediately.
+- When stdout is redirected to an anonymous OS pipe (`Stdio::piped()`), CRT runtimes switch to **block buffering** (`_IOFBF`), accumulating up to 4KB or 8KB of text in memory before executing a `write()` system call.
+- Conversely, `stderr` is **unbuffered** (`_IONBF`) by default in virtually all runtime specifications to guarantee that crash traces and fatal diagnostics reach the OS stream without delay.
+
+**The Deadlock Threat**:
+Anonymous OS pipes have fixed capacity (typically 64KB on Windows NT). If a parent process spawns a child with `stdout(Stdio::piped())` and calls `child.wait()` or reads sequentially from stdout without reading stderr, a child that emits >64KB of stderr will block forever on `write(2, ...)`, causing a permanent deadlock.
+**Runara's Solution**: Runara spawns dedicated, concurrent background reader threads for stdout and stderr immediately upon process creation, continuously consuming pipe bytes into `LogManager` buffers and preventing OS pipe saturation.
+
+---
+
+## 175. Chunked IPC, Partial Line Reassembly & Newline Normalization
+
+### 175.1 The Stream Chunking Problem
+OS pipe reads (`Read::read(&mut [u8])`) do NOT return discrete lines of text. They return raw, arbitrary byte slices (e.g. 4096-byte buffers). A single log line may be split across two reads, or a single read may contain 50 consecutive log lines:
+
+$$\text{Read } 1: \text{"Server starting on port 3000\nConnected to db: host=local"}$$
+$$\text{Read } 2: \text{"host user=postgres\nReady for traffic\n"}$$
+
+Without stateful line buffering, split chunks would be rendered as broken, corrupted fragments in the UI.
+
+### 175.2 Runara's Line Buffering State Machine
+Runara's `LogManager` maintains per-session, per-stream partial string buffers (`stdout_partial`, `stderr_partial`):
+
+```
+Incoming Chunk ──► partial.push_str(chunk)
+                        │
+                        ▼
+               Replace "\r\n" with "\n"
+                        │
+                        ▼
+               Split string by "\n"
+                        │
+       ┌────────────────┴────────────────┐
+       ▼                                 ▼
+All elements 0..(len-2)          Last element (len-1)
+[ Complete Lines ]              [ Incomplete Partial Line ]
+       │                                 │
+       ▼                                 ▼
+Strip ANSI & Emit                Save back into `partial`
+```
+
+When the stream reaches EOF (child process termination or pipe close), `LogManager::flush_partials` flushes any remaining text in the partial buffer, ensuring trailing diagnostics without final newlines are never lost.
+
+---
+
+## 176. Terminal Control Sequences & ANSI Escape Sanitization
+
+### 176.1 Modern Compiler & Dev Server ANSI Sequences
+Modern web and backend tooling (e.g., `tsc`, `vite`, `cargo`, `next.js`, `uvicorn`) use ANSI escape sequences to format terminal text with colors, cursor position instructions, and terminal title updates.
+Common sequence families include:
+1. **CSI (Control Sequence Introducer)**: `\x1B[` followed by parameters and a command byte (`@-~`), e.g., `\x1B[32m` (green text), `\x1B[0m` (reset), `\x1B[2K` (clear line).
+2. **OSC (Operating System Command)**: `\x1B]` followed by text and terminated by BEL (`\x07`) or String Terminator (`\x1B\\`), e.g., `\x1B]0;Terminal Title\x07`.
+3. **Character Set & Escape Sequences**: `\x1B(B`, `\x1B=`.
+
+### 176.2 State-Machine ANSI Stripper Implementation
+If raw ANSI sequences are rendered directly into HTML / React nodes, they appear as ugly garbage characters (`[32mServer started[0m`).
+Runara implements an efficient $O(N)$ single-pass state-machine parser in `LogManager::strip_ansi` that strips all escape sequences, normalizes `\r` carriage returns, and produces clean UTF-8 strings.
+
+---
+
+## 177. Bounded Ring Buffers & Memory Safety Under Unbounded Output
+
+### 177.1 The Threat of Runaway Logging
+A noisy dev server (e.g. infinite loop emitting `console.log("tick")` 100,000 times/sec) could easily consume gigabytes of RAM in minutes if stored in an unbounded vector.
+
+### 177.2 Double-Ended Queue (`VecDeque`) Ring Buffer
+Runara bounds log memory using a double-ended queue `VecDeque<LogEntry>` with a strict per-session limit of $N = 5,000$ lines:
+
+```rust
+if session.entries.len() >= self.max_lines {
+    session.entries.pop_front(); // O(1) amortized eviction of oldest entry
+}
+session.entries.push_back(entry); // O(1) amortized insertion of new entry
+```
+
+- **Time Complexity**: $O(1)$ amortized insertion and eviction.
+- **Space Complexity**: Upper bounded at $\approx 5,000 \times 128\text{ B} \approx 640\text{ KB}$ per active service.
+- **Garbage Collection**: Discarded entries are dropped immediately in Rust without memory fragmentation.
+
+---
+
+## 178. The "Observability vs Process Control" Architectural Separation
+
+### 178.1 Decoupled Failure Domains
+A foundational principle of robust systems architecture is **separating observability from execution control**:
+> *Logging failure must NEVER cause server execution failure. Server execution failure must NEVER corrupt logging observability.*
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 DECOUPLED FAILURE DOMAINS                                        │
+├────────────────────────────────────────────────┬─────────────────────────────────────────────────┤
+│ EXECUTION PLANE (Process Control & Discovery)  │ OBSERVABILITY PLANE (Log Capture & Preview)     │
+├────────────────────────────────────────────────┼─────────────────────────────────────────────────┤
+│ • Win32 `CreateProcess` / `wsl.exe` spawn      │ • Piped `BufReader` worker threads              │
+│ • TCP Port discovery & readiness polling       │ • `LogManager` in-memory ring buffer            │
+│ • Process target identity validation           │ • ANSI strip & live event emitter               │
+│ • Graceful `SIGTERM` / forceful kill           │ • Frontend React log preview & modal viewer     │
+│ • SQLite profile configuration persistence     │ • Transient in-memory state only                │
+└────────────────────────────────────────────────┴─────────────────────────────────────────────────┘
+```
+
+If a background log reader encounters a UTF-8 decoding error, pipe break, or buffer saturation, it logs a warning and gracefully stops without terminating the running server process. Conversely, if a server crashes on startup, the log reader captures the crash output and preserves it in the log buffer for developer inspection.
+
+---
+
+## 179. Transient Runtime Observability vs Persistent Database Storage
+
+### 179.1 Why Dev Server Logs Must NOT Be Stored in SQLite
+In desktop developer tools, storing every stdout/stderr line in SQLite creates severe anti-patterns:
+1. **Disk I/O Churn & Write Amplification**: Dev servers produce high-frequency, transient bursts of log text. Writing each line to disk causes heavy SQLite WAL write contention and disk wear.
+2. **Database Bloat**: Retaining logs indefinitely across multiple projects would cause `runara.db` to grow to hundreds of megabytes.
+3. **Stale Debug Data**: Development server logs are only meaningful during the active debugging session. Once a server is restarted or recompiled, old output is obsolete.
+
+Runara stores logs purely in **transient, in-memory memory structures** that reset cleanly when a new session begins or when explicitly cleared by the developer.
+
+---
+
+## 180. Process Categories & Observability Asymmetry
+
+### 180.1 Category A vs Category B Processes
+Runara handles two fundamentally different process categories:
+
+| Category | Origin | Stdout/Stderr Ownership | Live Logs Available? | UI Representation |
+| :--- | :--- | :--- | :--- | :--- |
+| **Category A** | Started by Runara via Profile | Runara created child pipe handles at launch | **YES** (Live streaming) | Live log preview, pulsing green indicator, 5,000-line history |
+| **Category B** | Started Externally (Terminal/IDE) | Parent shell/terminal owns pipe handles | **NO** (OS pipe security boundary) | Clear diagnostic banner: *"Live log output unavailable. Runara did not start this service."* |
+
+### 180.2 Why External Process Output Cannot Be Hijacked
+On Windows NT and Linux, once a process is spawned, its standard file descriptors are bound to the parent terminal. An external utility cannot attach to stdout/stderr of an already-running process without invasive debugger injection (`ptrace` / Win32 `DebugActiveProcess`), which carries severe crash risks and triggers antivirus heuristics.
+Runara adheres to engineering honesty: it explicitly informs the user that the process was started externally, and when the user restarts the service through Runara, it seamlessly transitions to Category A with full live log capture.
+
+---
+
+## 181. High-Level Architecture (HLD) & Low-Level Design (LLD) of Milestone 16
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                             MILESTONE 16 LOG STREAMING ARCHITECTURE                              │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                  │
+│  [ Windows Launcher / WSL Launcher ]                                                             │
+│       │                                                                                          │
+│       ├── stdout (Piped) ──► Worker Thread ──► LogManager::append_chunk(Stdout)                  │
+│       ├── stderr (Piped) ──► Worker Thread ──► LogManager::append_chunk(Stderr)                  │
+│       └── child.wait()   ──► Reaper Thread ──► LogManager::mark_status(Stopped/Error)            │
+│                                                      │                                           │
+│                                                      ▼                                           │
+│                                          ┌───────────────────────┐                               │
+│                                          │  LogManager (Mutex)   │                               │
+│                                          │  • VecDeque Ring Buf  │                               │
+│                                          │  • ANSI Stripper      │                               │
+│                                          │  • Line Buffering     │                               │
+│                                          └───────────┬───────────┘                               │
+│                                                      │                                           │
+│                                                      ▼                                           │
+│                                            Tauri Emitter Callback                                │
+│                                         ("service-log-updated")                                  │
+│                                                      │                                           │
+│                                                      ▼                                           │
+│                                    ┌───────────────────────────────────┐                         │
+│                                    │ React 19 Project UI Component     │                         │
+│                                    │ • ProjectServiceLogPreview (3-5L) │                         │
+│                                    │ • ServiceLogModal (Full Viewer)   │                         │
+│                                    │ • Auto-scroll / Pause / Search    │                         │
+│                                    └───────────────────────────────────┘                         │
+│                                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 182. End-to-End Execution Trace: From Service Launch to Live UI Render
+
+```
+1. User clicks "Start All" on Project in UI
+   └─► Tauri IPC `start_project` ──► `ProjectOrchestrator::start_project`
+        └─► Calls `ServerStartService::execute_start_sequence` for each service profile
+             │
+2. `ServerStartService` prepares execution
+   ├─► `log_manager.create_session(profile_id, LogSource::Runara)` ──► Fresh session UUID
+   └─► Calls `launcher.launch_server_with_logs(..., log_manager)`
+        │
+3. Launcher (`WindowsLauncher` / `WslLauncher`) spawns process
+   ├─► Configures `cmd.stdout(Stdio::piped())` and `cmd.stderr(Stdio::piped())`
+   ├─► `child = cmd.spawn()`
+   ├─► Spawns `stdout-worker` thread: loops on `reader.read(&mut buf)`
+   ├─► Spawns `stderr-worker` thread: loops on `reader.read(&mut buf)`
+   └─► Spawns `reap-worker` thread: blocks on `child.wait()`
+        │
+4. Child Process emits output (e.g. "Starting Next.js server on port 3000\n")
+   ├─► `stdout-worker` reads 40 bytes into buffer
+   ├─► Calls `LogManager::append_chunk(profile_id, session_id, Stdout, chunk)`
+   ├─► `LogManager` strips ANSI codes, splits lines, and appends `LogEntry` to `VecDeque`
+   └─► Calls registered listener callback ──► Emits `service-log-updated` Tauri event
+        │
+5. Frontend React components receive Tauri event
+   ├─► `ProjectServiceLogPreview` updates compact 4-line preview box
+   └─► If `ServiceLogModal` is open: appends line, tests search filter, and scrolls viewport to bottom
+```
+
+---
+
+## 183. Milestone 16 Verification Matrix & Test Strategy
+
+| Test Suite | Module | Test Cases Covered | Result |
+| :--- | :--- | :--- | :--- |
+| **Rust Unit Tests** | `log::manager` | ANSI code stripping (CSI & OSC), chunk line buffering, EOF partial flush, 5,000-line ring buffer overflow eviction, session lifecycle reset, clear session buffer, unmanaged service diagnostic | **7 / 7 Passed (100%)** |
+| **Rust Integration** | `launcher::*` & `profile::start_service` | Windows stdout/stderr capture, WSL stdout/stderr capture, child exit reaper status update, port conflict failure recovery | **132 / 132 Passed (100%)** |
+| **Frontend Unit Tests** | `ProjectServiceLogPreview` | Live line rendering, stderr badges, external process message, real-time event listener update, modal open trigger | **3 / 3 Passed (100%)** |
+| **Frontend Unit Tests** | `ServiceLogModal` | Header metadata, line numbers, stderr stream filtering, search substring filtering, clear buffer, clipboard copy | **5 / 5 Passed (100%)** |
+| **Frontend Integration**| `Projects` & `ProjectDetailsModal` | Service list embedding, individual service start/stop with live preview, confirmation modal interactions | **9 / 9 Passed (100%)** |
+| **Complete System Total**| **Full Suite** | **139 Rust tests + 155 React tests = 294 Automated Tests** | **294 / 294 Passed (100%)** |
+
+---
+
+## 184. Milestone 16 Engineering Q&A & Interview Master Reference
+
+### Q1: Why did Runara implement log previewing strictly within the Project context rather than creating a global logs dashboard?
+**Answer**: Local development control centers are designed for fast diagnostic triage during service lifecycle operations. When a multi-service project fails to boot, the developer needs immediate visual feedback on the exact service that failed. A global log aggregation system introduces unnecessary complexity (log indexing, cross-project search, database persistence, log rotation) that belongs in production observability tools (e.g. Datadog, Grafana Loki), not a lightweight local desktop control center.
+
+### Q2: How does Runara prevent memory exhaustion if a development server enters an infinite log loop?
+**Answer**: Runara uses a bounded double-ended queue (`VecDeque<LogEntry>`) capped at $N=5,000$ lines per session. When line $5,001$ arrives, the oldest line is popped in $O(1)$ time. This guarantees that memory overhead per service never exceeds $\approx 640\text{ KB}$, regardless of how many millions of lines the child process emits.
+
+### Q3: Why is line splitting done in Rust rather than sending raw chunks over Tauri IPC to JavaScript?
+**Answer**: Sending raw byte chunks to the frontend forces JavaScript to manage partial chunk buffers, perform regex-based ANSI stripping on every frame, and allocate thousands of temporary strings, leading to JavaScript garbage collection pauses. Performing normalization, ANSI stripping, and line splitting in compiled Rust threads offloads all CPU work from the UI thread and ensures the frontend only receives clean, structured `LogEntry` objects.
+
 
 
 

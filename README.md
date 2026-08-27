@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-280%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
+[![Tests](https://img.shields.io/badge/Tests-294%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 Runara is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
@@ -24,6 +24,7 @@ This leads to constant friction:
 * *"Where is the terminal that started this background API?"*
 * *"How do I safely restart a service without accidentally killing my VS Code window or PowerShell shell?"*
 * *"Why are my Linux microservices in WSL isolated from my Windows desktop tooling?"*
+* *"Why did my project service fail to start, and where are its startup error logs?"*
 
 **Runara solves local environment visibility and control** by providing a native control center above operating system processes.
 
@@ -35,14 +36,15 @@ This leads to constant friction:
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │                               RUNARA CAPABILITIES                                 │
 ├─────────────────────┬──────────────────────┬──────────────────────────────────────┤
-│ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration & Appearance        │
+│ 🔍 Discovery        │ 🛡️ Safe Control      │ 🚀 Orchestration & Observability     │
 │ • Win32 IP Helper   │ • 7-Signal Pre-Term  │ • Persistent Server Profiles (SQLite)│
 │ • Sub-ms TCP Scan   │   Verification Gate  │ • Multi-Service Projects Engine      │
 │ • WSL 2 Multi-Distro│ • Ancestor Guardrail │ • Desired-State Sequential Startup   │
 │ • O(P+S) Map Join   │ • Leaf Worker BFS    │ • Safe Reverse-Order Teardown        │
 │ • 9D Process Ident  │ • Windows & WSL POSIX│ • In-Memory Concurrency Guards (RAII)│
-│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Semantic Tokens (#101010 & #F9F9F9)│
-│ • Zero Native Leaks │ • Safe Port Conflict │ • Dark, Light & System Sync Themes   │
+│ • Tree Cycles (≤32) │ • Direct Arg Vectors │ • Live Project Service Log Preview   │
+│ • Zero Native Leaks │ • Safe Port Conflict │ • Bounded Ring Buffer (5,000 lines)  │
+│                     │                      │ • ANSI Stripping & Stream Filters    │
 └─────────────────────┴──────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -55,6 +57,7 @@ This leads to constant friction:
 * **Persistent Server Profiles**: SQLite-backed (WAL mode) repeatable launch configurations with one-click cross-environment execution, non-blocking readiness polling, and live restart.
 * **Unknown Server Adoption**: Automatically detects unmanaged background servers and synthesizes transient adoption drafts for instant profile enrollment with visual path adjustment.
 * **Multi-Service Projects & Complete Orchestration**: Groups related microservices into logical projects with declarative desired-state sequential startup (skips already-healthy services), safe reverse-order teardown, atomic SQLite gapless ordering, transient in-memory operation locks with RAII cleanup, and full confirmation modals with sequence breakdowns.
+* **Live Project Service Log Previews**: Embedded transient log previews within project services with real-time streaming, bounded 5,000-line ring buffers, ANSI escape code stripping, pause/resume auto-scroll, stream filters (`stdout` vs `stderr`), instant text search, clipboard copying, and honest diagnostic indicators for externally started processes.
 * **Full Dual-Theme Architecture & Semantic Design Tokens**: Instant switching between high-contrast Dark Mode (`#101010` background, `#CCCCCC` foreground), Light Mode (`#F9F9F9` background, `#101010` foreground), and dynamic System Sync via Tailwind v4 CSS variables. Features flash-free synchronous pre-mount initialization, live OS media query updates, and a dedicated Appearance & Settings page with token previews.
 * **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
 
@@ -70,11 +73,12 @@ Runara decouples a **native Rust backend core** from a **React 19 + TypeScript W
 │  ┌───────────────┐  ┌──────────────┐  ┌───────────────┐  ┌────────────────────┐  │
 │  │ Dashboard     │  │ Live Servers │  │ Profiles Page │  │ Project Groups     │  │
 │  └───────┬───────┘  └──────┬───────┘  └───────┬───────┘  └────────┬───────────┘  │
-│          └─────────────────┼──────────────────┴───────────────────┘              │
-│                            ▼                                                     │
+│          │                 │                  │                   │              │
+│          └─────────────────┴──────────────────┴───────────────────┘              │
+│                                    ▼                                             │
 │                  TypeScript API Gateway (`src/lib/commands.ts`)                  │
 ├────────────────────────────────────┬─────────────────────────────────────────────┤
-│                                    │ Tauri 2 IPC Channel                         │
+│                                    │ Tauri 2 IPC Channel & Live Event Bus        │
 ├────────────────────────────────────▼─────────────────────────────────────────────┤
 │                         Tauri Command Controllers                                │
 │  ┌────────────────────────────────────────────────────────────────────────────┐  │
@@ -84,7 +88,8 @@ Runara decouples a **native Rust backend core** from a **React 19 + TypeScript W
 │  │ ├── ProcessControlService   ──► Win32 Kernel Controller + Safety Gates     │  │
 │  │ ├── ServerProfileService    ──► SQLite Profile Repository                  │  │
 │  │ ├── ServerStartService      ──► Windows/WSL Launchers + Readiness Polling  │  │
-│  │ └── ProjectOrchestrator     ──► Multi-Service Sequential Orchestrator      │  │
+│  │ ├── ProjectOrchestrator     ──► Multi-Service Sequential Orchestrator      │  │
+│  │ └── LogManager              ──► Bounded Ring Buffer + ANSI + Live Emitter  │  │
 │  └──────────────────────┬───────────────────────────────┬─────────────────────┘  │
 │                         ▼                               ▼                        │
 │          ┌─────────────────────────────┐  ┌───────────────────────────┐          │
@@ -93,6 +98,7 @@ Runara decouples a **native Rust backend core** from a **React 19 + TypeScript W
 │          │ • Win32 Kernel32 (FFI)      │  │ • Foreign Key Cascades    │          │
 │          │ • sysinfo & PEB Parser      │  │ • Gapless Profile Ordering│          │
 │          │ • WSL 2 Subsystem Driver    │  │ • Zero Lock Contention    │          │
+│          │ • Piped Stdio Worker Threads│  │                           │          │
 │          └─────────────────────────────┘  └───────────────────────────┘          │
 │                                                                                  │
 │                            NATIVE RUST BACKEND                                   │
