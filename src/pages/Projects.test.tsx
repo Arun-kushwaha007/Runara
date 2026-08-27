@@ -28,6 +28,21 @@ vi.mock('../lib/commands', () => ({
   controlApi: {
     stopServer: vi.fn(),
   },
+  logApi: {
+    getServiceLogs: vi.fn().mockResolvedValue({
+      sessionId: 'sess-1',
+      profileId: 'prof-1',
+      status: 'running',
+      source: 'runara',
+      isLiveAvailable: true,
+      unavailableReason: null,
+      startedAt: '2026-08-22T10:00:00Z',
+      totalLines: 0,
+      entries: [],
+    }),
+    clearServiceLogs: vi.fn().mockResolvedValue(true),
+    subscribeToServiceLogs: vi.fn().mockResolvedValue(() => {}),
+  },
 }));
 
 const mockProfiles: ServerProfile[] = [
@@ -240,7 +255,7 @@ describe('Projects Page & Orchestration (Milestone 13)', () => {
     fireEvent.click(detailsButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/Services & Execution Sequence/i)).toBeInTheDocument();
+      expect(screen.getByText(/Services in Startup Order/i)).toBeInTheDocument();
     });
 
     // Reorder: Move second service UP
@@ -387,7 +402,7 @@ describe('Projects Page & Orchestration (Milestone 13)', () => {
     fireEvent.click(detailsButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/Services & Execution Sequence/i)).toBeInTheDocument();
+      expect(screen.getByText(/Services in Startup Order/i)).toBeInTheDocument();
     });
 
     // In Company Platform, both services are running, so they have "Stop" buttons
