@@ -36,4 +36,5 @@ export * from './adoption';
 export * from './project';
 export * from './filesystem';
 export * from './theme';
+export * from './log';
 

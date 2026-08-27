@@ -246,6 +246,36 @@ export const projectApi = {
   restartProject,
 };
 
+// Log API commands & Events
+export async function getServiceLogs(profileId: string): Promise<import('../types').LogSessionView> {
+  return invoke<import('../types').LogSessionView>('get_service_logs', { profileId });
+}
+
+export async function clearServiceLogs(profileId: string): Promise<boolean> {
+  return invoke<boolean>('clear_service_logs', { profileId });
+}
+
+export async function subscribeToServiceLogs(
+  callback: (event: import('../types').LogUpdateEvent) => void
+): Promise<() => void> {
+  try {
+    const { listen } = await import('@tauri-apps/api/event');
+    const unlisten = await listen<import('../types').LogUpdateEvent>('service-log-updated', (e) => {
+      callback(e.payload);
+    });
+    return unlisten;
+  } catch {
+    // Graceful degradation when running in mock/test browser environment without Tauri core
+    return () => {};
+  }
+}
+
+export const logApi = {
+  getServiceLogs,
+  clearServiceLogs,
+  subscribeToServiceLogs,
+};
+
 export const filesystemApi = {
   pickFolder,
   listWslDirectories,
