@@ -2,6 +2,7 @@ pub mod adoption;
 pub mod control;
 pub mod filesystem;
 pub mod identity;
+pub mod logs;
 pub mod ports;
 pub mod processes;
 pub mod profiles;

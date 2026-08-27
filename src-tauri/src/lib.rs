@@ -4,6 +4,7 @@ pub mod discovery;
 pub mod filesystem;
 pub mod identity;
 pub mod launcher;
+pub mod log;
 pub mod models;
 pub mod process;
 pub mod profile;
@@ -37,13 +38,21 @@ pub fn run() {
             let profile_repo: Arc<dyn db::ServerProfileRepository> = sqlite_repo.clone();
             let project_repo: Arc<dyn db::ProjectRepository> = sqlite_repo;
 
+            let log_manager = Arc::new(log::LogManager::new());
+            let app_handle_emitter = app.handle().clone();
+            log_manager.set_listener(move |event| {
+                use tauri::Emitter;
+                let _ = app_handle_emitter.emit("service-log-updated", event);
+            });
+
             let profile_service = Arc::new(profile::ServerProfileService::new(profile_repo.clone()));
             let discovery_service = Arc::new(discovery::UnifiedDiscoveryService::new());
             let process_control_service = Arc::new(process::ProcessControlService::new());
-            let start_service = Arc::new(profile::ServerStartService::new(
+            let start_service = Arc::new(profile::ServerStartService::with_log_manager(
                 profile_repo.clone(),
                 discovery_service.clone(),
                 process_control_service.clone(),
+                log_manager.clone(),
             ));
 
             let project_service = Arc::new(project::ProjectService::new(project_repo.clone()));
@@ -56,6 +65,7 @@ pub fn run() {
             ));
             let filesystem_service = Arc::new(filesystem::FilesystemService::new());
 
+            app.manage(log_manager);
             app.manage(profile_service);
             app.manage(discovery_service);
             app.manage(start_service);
@@ -98,6 +108,8 @@ pub fn run() {
             commands::project::start_project,
             commands::project::stop_project,
             commands::project::restart_project,
+            commands::logs::get_service_logs,
+            commands::logs::clear_service_logs,
             commands::filesystem::pick_folder,
             commands::filesystem::list_wsl_directories,
             commands::filesystem::validate_directory

@@ -2,6 +2,7 @@ pub mod control;
 pub mod environment;
 pub mod filesystem;
 pub mod identity;
+pub mod log;
 pub mod port;
 pub mod process;
 pub mod profile;
@@ -18,6 +19,9 @@ pub use environment::{
 pub use filesystem::{DirectoryEntry, DirectoryListing, PathValidationResult};
 pub use identity::{
     PackageManager, ProcessIdentity, ProcessParentInfo, ProcessTreeNode, Runtime,
+};
+pub use log::{
+    LogEntry, LogSessionStatus, LogSessionView, LogSource, LogStream, LogUpdateEvent,
 };
 pub use port::PortInfo;
 pub use process::{ProcessInfo, ProcessStatus};

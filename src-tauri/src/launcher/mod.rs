@@ -4,7 +4,9 @@ pub mod wsl;
 pub use windows::WindowsLauncher;
 pub use wsl::WslLauncher;
 
+use crate::log::LogManager;
 use crate::models::profile::StartError;
+use std::sync::Arc;
 
 /// Handle capturing initial process information recorded immediately after spawning.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,5 +26,17 @@ pub trait EnvironmentLauncher: Send + Sync {
     fn validate_working_directory(&self, dir: &str) -> Result<(), StartError>;
 
     /// Launches the configured server command asynchronously within the execution environment.
-    fn launch_server(&self, working_dir: &str, command: &str) -> Result<LaunchHandle, StartError>;
+    fn launch_server(&self, working_dir: &str, command: &str) -> Result<LaunchHandle, StartError> {
+        self.launch_server_with_logs(working_dir, command, None, None, None)
+    }
+
+    /// Launches the server command with optional stdout/stderr log capture streamed to `LogManager`.
+    fn launch_server_with_logs(
+        &self,
+        working_dir: &str,
+        command: &str,
+        profile_id: Option<&str>,
+        session_id: Option<&str>,
+        log_manager: Option<Arc<LogManager>>,
+    ) -> Result<LaunchHandle, StartError>;
 }

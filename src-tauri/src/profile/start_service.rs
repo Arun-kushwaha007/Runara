@@ -1,14 +1,13 @@
 use crate::db::ServerProfileRepository;
 use crate::discovery::{UnifiedDiscovery, UnifiedDiscoveryService};
 use crate::launcher::{EnvironmentLauncher, WindowsLauncher, WslLauncher};
-
+use crate::log::LogManager;
 use crate::models::control::{ProcessTarget, RemainingOwnerInfo};
 use crate::models::environment::Environment;
+use crate::models::log::LogSource;
 use crate::models::profile::{
     ProfileRuntimeStatus, StartError, StartErrorCode, StartProfileResult,
 };
-
-
 
 use crate::process::ProcessControlService;
 use crate::profile::service::ServerProfileService;
@@ -34,6 +33,7 @@ pub struct ServerStartService {
     repository: Arc<dyn ServerProfileRepository>,
     discovery: Arc<UnifiedDiscoveryService>,
     process_control: Arc<ProcessControlService>,
+    log_manager: Arc<LogManager>,
     active_operations: Arc<Mutex<HashMap<String, StartOperation>>>,
     recent_errors: Arc<Mutex<HashMap<String, (String, u64)>>>,
     /// Bounded timeout for startup polling in milliseconds (default 20,000ms / 20 seconds).
@@ -53,6 +53,26 @@ impl ServerStartService {
             repository,
             discovery,
             process_control,
+            log_manager: Arc::new(LogManager::new()),
+            active_operations: Arc::new(Mutex::new(HashMap::new())),
+            recent_errors: Arc::new(Mutex::new(HashMap::new())),
+            startup_timeout_ms: 20_000,
+            poll_interval_ms: 500,
+        }
+    }
+
+    /// Creates a `ServerStartService` with an explicit LogManager.
+    pub fn with_log_manager(
+        repository: Arc<dyn ServerProfileRepository>,
+        discovery: Arc<UnifiedDiscoveryService>,
+        process_control: Arc<ProcessControlService>,
+        log_manager: Arc<LogManager>,
+    ) -> Self {
+        Self {
+            repository,
+            discovery,
+            process_control,
+            log_manager,
             active_operations: Arc::new(Mutex::new(HashMap::new())),
             recent_errors: Arc::new(Mutex::new(HashMap::new())),
             startup_timeout_ms: 20_000,
@@ -72,6 +92,7 @@ impl ServerStartService {
             repository,
             discovery,
             process_control,
+            log_manager: Arc::new(LogManager::new()),
             active_operations: Arc::new(Mutex::new(HashMap::new())),
             recent_errors: Arc::new(Mutex::new(HashMap::new())),
             startup_timeout_ms,
@@ -232,8 +253,15 @@ impl ServerStartService {
         launcher.validate_environment()?;
         launcher.validate_working_directory(&profile.working_directory)?;
 
-        // Step 6: Launch command
-        let launch_handle = launcher.launch_server(&profile.working_directory, &profile.command)?;
+        // Step 6: Create fresh LogSession and launch command with live log capture
+        let session_id = self.log_manager.create_session(profile_id, LogSource::Runara);
+        let launch_handle = launcher.launch_server_with_logs(
+            &profile.working_directory,
+            &profile.command,
+            Some(profile_id),
+            Some(&session_id),
+            Some(self.log_manager.clone()),
+        )?;
 
         // Update operation record with initial PID and expected port
         if let Ok(mut ops) = self.active_operations.lock() {
