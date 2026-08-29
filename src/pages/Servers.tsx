@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { controlApi, profileApi, unifiedApi, wslApi } from '../lib/commands';
+import { controlApi, profileApi, unifiedApi } from '../lib/commands';
 import type {
   DashboardServer,
   ProcessTarget,
@@ -94,7 +94,7 @@ export const Servers: React.FC = () => {
   const refreshAll = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
-      const [fetchedViews, snapshot, distros] = await Promise.all([
+      const [fetchedViews, snapshot] = await Promise.all([
         profileApi.getProfilesWithStatus().catch((err) => {
           console.warn('Failed to load profiles with status:', err);
           return [] as ServerProfileView[];
@@ -103,11 +103,10 @@ export const Servers: React.FC = () => {
           console.warn('Unified discovery failed:', err);
           return { processes: [], ports: [], identities: [], distributions: [], diagnostics: [] };
         }),
-        wslApi.getWslDistributions().catch(() => [] as WslDistribution[]),
       ]);
 
       setProfileViews(fetchedViews);
-      setWslDistros(distros);
+      setWslDistros(snapshot.distributions || []);
 
       const rawLive = deriveDashboardServers(snapshot.ports, snapshot.identities);
       const profilesList = fetchedViews.map((v) => v.profile);
@@ -346,7 +345,11 @@ export const Servers: React.FC = () => {
 
   const handleStopFromProfile = (view: ServerProfileView) => {
     if (!view.activePid) return;
-    const targetServer: DashboardServer = {
+    const matchingLive = discoveredServers.find(
+      (s) => s.pid === view.activePid && s.environment.type === view.profile.environment.type
+    );
+
+    const targetServer: DashboardServer = matchingLive ?? {
       id: view.dashboardServerId ?? `win-${view.activePid}`,
       name: view.profile.name,
       status: 'running',
@@ -355,7 +358,7 @@ export const Servers: React.FC = () => {
       address: '127.0.0.1',
       protocol: 'tcp',
       pid: view.activePid,
-      processName: 'node.exe',
+      processName: view.profile.name,
       executablePath: null,
       commandLine: view.profile.command,
       workingDirectory: view.profile.workingDirectory,

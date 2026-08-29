@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type {
   ProjectView,
   ServerProfile,
@@ -32,6 +32,7 @@ const Projects: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'running' | 'partial' | 'stopped' | 'error'>('all');
   const [isOperating, setIsOperating] = useState(false);
   const [operatingProfileId, setOperatingProfileId] = useState<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   // Modal States
   const [detailsProject, setDetailsProject] = useState<ProjectView | null>(null);
@@ -72,6 +73,8 @@ const Projects: React.FC = () => {
   }, [toast]);
 
   const fetchAll = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       const [views, profiles] = await Promise.all([
         projectApi.getProjectViews(),
@@ -92,6 +95,7 @@ const Projects: React.FC = () => {
       setError(msg || 'Failed to load projects.');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
@@ -161,13 +165,15 @@ const Projects: React.FC = () => {
       } else {
         const created = await projectApi.createProject(data);
         if (selectedProfileIds && selectedProfileIds.length > 0) {
-          for (let i = 0; i < selectedProfileIds.length; i++) {
-            await projectApi.addProfileToProject({
-              projectId: created.id,
-              profileId: selectedProfileIds[i],
-              orderIndex: i,
-            });
-          }
+          await Promise.all(
+            selectedProfileIds.map((profileId, index) =>
+              projectApi.addProfileToProject({
+                projectId: created.id,
+                profileId,
+                orderIndex: index,
+              })
+            )
+          );
         }
         setToast({
           type: 'success',

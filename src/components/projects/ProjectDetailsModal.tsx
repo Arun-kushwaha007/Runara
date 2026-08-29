@@ -50,8 +50,6 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   const hasWsl = profiles.some((p) => p.profile.environment.type === 'wsl');
   const isRunning = status === 'running';
-  const isPartial = status === 'partial';
-  const isError = status === 'error';
   const isStarting = status === 'starting';
   const isStopping = status === 'stopping';
 

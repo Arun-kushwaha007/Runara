@@ -58,14 +58,14 @@ export const ProjectServiceLogPreview: React.FC<ProjectServiceLogPreviewProps> =
             };
           }
 
-          // Append new entries and slice to last 5000 entries
+          // Append new entries and slice to last 20 entries for preview efficiency
           const merged = [...prev.entries, ...event.newEntries];
-          const bounded = merged.length > 5000 ? merged.slice(merged.length - 5000) : merged;
+          const bounded = merged.length > 20 ? merged.slice(merged.length - 20) : merged;
 
           return {
             ...prev,
             status: event.status,
-            totalLines: bounded.length,
+            totalLines: prev.totalLines + event.newEntries.length,
             entries: bounded,
           };
         });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import type { LogEntry, LogSessionView, LogStream, LogUpdateEvent, ServerProfile, ProfileRuntimeStatus } from '../../types';
+import type { LogSessionView, LogStream, LogUpdateEvent, ServerProfile, ProfileRuntimeStatus } from '../../types';
 import { logApi } from '../../lib/commands';
 
 interface ServiceLogModalProps {

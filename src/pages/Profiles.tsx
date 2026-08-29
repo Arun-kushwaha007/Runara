@@ -154,9 +154,17 @@ export const Profiles: React.FC = () => {
   }, [profileViews, envFilter, statusFilter, searchQuery]);
 
   // Metrics
-  const runningCount = profileViews.filter((p) => p.status === 'running').length;
-  const windowsCount = profileViews.filter((p) => p.profile.environment.type === 'windows').length;
-  const wslCount = profileViews.filter((p) => p.profile.environment.type === 'wsl').length;
+  const { runningCount, windowsCount, wslCount } = useMemo(() => {
+    let running = 0;
+    let windows = 0;
+    let wsl = 0;
+    for (const p of profileViews) {
+      if (p.status === 'running') running++;
+      if (p.profile.environment.type === 'windows') windows++;
+      else if (p.profile.environment.type === 'wsl') wsl++;
+    }
+    return { runningCount: running, windowsCount: windows, wslCount: wsl };
+  }, [profileViews]);
 
   // Actions
   const handleOpenCreateModal = () => {
