@@ -27,9 +27,9 @@ The production release artifacts are standalone binaries and installers that run
 
 | Artifact | File Name | Size | SHA-256 Checksum |
 | :--- | :--- | :--- | :--- |
-| **Windows NSIS Installer** | `Runara_0.1.0_x64-setup.exe` | 3.44 MB | `E5968CA0038B8BF357C8776A38AA2E2B0F0253D822F877042894589DB15C6396` |
-| **Windows MSI Package** | `Runara_0.1.0_x64_en-US.msi` | 4.69 MB | `1B71E775C965DA0517A770FBF427FE8BA9ED4F3A01CF689D1947BFD480A95ED7` |
-| **Standalone Executable** | `Runara.exe` | 8.19 MB | `484888649807E1E8C18F66FCE727D78D50DDF80AA0BC28A06075B2A39F854462` |
+| **Windows NSIS Installer** | `Runara_0.1.0_x64-setup.exe` | 2.92 MB | `DD507ACC5987CFDF6504FD595FC9E767312041565EC9BA0B77253E41D8679938` |
+| **Windows MSI Package** | `Runara_0.1.0_x64_en-US.msi` | 4.17 MB | `34FC24D4FCA176EF19158746654EC6404840D549935527B5BA4611B075740D69` |
+| **Standalone Executable** | `Runara.exe` | 11.65 MB | `0159DC20A960B7C210276FA9748E111A569B142A459D748BDD01542E5CCBD054` |
 
 ---
 
@@ -70,7 +70,14 @@ The production release artifacts are standalone binaries and installers that run
 - **Dynamic 8-Tier Runtime Health**: Derives aggregated project status (`Running`, `Partial`, `Stopped`, `Error`) from live process telemetry.
 - **Concurrency Locks**: In-memory mutex guards prevent race conditions and duplicate operations.
 
-### 8. Semantic Dual-Theme Engine & Settings
+### 8. Live Project Service Log Previews & Streaming
+- **Embedded Live Output Previews**: Real-time log capture and line-buffered preview rendering for active project services.
+- **Bounded In-Memory Ring Buffer**: Dedicated 5,000-line ring buffers per service session with automated oldest-entry discard.
+- **ANSI Escape Sanitization**: Strips ANSI color codes, cursor sequences, and carriage returns on ingestion for clean UI rendering.
+- **Interactive Log Modal**: Search filtering, stdout vs stderr stream filtering, auto-scroll toggle with pause on scroll-up, and single-click clipboard copying.
+- **Non-Intrusive External Diagnostics**: Diagnostic indicators for externally started processes that were not spawned by Runara.
+
+### 9. Semantic Dual-Theme Engine & Settings
 - **Dark Theme Palette**: `#101010` background with `#CCCCCC` foreground.
 - **Light Theme Palette**: `#F9F9F9` background with `#101010` foreground.
 - **Zero-Flash Synchronous Mount**: Synchronous pre-mount theme injection into DOM attributes + live OS media query synchronization.
@@ -88,10 +95,11 @@ The production release artifacts are standalone binaries and installers that run
 
 ## 🔮 Roadmap Beyond v0.1.0
 
-The following features are planned for future major releases:
+The following features are planned for future releases:
+- Keyboard shortcut for runtime refresh (`Ctrl+R`).
 - Native system tray integration with quick-access status menu.
 - Real-time socket event monitoring via ETW (Event Tracing for Windows).
-- Live log streaming and terminal output viewer per server profile.
 - Deep container inspection (Docker Desktop / Podman container integration).
 - Custom environment variable management per project group.
 - Native Linux host and macOS support.
+

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="Runara Logo" width="120" />
+</p>
+
 # Runara
 
 > **Local Development Control Center for Windows and WSL**
@@ -8,7 +12,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind-v4.3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-294%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
+[![Tests](https://img.shields.io/badge/Tests-280%20Passed-brightgreen)](RELEASE_CHECKLIST.md)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 Runara is a high-performance, native Windows desktop application that gives developers a centralized control layer for discovering, identifying, starting, stopping, restarting, and organizing local development servers across native Windows and WSL 2 Linux distributions.
@@ -59,7 +63,7 @@ This leads to constant friction:
 * **Multi-Service Projects & Complete Orchestration**: Groups related microservices into logical projects with declarative desired-state sequential startup (skips already-healthy services), safe reverse-order teardown, atomic SQLite gapless ordering, transient in-memory operation locks with RAII cleanup, and full confirmation modals with sequence breakdowns.
 * **Live Project Service Log Previews**: Embedded transient log previews within project services with real-time streaming, bounded 5,000-line ring buffers, ANSI escape code stripping, pause/resume auto-scroll, stream filters (`stdout` vs `stderr`), instant text search, clipboard copying, and honest diagnostic indicators for externally started processes.
 * **Full Dual-Theme Architecture & Semantic Design Tokens**: Instant switching between high-contrast Dark Mode (`#101010` background, `#CCCCCC` foreground), Light Mode (`#F9F9F9` background, `#101010` foreground), and dynamic System Sync via Tailwind v4 CSS variables. Features flash-free synchronous pre-mount initialization, live OS media query updates, and a dedicated Appearance & Settings page with token previews.
-* **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Ctrl+R`, `Esc`), and live system telemetry.
+* **Polished Desktop UX**: Dark-theme design tokens, progressive disclosure inspection modals, single-click clipboard copy triggers, global keyboard shortcuts (`Ctrl+1..5`, `Esc`), and live system telemetry.
 
 ---
 
@@ -123,15 +127,30 @@ For complete technical specifications, see **[ARCHITECTURE.md](ARCHITECTURE.md)*
 
 ---
 
-## 🚀 Installation & Distribution
+## 🚀 Installation & Getting Started
 
-### Option 1: Windows Installers (Recommended)
+Runara is currently released for Windows and supports native Windows and WSL 2 Linux development environments.
+
+### Option 1: Download Windows Installer (Recommended)
 
 Download the latest release from [GitHub Releases](https://github.com/Arun-kushwaha007/DevHub/releases):
 
 * **Standard Setup Installer (NSIS)**: `Runara_0.1.0_x64-setup.exe` (Self-contained installer with desktop shortcut and Start Menu entry).
 * **Enterprise MSI Package**: `Runara_0.1.0_x64_en-US.msi` (Standard Windows Installer package for managed deployments).
 * **Standalone Portable Binary**: `Runara.exe` (Run directly without installation).
+
+> [!NOTE]
+> Runara is currently unsigned. On first launch, Windows SmartScreen may show an untrusted publisher notice ("Windows protected your PC"). Click **More info** → **Run anyway** to proceed.
+
+### Quick Start
+1. Download the Windows installer.
+2. Install Runara.
+3. Launch Runara.
+4. Runara automatically discovers local Windows and WSL development servers.
+5. Create or adopt a server profile.
+6. Group services into Projects.
+
+---
 
 ### Option 2: Build from Source
 
