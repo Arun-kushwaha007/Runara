@@ -6,6 +6,10 @@
 
 > **Local Development Control Center for Windows and WSL**
 
+<p align="center">
+  <a href="https://www.producthunt.com/products/runara?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-runara" target="_blank" rel="noopener noreferrer"><img alt="Runara - Local dev environment control center for Windows and WSL | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1235780&amp;theme=light&amp;t=1788102612213"></a>
+</p>
+
 [![Tauri 2](https://img.shields.io/badge/Tauri-2.0-24C8D5?logo=tauri&logoColor=white)](https://v2.tauri.app/)
 [![Rust](https://img.shields.io/badge/Rust-1.78+-orange?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
